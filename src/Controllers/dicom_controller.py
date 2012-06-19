@@ -435,7 +435,7 @@ class Controller():
                     self.pan_view(x, self.previous_y)
                 else:
                     self.pan_view(x, y)
-            self.view.canvas.Refresh(eraseBackground=False)
+                self.view.canvas.Refresh(eraseBackground=False)
 
         if event.inaxes == self.view.axes:
             try:

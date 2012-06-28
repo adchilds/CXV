@@ -4,6 +4,9 @@
 # @author:    Luke Mueller
 # @contact:   muellelj@eckerd.edu or lmueller62@gmail.com
 #
+# @author:    Adam Childs
+# @contact:   adchilds@eckerd.edu
+#
 # @copyright: owned and maintained by the
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
@@ -28,11 +31,14 @@ class Model():
         
     def on_mouse_motion(self, event):
         if self.drag:
-            self.sx = event.xdata - self.mouse_offset_sx
-            self.sy = event.ydata - self.mouse_offset_sy
-            self.dx = event.xdata + self.mouse_offset_dx
-            self.dy = event.ydata + self.mouse_offset_dy
-            self.check_bounds()
+            try:
+                self.sx = event.xdata - self.mouse_offset_sx
+                self.sy = event.ydata - self.mouse_offset_sy
+                self.dx = event.xdata + self.mouse_offset_dx
+                self.dy = event.ydata + self.mouse_offset_dy
+                self.check_bounds()
+            except TypeError:
+                pass
         elif self.adjust:
             self.adjust_rect(event)
         else:
@@ -76,7 +82,16 @@ class Model():
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZEWE))
             elif self.picked == 'top' or self.picked == 'bottom':
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZENS))
-    
+
+    def is_mouse_in_rect(self, event):
+        """ Checks whether the user's mouse is within the
+        coordinates of the rect.
+        """
+        return event.xdata >= self.sx and event.xdata <= self.dx and event.ydata >= self.sy and event.ydata <= self.dy
+
+    def get_rect_pos(self):
+        return [self.sx, self.sy, self.dx, self.dy]
+
     def on_mouse_release(self, event):
         self.drag = False 
         self.adjust = False

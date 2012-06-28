@@ -11,17 +11,21 @@
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
-from Views import dicom_view
-from Controllers import overview_controller
-from Controllers import image_info_controller
-from Controllers import coral_controller
-from Controllers import contrast_controller
-from Controllers import overlay_controller
-from Controllers import polyline_controller
 from Controllers import calibrate_controller
+from Controllers import contrast_controller
+from Controllers import coral_controller
+from Controllers import image_info_controller
+from Controllers import overlay_controller
+from Controllers import overview_controller
+from Controllers import polyline_controller
+from Controllers import xml_controller
+from Controllers import zoom_controller
 from Models import dicom_model
+from lib import browse_dialog
 from lib import progress_bar
 from lib import save_session
+from Views import dicom_view
+import getpass
 import wx
 import re
 import os
@@ -45,13 +49,29 @@ class Controller():
         self.overlay_controller = None
         self.polyline_controller = None
         self.calibrate_controller = None
+        self.zoom_controller = None
         self.save_session = None
         self.changed = False
         self.pan_image = False # Is the user able to currently pan the image?
         self.left_down = False # Is the user holding the left mouse button?
         self.view = dicom_view.View(self, self.model)
         self.background = None
-        
+        self.xml = None
+        self.plugin_directory = ""
+
+        # Check for the XML config file. If it's installed,
+        # read the corresponding data. If it's not installed,
+        # install it to the user's home directory, setting
+        # default values.
+        path = os.path.expanduser('~')
+        if os.path.exists(r'' + path + '\.cxvrc.xml'):
+            self.xml = xml_controller.Controller(path + '\.cxvrc.xml')
+            self.xml.load_file()
+            self.plugin_directory = self.xml.get_plugin_directory()
+        else:
+            self.xml = xml_controller.Controller(path + '\.cxvrc.xml')
+            self.xml.create_config()
+
     def on_open(self, event):
         dialog = wx.FileDialog(None, wildcard='DICOM (*.DCM)|*.DCM|Saved Session (*.txt)|*.txt', style=wx.FD_FILE_MUST_EXIST)
         if dialog.ShowModal() == wx.ID_OK:
@@ -113,7 +133,7 @@ class Controller():
         self.polyline_controller = None
         self.save_session = None
         self.changed = False
-        self.enable_tools(['Lock Coral Slab', 'Overlay Images'], False)
+        self.enable_tools(['Lock Coral Slab', 'Filtered Overlays'], False)
         
     def on_quit(self, event):
         self.save_prompt()
@@ -165,113 +185,14 @@ class Controller():
         # Update the scrollbar with the new position
         self.view.scroll.Scroll(init_pos_x, init_pos_y)
 
-    def center_of_rect(self, x1, y1, x2, y2):
-        """ Calculates the center point in the rect """
-
-        center_x = x1 + math.fabs((x2 - x1) / 2)
-        center_y = y1 + math.fabs((y1 - y2) / 2)
-
-        return center_x, center_y
-
-    def within_scroll_unit(self, scroll_unit, su_amount_x, su_amount_y, x1, y1, x2, y2):
-        """ Determines whether or not the given points (x1, y1) and (x2, y2)
-        are within the given amount of scroll units.
-        
-        @var su_amount_x: The x axis scroll unit that the points should be within
-        @var su_amount_y: The y axis scroll unit that the points should be within
-        @var x1, y1: First point
-        @var x2, y2: Second point
-        
-        @return: True, True if both values are within su_amount
-                False, False if both values are not within su_amount
-                True, False if only x value is within su_amount
-                False, True if only y value is within su_amount
-                x_delta how many scroll units apart x1 and x2 are
-                y_delta how many scroll units apart y1 and y2 are
-        """
-        # Calculate how many x axis scroll units the points are away from each other
-        x_delta = math.fabs(x1 - x2) / scroll_unit
-
-        # Calculate how many y axis scroll units the points are away from each other
-        y_delta = math.fabs(y1 - y2) / scroll_unit
-
-        # Are they within the given su_amounts?
-        x_bool = x_delta < su_amount_x
-        y_bool = y_delta < su_amount_y
-
-        return x_bool, y_bool, x_delta, y_delta
-
-    def rect_ratio(self, x1, y1, x2, y2):
-        """ Calculates the ratio in size between the two given rectangles
-        
-        @var x1, y1: The smaller rectangle
-        @var x2, y2: The larger rectangle
-        
-        @return: The size ratio between the two rectangles
-        """
-        if x1 > y1:
-            return x2 / x1#x1 / x2
-        else:
-            return y2 / y1#y1 / y2
-
-    def on_drag_zoom(self, drag_coords=None):
-        x1, y1, x2, y2 = drag_coords # Selected area dimensions
-        print '(x1: %i, y1: %i) --> (x2: %i, y2: %i)' % (x1, y1, x2, y2)
-
-        # Find the center of the given rectangle
-        rect_center_x, rect_center_y = self.center_of_rect(x1, y1, x2, y2)
-
-        # Get the width and height of the scroll window
-        view_width, view_height = self.view.scroll.GetSizeTuple()
-
-        # Get the width and height of the selected area
-        rect_width = math.fabs(x2 - x1)
-        rect_height = math.fabs(y2 - y1)
-
-        # Calculate the ratio of the selected area
-        # to the current size of the scroll window
-        ratio = self.rect_ratio(rect_width, rect_height, view_width, view_height)
-
-        # Set the new aspect ratio of the image
-        self.view.aspect = ratio
-
-        # Zoom the image accordingly
-        if self.view.aspect > 1.00:
-            self.view.aspect = 1.00
-            self.view.aspect_cb.SetValue('100%')
-        elif self.view.aspect < 0.1:
-            self.view.aspect = 0.1
-            self.view.aspect_cb.SetValue('10%')
-        else:
-            self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
-
-        # Resize without displaying so that we can do some calculations
-        self.resize_mpl_widgets()
-
-        # Get the current center of the scrolledwindow's viewport
-        size_x, size_y = self.view.scroll.GetSize()
-        scroll_center_x, scroll_center_y = self.center_of_rect(0, 0, size_x, size_y)
-
-        print 'Rect center:'
-        print '   X: %i' % rect_center_x
-        print '   Y: %i' % rect_center_y
-        print 'View center:'
-        print '   X: %i' % scroll_center_x
-        print '   Y: %i' % scroll_center_x
-
-        # Calculate how many scroll units the two rect's centers are apart
-        x_delta = math.fabs(rect_center_x - scroll_center_x) / (self.view.aspect*100.0)
-        y_delta = math.fabs(rect_center_y - scroll_center_y) / (self.view.aspect*100.0)
-        print 'Scroll Units: %ipx' % (self.view.aspect*100.0)
-        print 'X units away: %i' % x_delta
-        print 'Y units away: %i' % y_delta
-
-        # Resize and scroll the image
-        self.resize_image(False, x_delta, y_delta)
-        self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox has keyboard focus
-
     def resize_image(self, b=True, sx=0, sy=0):
         self.resize_mpl_widgets()
+        # Ordering here determines a couple things:
+        # if self.cleanup() happens first, we see (0,0) in scrollbar,
+        # then it scrolls to the desired position
+        #
+        # if self.set_scrollbars() happens first, it scrolls first but
+        # we get an ugly overlapping image until the canvas refreshes
         self.set_scrollbars(b, sx, sy)
         self.cache_background()
         self.cleanup()
@@ -291,7 +212,7 @@ class Controller():
         """
         y, x = self.model.get_image_shape()
         if b: # Scroll here
-            self.view.scroll.Scroll(0, 0)
+            self.view.scroll.Scroll(sx, sy)
         scroll_unit = self.view.aspect*100.0
         self.su = scroll_unit
         self.view.scroll.SetScrollbars(scroll_unit, scroll_unit, 
@@ -345,51 +266,10 @@ class Controller():
         try: self.overview_controller.update_viewable_area()
         except AttributeError: pass
 
-    def test_zoom(self, drag_coords=None):
-        x1, y1, x2, y2 = drag_coords # Selected area dimensions
-#        self.view.mpl_toolbar.zoom(drag_coords)
-
-    def on_zoom_in(self, event):
-        self.ztf = False
-        self.zoom = self.view.toolbar.GetToolState(self.view.toolbar_ids['Zoom In'])
-
-        if self.zoom: # Zoom ON
-            # Change the cursor
-            #cur = wx.CursorFromImage(wx.Image("images/zoom_in.png", wx.BITMAP_TYPE_PNG))
-            cur = wx.StockCursor(wx.CURSOR_MAGNIFIER)
-            self.view.canvas.SetCursor(cur)
-
-            # Set the rectangle selector to active
-            self.view.toggle_selector.set_active(True)
-
-            # Update the toggle_selector, otherwise we get a nasty opaque
-            # box the first time that the user attempts to drag and zoom
-            self.view.toggle_selector.update()
-            self.view.toggle_selector.update_background(event)
-
-        else: # Zoom OFF
-            self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
-            self.view.toggle_selector.set_active(False)
-
-    def on_zoom_out(self, event):
-        self.zoom = False
-        self.ztf = False
-        self.view.toolbar.ToggleTool(self.view.toolbar_ids['Zoom In'], False)
-        self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
-        self.view.toggle_selector.set_active(False)
-        self.view.aspect -= 0.1
-        if self.view.aspect < 0.1:
-            self.view.aspect = 0.1
-            self.view.aspect_cb.SetValue('10%')
-        else:
-            self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
-        self.resize_image()
-        self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox has keyboard focus
-
     def on_show_popup(self, event):
         if not self.ztf and not self.zoom:
             self.popup_menu = wx.Menu()
-            item = self.popup_menu.Append(-1, 'Zoom to fit')
+            self.popup_menu.Append(-1, 'Zoom to fit')
 
             # Better to set this event here when we need it because if it's set in
             # the view class, all menu items will fire this event.
@@ -409,6 +289,7 @@ class Controller():
     def on_popup_item_selected(self, event):
         self.ztf = True
         self.on_resize(event)
+        self.view.canvas.Refresh()
 
     def on_mouse_motion(self, event):
         if self.pan_image and self.left_down:
@@ -459,6 +340,7 @@ class Controller():
             elif self.calib:
                 self.calibrate_controller.on_mouse_motion(event)
             self.draw_all()
+        self.view.canvas.Refresh(eraseBackground=False)
         
     def on_mouse_press(self, event):
         if event.button == 1: # Left mouse button
@@ -467,7 +349,7 @@ class Controller():
             try :
                 self.previous_x = int(event.xdata)
                 self.previous_y = int(event.ydata)
-            except TypeError: 
+            except TypeError:
                 # This is thrown if the user clicks just barely
                 # outside of the image bounds (a few pixels at most),
                 # when the coordinates show (x, y) in the status bar.
@@ -477,7 +359,7 @@ class Controller():
         elif event.button == 3: # Right mouse button
             pass
 
-        if not self.pan_image and not self.zoom:
+        if not self.pan_image:
             if self.polyline:
                 self.polyline_controller.on_mouse_press(event)
             elif self.coral:
@@ -488,7 +370,7 @@ class Controller():
 
     def on_mouse_release(self, event):
         self.left_down = False
-        if not self.pan_image and not self.zoom:
+        if not self.pan_image:
             if self.polyline:
                 self.polyline_controller.on_mouse_release(event)
             elif self.coral:
@@ -501,9 +383,8 @@ class Controller():
         if event.key == ' ' and not self.zoom: # Is the user pressing the SPACE BAR?
             self.pan_image = True
             self.view.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
-        elif event.key == 'p':
-            print 'Key pressed: [p]'
-            self.view.mpl_toolbar.pan()
+        elif event.key == 'd': # DEBUG
+            print 'DEBUG'
 
     def on_key_release(self, event):
         self.pan_image = False
@@ -531,7 +412,7 @@ class Controller():
         else:
             self.cleanup()
         self.update_overview()
-        
+
     def on_aspect(self, event):
         m = self.ztf_patt.match(self.view.aspect_cb.GetLabel()) # zoom to fit
         if m: 
@@ -542,9 +423,9 @@ class Controller():
         m = self.aspect_patt.match(self.view.aspect_cb.GetLabel())  # percent
         if not m: self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
         else:
-            if int(m.group(0)) > 100:
-                self.view.aspect = 1.0
-                self.view.aspect_cb.SetValue('100%')
+            if int(m.group(0)) > 120:
+                self.view.aspect = 1.20
+                self.view.aspect_cb.SetValue('120%')
             elif int(m.group(0)) < 10:
                 self.view.aspect = 0.1
                 self.view.aspect_cb.SetValue('10%')
@@ -558,9 +439,11 @@ class Controller():
     def on_image_info(self, event):
         try: self.image_info_controller.view.Raise()
         except AttributeError: self.image_info_controller = image_info_controller.Controller(self, self.model)
-        
+
     def on_coral(self, event):
         self.coral = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Coral Slab'])
+        if self.coral_locked:
+            self.enable_tools(['Filtered Overlays'], False)
         self.coral_locked = False
         self.polyline = False
         self.calib = False
@@ -568,7 +451,7 @@ class Controller():
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         if not self.coral_controller:   # first open
             self.coral_controller = coral_controller.Controller(self.view, self.background)
-            self.enable_tools(['Lock Coral Slab', 'Overlay Images'], True)
+            self.enable_tools(['Lock Coral Slab'], True)
         else:
             try:    # remove overlay if already added
                 self.view.figure.delaxes(self.view.ov_axes)
@@ -579,18 +462,19 @@ class Controller():
             except:
                 pass
         self.draw_all()
-                    
-    def on_lock_coral(self, event, show=False):
+
+    def on_lock_coral(self, event, show=True):
         if self.coral_locked: return  # already locked
         self.coral = False
         self.coral_locked = True
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Coral Slab'], False)
+        self.enable_tools(['Filtered Overlays'], True)
         if not self.overlay_controller:
             self.overlay_controller = overlay_controller.Controller(self.view, self, self.model, self.background, show)
         self.draw_all()
         self.overlay_controller.create_overlays()
         self.cleanup()
-        
+
     def on_contrast(self, event):
         try: self.contrast_controller.view.Raise()
         except AttributeError: self.contrast_controller = contrast_controller.Controller(self.view, self.model)
@@ -599,12 +483,14 @@ class Controller():
         if not self.coral_locked:
             self.on_lock_coral(event, True) # have worker thread add and display overlay
         elif not self.overlay_controller.view.IsShown():    # first press
-            self.overlay_controller.alphas = [50, 50, 0]
             self.overlay_controller.display()
             self.overlay_controller.view.Show()
         elif self.overlay_controller.view.IsShown():
             self.overlay_controller.view.Raise()
-            
+
+    def on_plugin(self, event):
+        pass
+
     def on_polyline(self, event):
         self.polyline = self.view.toolbar.GetToolState(self.view.toolbar_ids['Draw Polylines'])
         self.polyline_locked = False
@@ -649,3 +535,53 @@ class Controller():
                 self.save_session.write()
         else:
             self.save_session.write()
+    
+    def on_plugin_properties(self, event=None):
+        browse = browse_dialog.BrowseDialog(None, title='Default Plugin Directory')
+        browse.ShowModal()
+        browse.Destroy()
+
+        # Update the view to show the changes in the menu
+        self.view.create_menubar()
+
+    def on_browse_callback(self, event):
+        pass
+
+    def on_about_filter(self, event, plugin):
+        """ Shows a wx.AboutDialog for the plugin that has been
+        clicked in the Tools --> Filter Plugins --> menu item. Limits
+        the words per line to 10. Ugly work around, but since we
+        can't have multiple lines in the .plugin file for the Description
+        we need to handle that here.
+        """
+        description = plugin.description
+        span = 10
+        words = description.split(" ")
+        list = [" ".join(words[i:i+span]) for i in range(0, len(words), span)]
+        description = '\n'.join(list)
+
+        info = wx.AboutDialogInfo()
+        info.SetName(plugin.name)
+        info.SetVersion(plugin.version)
+        info.SetDescription(description)
+        info.SetWebSite(plugin.website)
+        info.AddDeveloper(plugin.author)
+
+        wx.AboutBox(info)
+
+    def on_help(self, event):
+        pass
+
+    def on_about(self, event):
+        description = "Coral X-Ray Viewer does... INFO ABOUT CXV HERE"
+
+        info = wx.AboutDialogInfo()
+        info.SetName('Coral X-Ray Viewer')
+        info.SetVersion('1.00')
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2010 - 2012 US Geological Survey, DOI')
+        info.SetWebSite('www.usgs.gov')
+        info.AddDeveloper('Luke Mueller')
+        info.AddDeveloper('Adam Childs')
+
+        wx.AboutBox(info)

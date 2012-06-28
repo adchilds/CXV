@@ -4,10 +4,16 @@
 # @author:    Luke Mueller
 # @contact:   muellelj@eckerd.edu or lmueller62@gmail.com
 #
+# @author:    Adam Childs
+# @contact:   adchilds@eckerd.edu
+#
 # @copyright: owned and maintained by the
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
+from Controllers import xml_controller
+from yapsy.PluginManager import PluginManager
+import os
 import wx
 
 class View(wx.MiniFrame):
@@ -19,7 +25,7 @@ class View(wx.MiniFrame):
         wx.MiniFrame.__init__(self,
                               parent=None,
                               title="Overlay",
-                              size=(200, 300),
+                              #size=(200, 300),
                               style=wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.RESIZE_BOX | wx.MAXIMIZE_BOX))
         self.ids = []
         panel = wx.Panel(self)
@@ -28,7 +34,9 @@ class View(wx.MiniFrame):
         
         for each in self.pane_data():
             i = self.pane_data().index(each)
-            self.add_pane(panel, panel_sizer, i, *each)
+#            percent = 100.0 / len(self.pane_data())
+            percent = 0
+            self.add_pane(panel, panel_sizer, i, int(percent), *each)
         
         apply = wx.Button(panel, -1, 'Apply')
         text = wx.StaticText(panel, -1, 'Overlays can\'t exceed 100%')
@@ -40,8 +48,9 @@ class View(wx.MiniFrame):
         self.Bind(wx.EVT_BUTTON, self.controller.display, apply)
         self.Bind(wx.EVT_CLOSE, self.on_close, self)
         self.Bind(wx.EVT_MOVE, self.dicom_view.controller.cleanup)
+        self.Fit()
         
-    def add_pane(self, panel, sizer, i, label, enabled):
+    def add_pane(self, panel, sizer, i, percent, label, enabled):
         cb_id = wx.NewId()
         tc_id = wx.NewId()
         s_id = wx.NewId()
@@ -61,7 +70,7 @@ class View(wx.MiniFrame):
             
         bs2 = wx.BoxSizer(wx.HORIZONTAL)
         st = wx.StaticText(panel, -1, 'Opacity: ')
-        tc = wx.TextCtrl(panel, tc_id, '50%', size=(60,-1), style=wx.TE_PROCESS_ENTER)
+        tc = wx.TextCtrl(panel, tc_id, str(percent) + '%', size=(60,-1), style=wx.TE_PROCESS_ENTER)
         tc.Enable(enabled)
         self.Bind(wx.EVT_TEXT_ENTER, self.controller.find_items, tc)
         bs2.AddMany([st, tc])
@@ -69,7 +78,7 @@ class View(wx.MiniFrame):
         sbs.AddSpacer(10)
         
         bs3 = wx.BoxSizer(wx.HORIZONTAL)
-        s = wx.Slider(panel, s_id, 50, 0, 100)
+        s = wx.Slider(panel, s_id, percent, 0, 100)
         s.Enable(enabled)
         self.Bind(wx.EVT_SLIDER, self.controller.find_items, s) 
         bs3.Add(s, 1, wx.EXPAND)
@@ -79,12 +88,27 @@ class View(wx.MiniFrame):
         sizer.AddSpacer(10)
         
     def pane_data(self):
-        return [
-                ('FFT + Butterworth HPF', True),
-                ('Sobel Filter', True)
-                #('Base Image', False)
-                ]
+        list = [] # Holds the filter tuples (name, activated=True)
         
+        # Get the default plugin directory, using XML
+        path = os.path.expanduser('~')
+        xml = xml_controller.Controller(path + '\.cxvrc.xml')
+        xml.load_file()
+        xml.get_plugin_directory()
+        directory = ["plugins", xml.get_plugin_directory()]
+
+        # Load the plugins from the default plugin directory.
+        manager = PluginManager()
+        manager.setPluginPlaces(directory)
+        manager.setPluginInfoExtension('plugin')
+        manager.collectPlugins()
+
+        # Append tuple with plugin name and enabled=True to the list
+        for plugin in manager.getAllPlugins():
+            list.append((plugin.name, True))
+        
+        return list
+
     def create_statusbar(self):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetFieldsCount(1)

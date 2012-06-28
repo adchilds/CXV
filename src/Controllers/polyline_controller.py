@@ -230,7 +230,7 @@ class Controller():
         color_menu = wx.Menu()
         for each in self.popup_color_data():
             self.add_option(color_menu, *each)
-        self.menu.AppendMenu(-1, 'color', color_menu)
+        self.menu.AppendMenu(-1, 'Color', color_menu)
         try: self.dicom_view.PopupMenu(self.menu)
         except: pass    # avoid C++ assertion error
         self.menu.Destroy()
@@ -240,14 +240,14 @@ class Controller():
         self.dicom_view.Bind(wx.EVT_MENU, handler, option)
         
     def popup_line_data(self):
-        label = 'delete polyline ' + self.curr_pl.get_label()
-        return [('add vertex here', self.add_vertex),
+        label = 'Delete Polyline ' + self.curr_pl.get_label()
+        return [('Add Vertex Here', self.add_vertex),
                 (label, self.delete_polyline)
                 ]
         
     def popup_vertex_data(self):
-        label = 'delete polyline ' + self.curr_pl.get_label()
-        return [('delete vertex', self.delete_vertex),
+        label = 'Delete Polyline ' + self.curr_pl.get_label()
+        return [('Delete Vertex', self.delete_vertex),
                 (label, self.delete_polyline)
                 ]
         

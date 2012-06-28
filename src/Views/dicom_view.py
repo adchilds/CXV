@@ -11,10 +11,14 @@
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
+from Controllers import xml_controller
+from Controllers import zoom_controller
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib.widgets import RectangleSelector
+from yapsy.PluginManager import PluginManager
+import os
 import wx
 
 class View(wx.Frame):
@@ -22,6 +26,7 @@ class View(wx.Frame):
     def __init__(self, controller, model):
         self.controller = controller
         self.model = model
+        self.zoom_controller = zoom_controller.Controller(controller, self, model)
         self.aspect = 1.0
         self.toolbar_ids = {}
         self.menubar_ids = {}
@@ -31,7 +36,7 @@ class View(wx.Frame):
 
         wx.Frame.__init__(self,
                           parent=None,
-                          title="DICOM Viewer",
+                          title="Coral X-Ray Viewer",
                           size=(850, 750),
                           pos=(0,0))
 
@@ -68,50 +73,89 @@ class View(wx.Frame):
             self.menubar.Append(menu, name)
         self.SetMenuBar(self.menubar)
         
-    def add_menu_option(self, menu, label, accel, handler, enabled):
+    def add_menu_option(self, menu, label, accel, handler, enabled, has_submenu, submenu):
         if not label:
             menu.AppendSeparator()
         else:
             id = wx.NewId()
             self.menubar_ids[label] = id
-            option = menu.Append(id, label)
+            if has_submenu:
+                option = menu.AppendMenu(id, label, submenu)
+            else:
+                option = menu.Append(id, label)
             option.Enable(enabled)
             if accel:
                 wx.AcceleratorTable([ (accel[0], ord(accel[1]), option.GetId()) ])
             self.Bind(wx.EVT_MENU, handler, option)
         
     def menu_names(self):
-        return ('File', 'Tools')
+        return ('File', 'Tools', 'Help')
     
     def menu_options(self):
-        return ( [# File
-                  ('&Open...\tCtrl+O', (wx.ACCEL_CTRL, 'O'), self.controller.on_open, True),
-                  ('&Save...\tCtrl+S', (wx.ACCEL_CTRL, 'S'), self.controller.on_save, False),
-                  ('', '', '', True),
-                  ('&Quit\tCtrl+Q', (wx.ACCEL_CTRL, 'Q'), self.controller.on_quit, True)
+        """ ('TEXT', (ACCELERATOR), HANDLER, ENABLED, HAS_SUBMENU, SUBMENU METHOD """
+        return ( [ # File
+                  ('&Open...\tCtrl+O', (wx.ACCEL_CTRL, 'O'), self.controller.on_open, True, False, None),
+                  ('&Save...\tCtrl+S', (wx.ACCEL_CTRL, 'S'), self.controller.on_save, False, False, None),
+                  ('', '', '', True, False, None),
+                  ('&Quit\tCtrl+Q', (wx.ACCEL_CTRL, 'Q'), self.controller.on_quit, True, False, None)
                   ],
-                 [#Tools
-                  ('Image Overview', (), self.controller.on_overview, False),
-                  ('Image Information', (), self.controller.on_image_info, False),
-                  ('', '', '', True),
-                  ('Zoom In', (), self.controller.on_zoom_in, False),
-                  ('Zoom Out', (), self.controller.on_zoom_out, False),
-                  ('', '', '', True),
-                  ('Adjust Contrast', (), self.controller.on_contrast, False),
-                  ('', '', '', True),
-                  ('Adjust Coral Slab', (), self.controller.on_coral, False),
-                  ('Lock Coral Slab', (), self.controller.on_lock_coral, False),
-                  ('', '', '', True),
-                  ('Overlay Images', (), self.controller.on_overlay, False),
-                  ('', '', '', True),
-                  ('Adjust Calibration Region', (), self.controller.on_calibrate, False),
-                  ('Set Density Parameters', (), self.controller.on_density_params, False),
-                  ('', '', '', True),
-                  ('Draw Polylines', (), self.controller.on_polyline, False),
-                  ('Lock Polylines', (), self.controller.on_lock_polyline, False)
+                 [ # Tools
+                  ('Image Overview', (), self.controller.on_overview, False, False, None),
+                  ('Image Information', (), self.controller.on_image_info, False, False, None),
+                  ('', '', '', True, False, None),
+                  ('Zoom In', (), self.zoom_controller.on_zoom_in, False, False, None),
+                  ('Zoom Out', (), self.zoom_controller.on_zoom_out, False, False, None),
+                  ('', '', '', True, False, None),
+                  ('Adjust Contrast', (), self.controller.on_contrast, False, False, None),
+                  ('', '', '', True, False, None),
+                  ('Adjust Coral Slab', (), self.controller.on_coral, False, False, None),
+                  ('Lock Coral Slab', (), self.controller.on_lock_coral, False, False, None),
+                  ('', '', '', True, False, None),
+                  ('Filtered Overlays', (), self.controller.on_overlay, False, False, None),
+                  ('Filter Plugins', (), self.controller.on_plugin, True, True, self.plugin_submenu()),
+                  ('', '', '', True, False, None),
+                  ('Adjust Calibration Region', (), self.controller.on_calibrate, False, False, None),
+                  ('Set Density Parameters', (), self.controller.on_density_params, False, False, None),
+                  ('', '', '', True, False, None),
+                  ('Draw Polylines', (), self.controller.on_polyline, False, False, None),
+                  ('Lock Polylines', (), self.controller.on_lock_polyline, False, False, None)
+                  ],
+                 [ # Help
+                  ('Help\tCtrl+H', (wx.ACCEL_CTRL, 'H'), self.controller.on_help, True, False, None),
+                  ('About', (), self.controller.on_about, True, False, None)
                   ]
                 )
-               
+
+    def plugin_submenu(self):
+        menu = wx.Menu()
+        props = wx.MenuItem(menu, wx.ID_ANY, 'Properties')
+        menu.AppendItem(props)
+        self.Bind(wx.EVT_MENU, self.controller.on_plugin_properties, props)
+
+        menu.AppendSeparator()
+
+        # Get the default plugin directory, using XML
+        path = os.path.expanduser('~')
+        xml = xml_controller.Controller(path + '\.cxvrc.xml')
+        xml.load_file()
+        xml.get_plugin_directory()
+        directory = ["plugins", xml.get_plugin_directory()]
+
+        # Load the plugins from the default plugin directory.
+        manager = PluginManager()
+        manager.setPluginPlaces(directory)
+        manager.setPluginInfoExtension('plugin')
+        manager.collectPlugins()
+
+        for plugin in manager.getAllPlugins():
+            item = wx.MenuItem(menu, wx.ID_ANY, plugin.name)
+            menu.AppendItem(item)
+            self.better_bind(wx.EVT_MENU, item, self.controller.on_about_filter, plugin)
+        return menu
+
+    def better_bind(self, type, instance, handler, *args, **kwargs):
+        self.Bind(type, lambda event: handler(event, *args, **kwargs), instance)
+
     def create_toolbar(self):
         self.toolbar = self.CreateToolBar()
         for each in self.toolbar_data():
@@ -150,8 +194,8 @@ class View(wx.Frame):
                 ('simple', 'Image Overview', 'images/overview.png', self.controller.on_overview, False),
                 ('simple', 'Image Information', 'images/info.png', self.controller.on_image_info, False),
                 ('separator', '', '', '', ''),
-                ('toggle', 'Zoom In', 'images/zoom_in_toolbar.png', self.controller.on_zoom_in, False),
-                ('simple', 'Zoom Out', 'images/zoom_out_toolbar.png', self.controller.on_zoom_out, False),
+                ('toggle', 'Zoom In', 'images/zoom_in_toolbar.png', self.zoom_controller.on_zoom_in, False),
+                ('simple', 'Zoom Out', 'images/zoom_out_toolbar.png', self.zoom_controller.on_zoom_out, False),
                 ('control', self.aspect_cb, '', '', ''),
                 ('separator', '', '', '', ''),
                 ('simple', 'Adjust Contrast', 'images/contrast.png', self.controller.on_contrast, False),
@@ -159,7 +203,7 @@ class View(wx.Frame):
                 ('toggle', 'Adjust Coral Slab', 'images/coral.png', self.controller.on_coral, False),
                 ('simple', 'Lock Coral Slab', 'images/lock_coral.png', self.controller.on_lock_coral, False),
                 ('separator', '', '', '', ''),
-                ('simple', 'Overlay Images', 'images/overlay.png', self.controller.on_overlay, False),
+                ('simple', 'Filtered Overlays', 'images/overlay.png', self.controller.on_overlay, False),
                 ('separator', '', '', '', ''),
                 ('toggle', 'Adjust Calibration Region', 'images/calibrate.png', self.controller.on_calibrate, False),
                 ('simple', 'Set Density Parameters', 'images/density.png', self.controller.on_density_params, False),
@@ -200,14 +244,13 @@ class View(wx.Frame):
     def init_plot(self, new):
         if new:
             y, x = self.model.get_image_shape()
-            self.figure = Figure(figsize=(x/72.0, y/72.0), dpi=72)
+            self.figure = Figure(figsize=(x*2/72.0, y*2/72.0), dpi=72)
             self.canvas = FigureCanvasWxAgg(self.scroll, -1, self.figure)
             self.canvas.SetBackgroundColour('grey')
         self.axes = self.figure.add_axes([0.0, 0.0, 1.0, 1.0])
         self.axes.set_axis_off()
         self.axes.imshow(self.model.get_image(), aspect='auto') # aspect='auto' sets image aspect to match the size of axes
         self.axes.set_autoscale_on(False)   # do not apply autoscaling on plot commands - VERY IMPORTANT!
-        self.axes.set_aspect('equal', 'datalim')
         self.mpl_bindings()
         y, = self.scroll.GetSizeTuple()[-1:]
         iHt, = self.model.get_image_shape()[:-1]
@@ -215,9 +258,9 @@ class View(wx.Frame):
         self.controller.resize_image()
 
         # Set the RectangleSelector so that the user can drag zoom when enabled
-        rectprops = dict(facecolor='lightblue', edgecolor = 'lightblue', alpha=0.25, fill=True)
+        rectprops = dict(facecolor='white', edgecolor = 'white', alpha=0.25, fill=True)
         self.toggle_selector = RectangleSelector(self.axes,
-                                        self.line_select_callback,
+                                        self.zoom_controller.on_zoom,
                                         drawtype='box',
                                         useblit=True,
                                         rectprops=rectprops,
@@ -225,9 +268,3 @@ class View(wx.Frame):
                                         minspanx=1, minspany=1,
                                         spancoords='pixels')
         self.toggle_selector.set_active(False)
-
-    def line_select_callback(self, click, release):
-        'click and release are the press and release events'
-        x1, y1 = click.xdata, click.ydata
-        x2, y2 = release.xdata, release.ydata
-        self.controller.on_drag_zoom([x1, y1, x2, y2])

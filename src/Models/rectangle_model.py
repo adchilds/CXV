@@ -83,6 +83,12 @@ class Model():
             elif self.picked == 'top' or self.picked == 'bottom':
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZENS))
 
+    def on_mouse_release(self, event):
+        self.drag = False 
+        self.adjust = False
+        self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+        return [self.sx, self.sy, self.dx, self.dy]
+
     def is_mouse_in_rect(self, event):
         """ Checks whether the user's mouse is within the
         coordinates of the rect.
@@ -92,12 +98,6 @@ class Model():
     def get_rect_pos(self):
         return [self.sx, self.sy, self.dx, self.dy]
 
-    def on_mouse_release(self, event):
-        self.drag = False 
-        self.adjust = False
-        self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
-        return [self.sx, self.sy, self.dx, self.dy]
-        
     def on_pick(self, event):
         if self.left.contains(event)[0]:
             self.adjust = True

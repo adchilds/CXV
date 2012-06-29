@@ -240,7 +240,7 @@ class View(wx.Frame):
                 ('key_press_event', self.controller.on_key_press),
                 ('key_release_event', self.controller.on_key_release)
                 ]
-        
+
     def init_plot(self, new):
         if new:
             y, x = self.model.get_image_shape()
@@ -262,7 +262,7 @@ class View(wx.Frame):
         self.toggle_selector = RectangleSelector(self.axes,
                                         self.zoom_controller.on_zoom,
                                         drawtype='box',
-                                        useblit=True,
+                                        useblit=False,
                                         rectprops=rectprops,
                                         button=[1], # Left mouse button
                                         minspanx=1, minspany=1,

@@ -53,9 +53,6 @@ class Controller():
             self.view.aspect_cb.SetValue(str(int(ratio*100.0))+'%')
         ratio = self.view.aspect # could be > 120, so lets set it to what it should be
 
-        # Resize w/o displaying to prepare for calculations
-        self.dicom_controller.resize_mpl_widgets()
-
         # Calculate how many scroll units we should move
         x1 /= 100
         y1 /= 100
@@ -94,7 +91,6 @@ class Controller():
 
             # Update the toggle_selector, otherwise we get a nasty opaque
             # box the first time that the user attempts to drag and zoom
-            self.view.toggle_selector.update()
             self.view.toggle_selector.update_background(event)
 
         else: # Zoom OFF

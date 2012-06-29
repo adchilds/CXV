@@ -57,6 +57,7 @@ class Controller():
         self.view = dicom_view.View(self, self.model)
         self.background = None
         self.xml = None
+        self.drag = False
         self.plugin_directory = ""
 
         # Check for the XML config file. If it's installed,
@@ -215,9 +216,12 @@ class Controller():
             self.view.scroll.Scroll(sx, sy)
         scroll_unit = self.view.aspect*100.0
         self.su = scroll_unit
-        self.view.scroll.SetScrollbars(scroll_unit, scroll_unit, 
-                                      (x*self.view.aspect)/scroll_unit, 
-                                      (y*self.view.aspect)/scroll_unit)
+        try:
+            self.view.scroll.SetScrollbars(scroll_unit, scroll_unit, 
+                                           (x*self.view.aspect)/scroll_unit, 
+                                           (y*self.view.aspect)/scroll_unit)
+        except ZeroDivisionError:
+            pass
         self.view.scroll.Refresh()
         if not b: # Or scroll here (drag zooming uses this)
             self.view.scroll.Scroll(sx, sy)
@@ -227,15 +231,18 @@ class Controller():
         self.background = self.view.canvas.copy_from_bbox(self.view.axes.bbox)
         self.draw_all()
         
-    def draw_all(self):
-        self.view.canvas.restore_region(self.background)
+    def draw_all(self, bool=True):
+        if bool:
+            self.view.canvas.restore_region(self.background)
         if self.coral_controller:
+            print 'Draw rect'
             self.coral_controller.draw_rect(self.coral, self.coral_locked)
         if self.polyline_controller:
             self.polyline_controller.draw_polylines(self.polyline, self.polyline_locked)
         if self.calibrate_controller:
             self.calibrate_controller.draw_rect(self.calib, False)
-        self.view.canvas.blit(self.view.axes.bbox)
+        if bool:
+            self.view.canvas.blit(self.view.axes.bbox)
         
     def cleanup(self, event=None):
         try:    # ignore first couple calls before canvas instantiation
@@ -285,6 +292,7 @@ class Controller():
             # is given, all those events are fired at once, resizing our screen multiple
             # times.
             self.view.Unbind(wx.EVT_MENU)
+            self.popup_menu.Destroy()
 
     def on_popup_item_selected(self, event):
         self.ztf = True
@@ -325,7 +333,7 @@ class Controller():
             except:
                 self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
                 self.view.statusbar.SetStatusText("Pixel Intensity", 1)
-                
+
         elif event.inaxes == self.view.ov_axes: # check if mouse is in the overlay axes
             x = event.xdata + self.coral_slab[0]
             y = event.ydata + self.coral_slab[1]
@@ -339,14 +347,20 @@ class Controller():
                 self.coral_controller.on_mouse_motion(event)
             elif self.calib:
                 self.calibrate_controller.on_mouse_motion(event)
+
+        # TODO: this
+        if self.drag:
             self.draw_all()
+        else:
+            self.draw_all(False)
         self.view.canvas.Refresh(eraseBackground=False)
-        
+
     def on_mouse_press(self, event):
         if event.button == 1: # Left mouse button
             self.left_down = True
+            self.drag = True
             # Set the prev_x and prev_y to the mouse click position
-            try :
+            try:
                 self.previous_x = int(event.xdata)
                 self.previous_y = int(event.ydata)
             except TypeError:
@@ -355,7 +369,7 @@ class Controller():
                 # when the coordinates show (x, y) in the status bar.
                 pass
         elif event.button == 2: # Scroll-wheel button??
-            pass
+            return
         elif event.button == 3: # Right mouse button
             pass
 
@@ -370,6 +384,7 @@ class Controller():
 
     def on_mouse_release(self, event):
         self.left_down = False
+        self.drag = False
         if not self.pan_image:
             if self.polyline:
                 self.polyline_controller.on_mouse_release(event)
@@ -393,11 +408,11 @@ class Controller():
     def on_figure_leave(self, event):
         self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
         self.view.statusbar.SetStatusText("Pixel Intensity", 1)
-                
+
     def on_scroll(self, event):
         event.Skip()
         self.update_overview()
-    
+
     def on_resize(self, event):
         event.Skip()
         if self.ztf:

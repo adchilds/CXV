@@ -32,7 +32,7 @@ import os
 import math
 
 class Controller():
-    
+
     def __init__(self):
         self.model = dicom_model.Model()
         self.ptr = None
@@ -59,6 +59,7 @@ class Controller():
         self.xml = None
         self.drag = False
         self.plugin_directory = ""
+        self.debug = False
 
         # Check for the XML config file. If it's installed,
         # read the corresponding data. If it's not installed,
@@ -203,7 +204,7 @@ class Controller():
         y, x = self.model.get_image_shape()
         self.view.canvas.resize(x*self.view.aspect, y*self.view.aspect)  # canvas gets set in pixels
         self.view.figure.set_size_inches((x*self.view.aspect)/72.0, (y*self.view.aspect)/72.0)  # figure gets set in inches
-        
+
     def set_scrollbars(self, b=True, sx=0, sy=0):
         """ b is used here because unless we're drag zooming in, the 
         Scroll method has to be executed before setting the scrollbars.
@@ -222,27 +223,24 @@ class Controller():
                                            (y*self.view.aspect)/scroll_unit)
         except ZeroDivisionError:
             pass
-        self.view.scroll.Refresh()
         if not b: # Or scroll here (drag zooming uses this)
             self.view.scroll.Scroll(sx, sy)
-        
+        self.view.scroll.Refresh()
+
     def cache_background(self):
         self.view.canvas.draw() # cache clean slate background
         self.background = self.view.canvas.copy_from_bbox(self.view.axes.bbox)
         self.draw_all()
-        
-    def draw_all(self, bool=True):
-        if bool:
-            self.view.canvas.restore_region(self.background)
+
+    def draw_all(self):
+        self.view.canvas.restore_region(self.background)
         if self.coral_controller:
-            print 'Draw rect'
             self.coral_controller.draw_rect(self.coral, self.coral_locked)
         if self.polyline_controller:
             self.polyline_controller.draw_polylines(self.polyline, self.polyline_locked)
         if self.calibrate_controller:
             self.calibrate_controller.draw_rect(self.calib, False)
-        if bool:
-            self.view.canvas.blit(self.view.axes.bbox)
+        self.view.canvas.blit(self.view.axes.bbox)
         
     def cleanup(self, event=None):
         try:    # ignore first couple calls before canvas instantiation
@@ -295,13 +293,14 @@ class Controller():
             self.popup_menu.Destroy()
 
     def on_popup_item_selected(self, event):
+        if self.ztf:
+            return
         self.ztf = True
         self.on_resize(event)
         self.view.canvas.Refresh()
 
     def on_mouse_motion(self, event):
         if self.pan_image and self.left_down:
-            aspect = (self.view.aspect*100.0)
             try:
                 x = int(event.xdata)
                 y = int(event.ydata)
@@ -313,6 +312,7 @@ class Controller():
 
             total_x = math.fabs(x - self.previous_x) # total x plane mouse movement
             total_y = math.fabs(y - self.previous_y) # total y plane mouse movement
+            aspect = (self.view.aspect*100.0)
 
             # Force the method to only run if the user has moved their mouse
             # more than 'aspect' number of pixels. This ensures that the mouse
@@ -347,12 +347,7 @@ class Controller():
                 self.coral_controller.on_mouse_motion(event)
             elif self.calib:
                 self.calibrate_controller.on_mouse_motion(event)
-
-        # TODO: this
-        if self.drag:
             self.draw_all()
-        else:
-            self.draw_all(False)
         self.view.canvas.Refresh(eraseBackground=False)
 
     def on_mouse_press(self, event):
@@ -381,6 +376,7 @@ class Controller():
             elif self.calib:
                 self.calibrate_controller.on_mouse_press(event)
             self.draw_all()
+        self.view.canvas.Refresh(eraseBackground=False)
 
     def on_mouse_release(self, event):
         self.left_down = False
@@ -393,13 +389,22 @@ class Controller():
             elif self.calib:
                 self.calib_region = self.calibrate_controller.on_mouse_release(event)
             self.draw_all()
+        self.view.canvas.Refresh(eraseBackground=False)
+        # Update toggle_selector's background. Otherwise, next time we try to
+        # drag zoom, the objects overlaying the image will disappear during drag
+        self.view.toggle_selector.update_background(event)
 
     def on_key_press(self, event):
         if event.key == ' ' and not self.zoom: # Is the user pressing the SPACE BAR?
             self.pan_image = True
             self.view.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
         elif event.key == 'd': # DEBUG
-            print 'DEBUG'
+            if not self.debug:
+                self.debug = True
+                self.debug_message("DEBUG Activated...")
+            else:
+                self.debug = False
+                print "DEBUG De-Activated..."
 
     def on_key_release(self, event):
         self.pan_image = False
@@ -430,11 +435,13 @@ class Controller():
 
     def on_aspect(self, event):
         m = self.ztf_patt.match(self.view.aspect_cb.GetLabel()) # zoom to fit
-        if m: 
+        if m:
+            if self.ztf:
+                return
             self.ztf = True
             self.on_resize(event)
         else: self.ztf = False
-            
+
         m = self.aspect_patt.match(self.view.aspect_cb.GetLabel())  # percent
         if not m: self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
         else:
@@ -449,7 +456,8 @@ class Controller():
                 self.view.aspect = aspect
                 self.view.aspect_cb.SetValue(str(int(m.group(0)))+'%')
         self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox still has keyboard focus
-        self.resize_image()
+        if not self.ztf:
+            self.resize_image()
 
     def on_image_info(self, event):
         try: self.image_info_controller.view.Raise()
@@ -534,13 +542,13 @@ class Controller():
             self.calibrate_controller = calibrate_controller.Controller(self.view, self.background)
             self.enable_tools(['Set Density Parameters'], True)
         self.draw_all()
-            
+
     def on_density_params(self, event):
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         self.calibrate_controller.on_density_params(event)
         self.draw_all()
-        
+
     def on_save(self, event):
         if not self.save_session:
             dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='Text File (*.txt)|*.txt')
@@ -550,7 +558,7 @@ class Controller():
                 self.save_session.write()
         else:
             self.save_session.write()
-    
+
     def on_plugin_properties(self, event=None):
         browse = browse_dialog.BrowseDialog(None, title='Default Plugin Directory')
         browse.ShowModal()
@@ -600,3 +608,8 @@ class Controller():
         info.AddDeveloper('Adam Childs')
 
         wx.AboutBox(info)
+
+    def debug_message(self, message):
+        """ Used for testing and debugging purposes """
+        if self.debug:
+            print message

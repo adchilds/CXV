@@ -180,7 +180,7 @@ class View(wx.Frame):
         
     def toolbar_data(self):
         aspects = ['100%', '75%', '50%', '25%', '10%', 'Zoom to fit']
-        self.aspect_cb = wx.ComboBox(self.toolbar, -1, '100%',
+        self.aspect_cb = wx.ComboBox(self.toolbar, -1, '120%',
                                      choices=aspects,
                                      style=wx.CB_DROPDOWN)
         self.aspect_cb.SetValue('Zoom to fit')
@@ -258,7 +258,7 @@ class View(wx.Frame):
         self.controller.resize_image()
 
         # Set the RectangleSelector so that the user can drag zoom when enabled
-        rectprops = dict(facecolor='white', edgecolor = 'white', alpha=0.25, fill=True)
+        rectprops = dict(facecolor='white', edgecolor = 'white', alpha=0.15, fill=True)
         self.toggle_selector = RectangleSelector(self.axes,
                                         self.zoom_controller.on_zoom,
                                         drawtype='box',

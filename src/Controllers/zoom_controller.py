@@ -61,18 +61,16 @@ class Controller():
         x1 = int(round(x1))
         y1 = int(round(y1))
 
+        # TODO: May be a problem resizing here. Zoom then back to ZTF cuts image
         # Resize and scroll the image
         self.dicom_controller.resize_image(False, x1, y1)
-        self.view.canvas.SetFocus()
 
     def on_zoom(self, click, release):
         """ Initiated when the user is using the RectangleSelector class.
         In other words, the user is dragging a rectangular area with their
-        mouse, while the zoom in button is toggled.
+        mouse, while the zoom-in button is toggled.
         """
-        x1, y1 = click.xdata, click.ydata
-        x2, y2 = release.xdata, release.ydata
-        self.on_drag_zoom([x1, y1, x2, y2])
+        self.on_drag_zoom([click.xdata, click.ydata, release.xdata, release.ydata])
 
     def on_zoom_in(self, event):
         """ Initiated when the user presses the zoom-in button

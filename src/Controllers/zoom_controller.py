@@ -32,7 +32,6 @@ class Controller():
         
         @var drag_coords - The rect that the user has selected
         """
-        self.dicom_controller.ztf = False
         x1, y1, x2, y2 = drag_coords # Selected area dimensions
         rect_width, rect_height = (math.fabs(x2 - x1), math.fabs(y2 - y1)) # Rect dimensions
         scroll_width, scroll_height = self.view.scroll.GetSizeTuple() # ScrolledWindow dimensions
@@ -53,6 +52,9 @@ class Controller():
             self.view.aspect_cb.SetValue(str(int(ratio*100.0))+'%')
         ratio = self.view.aspect # could be > 120, so lets set it to what it should be
 
+        # Resize w/o displaying to prepare for calculations
+        self.dicom_controller.resize_mpl_widgets()
+
         # Calculate how many scroll units we should move
         x1 /= 100
         y1 /= 100
@@ -61,21 +63,24 @@ class Controller():
         x1 = int(round(x1))
         y1 = int(round(y1))
 
-        # TODO: May be a problem resizing here. Zoom then back to ZTF cuts image
         # Resize and scroll the image
         self.dicom_controller.resize_image(False, x1, y1)
+        self.view.canvas.SetFocus()
 
     def on_zoom(self, click, release):
         """ Initiated when the user is using the RectangleSelector class.
         In other words, the user is dragging a rectangular area with their
-        mouse, while the zoom-in button is toggled.
+        mouse, while the zoom in button is toggled.
         """
-        self.on_drag_zoom([click.xdata, click.ydata, release.xdata, release.ydata])
+        x1, y1 = click.xdata, click.ydata
+        x2, y2 = release.xdata, release.ydata
+        self.on_drag_zoom([x1, y1, x2, y2])
 
     def on_zoom_in(self, event):
-        """ Initiated when the user presses the zoom-in button
+        """ Initiated when the user presses the zoom in button
         in the toolbar or menubar.
         """
+        self.dicom_controller.ztf = False
         self.dicom_controller.zoom = self.view.toolbar.GetToolState(self.view.toolbar_ids['Zoom In'])
 
         if self.dicom_controller.zoom: # Zoom ON
@@ -89,6 +94,7 @@ class Controller():
 
             # Update the toggle_selector, otherwise we get a nasty opaque
             # box the first time that the user attempts to drag and zoom
+            self.view.toggle_selector.update()
             self.view.toggle_selector.update_background(event)
 
         else: # Zoom OFF
@@ -96,7 +102,7 @@ class Controller():
             self.view.toggle_selector.set_active(False)
 
     def on_zoom_out(self, event):
-        """ Initiated when the user presses the zoom-out button
+        """ Initiated when the user presses the zoom out button
         in the toolbar or menubar.
         """
         self.dicom_controller.zoom = False

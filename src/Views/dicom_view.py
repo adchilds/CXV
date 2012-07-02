@@ -36,7 +36,7 @@ class View(wx.Frame):
 
         wx.Frame.__init__(self,
                           parent=None,
-                          title="Coral X-Ray Viewer",
+                          title="DICOM Viewer",
                           size=(850, 750),
                           pos=(0,0))
 
@@ -89,7 +89,7 @@ class View(wx.Frame):
             self.Bind(wx.EVT_MENU, handler, option)
         
     def menu_names(self):
-        return ('File', 'Tools', 'Help')
+        return ('File', 'Tools')
     
     def menu_options(self):
         """ ('TEXT', (ACCELERATOR), HANDLER, ENABLED, HAS_SUBMENU, SUBMENU METHOD """
@@ -119,10 +119,6 @@ class View(wx.Frame):
                   ('', '', '', True, False, None),
                   ('Draw Polylines', (), self.controller.on_polyline, False, False, None),
                   ('Lock Polylines', (), self.controller.on_lock_polyline, False, False, None)
-                  ],
-                 [ # Help
-                  ('Help\tCtrl+H', (wx.ACCEL_CTRL, 'H'), self.controller.on_help, True, False, None),
-                  ('About', (), self.controller.on_about, True, False, None)
                   ]
                 )
 
@@ -180,7 +176,7 @@ class View(wx.Frame):
         
     def toolbar_data(self):
         aspects = ['100%', '75%', '50%', '25%', '10%', 'Zoom to fit']
-        self.aspect_cb = wx.ComboBox(self.toolbar, -1, '120%',
+        self.aspect_cb = wx.ComboBox(self.toolbar, -1, '100%',
                                      choices=aspects,
                                      style=wx.CB_DROPDOWN)
         self.aspect_cb.SetValue('Zoom to fit')
@@ -240,7 +236,7 @@ class View(wx.Frame):
                 ('key_press_event', self.controller.on_key_press),
                 ('key_release_event', self.controller.on_key_release)
                 ]
-
+        
     def init_plot(self, new):
         if new:
             y, x = self.model.get_image_shape()
@@ -258,11 +254,11 @@ class View(wx.Frame):
         self.controller.resize_image()
 
         # Set the RectangleSelector so that the user can drag zoom when enabled
-        rectprops = dict(facecolor='white', edgecolor = 'white', alpha=0.15, fill=True)
+        rectprops = dict(facecolor='white', edgecolor = 'white', alpha=0.25, fill=True)
         self.toggle_selector = RectangleSelector(self.axes,
                                         self.zoom_controller.on_zoom,
                                         drawtype='box',
-                                        useblit=False,
+                                        useblit=True,
                                         rectprops=rectprops,
                                         button=[1], # Left mouse button
                                         minspanx=1, minspany=1,

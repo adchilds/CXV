@@ -34,8 +34,7 @@ class View(wx.MiniFrame):
         
         for each in self.pane_data():
             i = self.pane_data().index(each)
-#            percent = 100.0 / len(self.pane_data())
-            percent = 0
+            percent = 100.0 / len(self.pane_data())
             self.add_pane(panel, panel_sizer, i, int(percent), *each)
         
         apply = wx.Button(panel, -1, 'Apply')

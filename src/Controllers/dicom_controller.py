@@ -27,12 +27,13 @@ from lib import save_session
 from Views import dicom_view
 import getpass
 import wx
+import wx.lib.filebrowsebutton as filebrowse
 import re
 import os
 import math
 
 class Controller():
-
+    
     def __init__(self):
         self.model = dicom_model.Model()
         self.ptr = None
@@ -57,9 +58,8 @@ class Controller():
         self.view = dicom_view.View(self, self.model)
         self.background = None
         self.xml = None
-        self.drag = False
         self.plugin_directory = ""
-        self.debug = False
+        self.debug = True
 
         # Check for the XML config file. If it's installed,
         # read the corresponding data. If it's not installed,
@@ -204,7 +204,7 @@ class Controller():
         y, x = self.model.get_image_shape()
         self.view.canvas.resize(x*self.view.aspect, y*self.view.aspect)  # canvas gets set in pixels
         self.view.figure.set_size_inches((x*self.view.aspect)/72.0, (y*self.view.aspect)/72.0)  # figure gets set in inches
-
+        
     def set_scrollbars(self, b=True, sx=0, sy=0):
         """ b is used here because unless we're drag zooming in, the 
         Scroll method has to be executed before setting the scrollbars.
@@ -217,21 +217,18 @@ class Controller():
             self.view.scroll.Scroll(sx, sy)
         scroll_unit = self.view.aspect*100.0
         self.su = scroll_unit
-        try:
-            self.view.scroll.SetScrollbars(scroll_unit, scroll_unit, 
-                                           (x*self.view.aspect)/scroll_unit, 
-                                           (y*self.view.aspect)/scroll_unit)
-        except ZeroDivisionError:
-            pass
+        self.view.scroll.SetScrollbars(scroll_unit, scroll_unit, 
+                                      (x*self.view.aspect)/scroll_unit, 
+                                      (y*self.view.aspect)/scroll_unit)
+        self.view.scroll.Refresh()
         if not b: # Or scroll here (drag zooming uses this)
             self.view.scroll.Scroll(sx, sy)
-        self.view.scroll.Refresh()
-
+        
     def cache_background(self):
         self.view.canvas.draw() # cache clean slate background
         self.background = self.view.canvas.copy_from_bbox(self.view.axes.bbox)
         self.draw_all()
-
+        
     def draw_all(self):
         self.view.canvas.restore_region(self.background)
         if self.coral_controller:
@@ -290,17 +287,15 @@ class Controller():
             # is given, all those events are fired at once, resizing our screen multiple
             # times.
             self.view.Unbind(wx.EVT_MENU)
-            self.popup_menu.Destroy()
 
     def on_popup_item_selected(self, event):
-        if self.ztf:
-            return
         self.ztf = True
         self.on_resize(event)
         self.view.canvas.Refresh()
 
     def on_mouse_motion(self, event):
         if self.pan_image and self.left_down:
+            aspect = (self.view.aspect*100.0)
             try:
                 x = int(event.xdata)
                 y = int(event.ydata)
@@ -312,7 +307,6 @@ class Controller():
 
             total_x = math.fabs(x - self.previous_x) # total x plane mouse movement
             total_y = math.fabs(y - self.previous_y) # total y plane mouse movement
-            aspect = (self.view.aspect*100.0)
 
             # Force the method to only run if the user has moved their mouse
             # more than 'aspect' number of pixels. This ensures that the mouse
@@ -333,7 +327,7 @@ class Controller():
             except:
                 self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
                 self.view.statusbar.SetStatusText("Pixel Intensity", 1)
-
+                
         elif event.inaxes == self.view.ov_axes: # check if mouse is in the overlay axes
             x = event.xdata + self.coral_slab[0]
             y = event.ydata + self.coral_slab[1]
@@ -349,13 +343,12 @@ class Controller():
                 self.calibrate_controller.on_mouse_motion(event)
             self.draw_all()
         self.view.canvas.Refresh(eraseBackground=False)
-
+        
     def on_mouse_press(self, event):
         if event.button == 1: # Left mouse button
             self.left_down = True
-            self.drag = True
             # Set the prev_x and prev_y to the mouse click position
-            try:
+            try :
                 self.previous_x = int(event.xdata)
                 self.previous_y = int(event.ydata)
             except TypeError:
@@ -364,11 +357,11 @@ class Controller():
                 # when the coordinates show (x, y) in the status bar.
                 pass
         elif event.button == 2: # Scroll-wheel button??
-            return
+            pass
         elif event.button == 3: # Right mouse button
             pass
 
-        if not self.pan_image:
+        if not self.pan_image and not self.zoom:
             if self.polyline:
                 self.polyline_controller.on_mouse_press(event)
             elif self.coral:
@@ -376,12 +369,10 @@ class Controller():
             elif self.calib:
                 self.calibrate_controller.on_mouse_press(event)
             self.draw_all()
-        self.view.canvas.Refresh(eraseBackground=False)
 
     def on_mouse_release(self, event):
         self.left_down = False
-        self.drag = False
-        if not self.pan_image:
+        if not self.pan_image and not self.zoom:
             if self.polyline:
                 self.polyline_controller.on_mouse_release(event)
             elif self.coral:
@@ -389,7 +380,6 @@ class Controller():
             elif self.calib:
                 self.calib_region = self.calibrate_controller.on_mouse_release(event)
             self.draw_all()
-        self.view.canvas.Refresh(eraseBackground=False)
         # Update toggle_selector's background. Otherwise, next time we try to
         # drag zoom, the objects overlaying the image will disappear during drag
         self.view.toggle_selector.update_background(event)
@@ -413,11 +403,11 @@ class Controller():
     def on_figure_leave(self, event):
         self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
         self.view.statusbar.SetStatusText("Pixel Intensity", 1)
-
+                
     def on_scroll(self, event):
         event.Skip()
         self.update_overview()
-
+    
     def on_resize(self, event):
         event.Skip()
         if self.ztf:
@@ -432,16 +422,14 @@ class Controller():
         else:
             self.cleanup()
         self.update_overview()
-
+        
     def on_aspect(self, event):
         m = self.ztf_patt.match(self.view.aspect_cb.GetLabel()) # zoom to fit
-        if m:
-            if self.ztf:
-                return
+        if m: 
             self.ztf = True
             self.on_resize(event)
         else: self.ztf = False
-
+            
         m = self.aspect_patt.match(self.view.aspect_cb.GetLabel())  # percent
         if not m: self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
         else:
@@ -456,17 +444,14 @@ class Controller():
                 self.view.aspect = aspect
                 self.view.aspect_cb.SetValue(str(int(m.group(0)))+'%')
         self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox still has keyboard focus
-        if not self.ztf:
-            self.resize_image()
+        self.resize_image()
 
     def on_image_info(self, event):
         try: self.image_info_controller.view.Raise()
         except AttributeError: self.image_info_controller = image_info_controller.Controller(self, self.model)
-
+        
     def on_coral(self, event):
         self.coral = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Coral Slab'])
-        if self.coral_locked:
-            self.enable_tools(['Filtered Overlays'], False)
         self.coral_locked = False
         self.polyline = False
         self.calib = False
@@ -497,7 +482,7 @@ class Controller():
         self.draw_all()
         self.overlay_controller.create_overlays()
         self.cleanup()
-
+        
     def on_contrast(self, event):
         try: self.contrast_controller.view.Raise()
         except AttributeError: self.contrast_controller = contrast_controller.Controller(self.view, self.model)
@@ -542,13 +527,13 @@ class Controller():
             self.calibrate_controller = calibrate_controller.Controller(self.view, self.background)
             self.enable_tools(['Set Density Parameters'], True)
         self.draw_all()
-
+            
     def on_density_params(self, event):
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         self.calibrate_controller.on_density_params(event)
         self.draw_all()
-
+        
     def on_save(self, event):
         if not self.save_session:
             dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='Text File (*.txt)|*.txt')
@@ -558,7 +543,7 @@ class Controller():
                 self.save_session.write()
         else:
             self.save_session.write()
-
+    
     def on_plugin_properties(self, event=None):
         browse = browse_dialog.BrowseDialog(None, title='Default Plugin Directory')
         browse.ShowModal()
@@ -589,23 +574,6 @@ class Controller():
         info.SetDescription(description)
         info.SetWebSite(plugin.website)
         info.AddDeveloper(plugin.author)
-
-        wx.AboutBox(info)
-
-    def on_help(self, event):
-        pass
-
-    def on_about(self, event):
-        description = "Coral X-Ray Viewer does... INFO ABOUT CXV HERE"
-
-        info = wx.AboutDialogInfo()
-        info.SetName('Coral X-Ray Viewer')
-        info.SetVersion('1.00')
-        info.SetDescription(description)
-        info.SetCopyright('(C) 2010 - 2012 US Geological Survey, DOI')
-        info.SetWebSite('www.usgs.gov')
-        info.AddDeveloper('Luke Mueller')
-        info.AddDeveloper('Adam Childs')
 
         wx.AboutBox(info)
 

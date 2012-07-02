@@ -1,0 +1,9 @@
+[Core]
+Name = Test 2 Filter
+Module = test2
+
+[Documentation]
+Author = Adam Childs
+Version = 0.1
+Website = http://www.usgs.gov
+Description = Test 2 plugin

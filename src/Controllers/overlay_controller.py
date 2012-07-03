@@ -130,7 +130,7 @@ class Controller():
         """
         pb = progress_bar.ProgressBar('Creating Overlays', 'Locking coral region', ((self.getPluginCount() * 2) + 1), self.dicom_view)
         plugin_controller.Controller(pb, self, self.dicom_controller, self.model)
-        
+
     def add_overlay(self):
         x, y, dx, dy = self.dicom_controller.coral_slab
         iH, iW = self.model.get_image_shape()
@@ -150,7 +150,7 @@ class Controller():
         self.dicom_view.ov_axes.patch.set_facecolor('none')
         self.dicom_view.canvas.draw() # cache new axes
         self.dicom_controller.coral_controller.draw_rect(False, True)
-        
+
     def calc_overlay(self, alphas):
         """ Calculates the visible overlay, depending on the transparency
         levels set for each of the overlays.

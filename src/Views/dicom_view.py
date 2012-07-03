@@ -53,15 +53,6 @@ class View(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.controller.on_quit)
         self.Bind(wx.EVT_CONTEXT_MENU, self.controller.on_show_popup)
 
-        # Dummy figure/canvas set, so we can set the NavigationToolbar here
-        # If we set it when creating the figure/canvas in init_plot(), the
-        # NavigationToolbar will flash quickly, but we don't want to see it!
-        # We just need it's functionality.
-        self.figure = Figure(figsize=(0,0), dpi=72)
-        self.canvas = FigureCanvasWxAgg(self.scroll, -1, self.figure)
-        self.mpl_toolbar = NavigationToolbar(self.canvas)
-        self.mpl_toolbar.Hide()
-
         self.Show()
 
     def create_menubar(self):

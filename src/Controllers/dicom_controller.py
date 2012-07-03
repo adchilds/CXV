@@ -187,7 +187,7 @@ class Controller():
         # Update the scrollbar with the new position
         self.view.scroll.Scroll(init_pos_x, init_pos_y)
 
-    def resize_image(self, b=True, sx=0, sy=0):
+    def resize_image(self, sx=0, sy=0):
         self.resize_mpl_widgets()
         # Ordering here determines a couple things:
         # if self.cleanup() happens first, we see (0,0) in scrollbar,
@@ -195,17 +195,17 @@ class Controller():
         #
         # if self.set_scrollbars() happens first, it scrolls first but
         # we get an ugly overlapping image until the canvas refreshes
-        self.set_scrollbars(b, sx, sy)
+        self.set_scrollbars(sx, sy)
         self.cache_background()
         self.cleanup()
         self.update_overview()
-        
+
     def resize_mpl_widgets(self):
         y, x = self.model.get_image_shape()
         self.view.canvas.resize(x*self.view.aspect, y*self.view.aspect)  # canvas gets set in pixels
         self.view.figure.set_size_inches((x*self.view.aspect)/72.0, (y*self.view.aspect)/72.0)  # figure gets set in inches
-        
-    def set_scrollbars(self, b=True, sx=0, sy=0):
+
+    def set_scrollbars(self, sx=0, sy=0):
         """ b is used here because unless we're drag zooming in, the 
         Scroll method has to be executed before setting the scrollbars.
         
@@ -213,22 +213,25 @@ class Controller():
         blank gray screen?
         """
         y, x = self.model.get_image_shape()
-        if b: # Scroll here
-            self.view.scroll.Scroll(sx, sy)
+        
+        # Setting to (0, 0) first eludes the cropping of the image.
+        # If this isn't here, the image will sometimes be cropped and the canvas size
+        # will totally change. Weird error... Hopefully there's a better workaround than
+        # this. Fast computers shouldn't see the flicker of (0, 0) -> (x, y) too much.
+        self.view.scroll.Scroll(0, 0)
         scroll_unit = self.view.aspect*100.0
         self.su = scroll_unit
         self.view.scroll.SetScrollbars(scroll_unit, scroll_unit, 
                                       (x*self.view.aspect)/scroll_unit, 
                                       (y*self.view.aspect)/scroll_unit)
+        self.view.scroll.Scroll(sx, sy)
         self.view.scroll.Refresh()
-        if not b: # Or scroll here (drag zooming uses this)
-            self.view.scroll.Scroll(sx, sy)
-        
+
     def cache_background(self):
         self.view.canvas.draw() # cache clean slate background
         self.background = self.view.canvas.copy_from_bbox(self.view.axes.bbox)
         self.draw_all()
-        
+
     def draw_all(self):
         self.view.canvas.restore_region(self.background)
         if self.coral_controller:
@@ -263,7 +266,7 @@ class Controller():
     def on_overview(self, event):
         try: self.overview_controller.view.Raise()
         except AttributeError: self.overview_controller = overview_controller.Controller(self.model, self.view)
-        
+
     def update_overview(self):
         try: self.overview_controller.update_viewable_area()
         except AttributeError: pass
@@ -417,19 +420,19 @@ class Controller():
                 self.view.aspect = (float(y)/float(iHt))
                 self.resize_image()
                 self.view.aspect_cb.SetValue('Zoom to fit')
-            except AttributeError: 
+            except AttributeError:
                 pass
         else:
             self.cleanup()
         self.update_overview()
-        
+
     def on_aspect(self, event):
         m = self.ztf_patt.match(self.view.aspect_cb.GetLabel()) # zoom to fit
         if m: 
             self.ztf = True
             self.on_resize(event)
         else: self.ztf = False
-            
+
         m = self.aspect_patt.match(self.view.aspect_cb.GetLabel())  # percent
         if not m: self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
         else:
@@ -471,16 +474,18 @@ class Controller():
                 pass
         self.draw_all()
 
-    def on_lock_coral(self, event, show=True):
+    def on_lock_coral(self, event, show=True, alg=True):
         if self.coral_locked: return  # already locked
         self.coral = False
         self.coral_locked = True
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Coral Slab'], False)
         self.enable_tools(['Filtered Overlays'], True)
-        if not self.overlay_controller:
-            self.overlay_controller = overlay_controller.Controller(self.view, self, self.model, self.background, show)
+        if alg:
+            if not self.overlay_controller:
+                self.overlay_controller = overlay_controller.Controller(self.view, self, self.model, self.background, show)
         self.draw_all()
-        self.overlay_controller.create_overlays()
+        if alg:
+            self.overlay_controller.create_overlays()
         self.cleanup()
         
     def on_contrast(self, event):
@@ -528,10 +533,11 @@ class Controller():
             self.enable_tools(['Set Density Parameters'], True)
         self.draw_all()
             
-    def on_density_params(self, event):
+    def on_density_params(self, event, show=True):
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
-        self.calibrate_controller.on_density_params(event)
+        if show:
+            self.calibrate_controller.on_density_params(event)
         self.draw_all()
         
     def on_save(self, event):

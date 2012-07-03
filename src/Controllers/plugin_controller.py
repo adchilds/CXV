@@ -89,12 +89,13 @@ class Controller(threading.Thread):
             # The last alpha should be 0. Set all the alphas to the same
             # value (except for the last one), so divide 100 by the number
             # of alphas minus one.
-            value = 100 / (len(self.controller.alphas) - 1)
+#            value = 100 / (len(self.controller.alphas) - 1)
+            value = 0
             for i in range(len(self.controller.alphas) - 1):
                 self.controller.alphas[i] = int(value)
 
             # Set the last one to 0 ourselves just to make sure
-            self.controller.alphas[len(self.controller.alphas) - 1] = 0
+            self.controller.alphas[len(self.controller.alphas) - 1] = 100
 
             wx.CallAfter(self.controller.display)
             wx.CallAfter(self.controller.view.Show)

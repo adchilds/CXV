@@ -43,7 +43,9 @@ class Model():
         elif self.adjust:
             self.adjust_rect(event)
         else:
-            if self.left_adj.contains(event)[0] or self.right_adj.contains(event)[0]:
+            if self.dicom_view.controller.pan_image:
+                self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+            elif self.left_adj.contains(event)[0] or self.right_adj.contains(event)[0]:
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZEWE))
             elif self.top_adj.contains(event)[0] or self.bottom_adj.contains(event)[0]:
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZENS))
@@ -172,7 +174,8 @@ class Model():
     def draw_rect(self, adjustable, locked, color):
         if not locked: c = color
         else: c = 'r'
-        
+
+        # Only need to check these two. If they're true, the others must be as well
         if self.left and self.left_adj:
             '''
             Stops a major memory leak. Program will use TONS of

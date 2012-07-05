@@ -36,7 +36,7 @@ class View(wx.Frame):
 
         wx.Frame.__init__(self,
                           parent=None,
-                          title="DICOM Viewer",
+                          title="Coral X-Ray Viewer",
                           size=(850, 750),
                           pos=(0,0))
 

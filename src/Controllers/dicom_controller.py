@@ -94,6 +94,10 @@ class Controller():
                      'Adjust Coral Slab', 'Draw Polylines',
                      'Adjust Calibration Region']
             self.enable_tools(tools, True)
+            self.coral_controller = None
+            self.overlay_controller = None
+            self.polyline_controller = None
+            self.calibrate_controller = None
 
     def open_dicom_file(self, path, new):
         p = path.split(os.sep)
@@ -221,6 +225,7 @@ class Controller():
                                       (y*self.view.aspect)/scroll_unit)
         self.view.scroll.Scroll(sx, sy)
         self.view.scroll.Refresh()
+        self.view.canvas.Refresh(eraseBackground=False)
 
     def cache_background(self):
         self.view.canvas.draw() # cache clean slate background

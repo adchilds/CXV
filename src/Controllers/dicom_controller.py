@@ -186,6 +186,7 @@ class Controller():
 
         # Update the scrollbar with the new position
         self.view.scroll.Scroll(init_pos_x, init_pos_y)
+        self.view.scroll.Refresh()
 
     def resize_image(self, sx=0, sy=0):
         self.resize_mpl_widgets()
@@ -206,23 +207,17 @@ class Controller():
         self.view.figure.set_size_inches((x*self.view.aspect)/72.0, (y*self.view.aspect)/72.0)  # figure gets set in inches
 
     def set_scrollbars(self, sx=0, sy=0):
-        """ b is used here because unless we're drag zooming in, the 
-        Scroll method has to be executed before setting the scrollbars.
-        
-        Order of execution matters for some reason, otherwise we get a
-        blank gray screen?
-        """
         y, x = self.model.get_image_shape()
-        
+
         # Setting to (0, 0) first eludes the cropping of the image.
         # If this isn't here, the image will sometimes be cropped and the canvas size
         # will totally change. Weird error... Hopefully there's a better workaround than
-        # this. Fast computers shouldn't see the flicker of (0, 0) -> (x, y) too much.
+        # this. Fast computers shouldn't see the flicker of (0, 0) -> (sx, sy) too much.
         self.view.scroll.Scroll(0, 0)
         scroll_unit = self.view.aspect*100.0
         self.su = scroll_unit
-        self.view.scroll.SetScrollbars(scroll_unit, scroll_unit, 
-                                      (x*self.view.aspect)/scroll_unit, 
+        self.view.scroll.SetScrollbars(scroll_unit, scroll_unit,
+                                      (x*self.view.aspect)/scroll_unit,
                                       (y*self.view.aspect)/scroll_unit)
         self.view.scroll.Scroll(sx, sy)
         self.view.scroll.Refresh()
@@ -241,7 +236,7 @@ class Controller():
         if self.calibrate_controller:
             self.calibrate_controller.draw_rect(self.calib, False)
         self.view.canvas.blit(self.view.axes.bbox)
-        
+
     def cleanup(self, event=None):
         try:    # ignore first couple calls before canvas instantiation
             if event:
@@ -420,17 +415,22 @@ class Controller():
                 self.view.aspect = (float(y)/float(iHt))
                 self.resize_image()
                 self.view.aspect_cb.SetValue('Zoom to fit')
+                self.view.canvas.Refresh()
             except AttributeError:
                 pass
         else:
             self.cleanup()
-        self.update_overview()
+            self.update_overview()
 
     def on_aspect(self, event):
         m = self.ztf_patt.match(self.view.aspect_cb.GetLabel()) # zoom to fit
-        if m: 
+        if m:
+            if self.ztf:
+                return
             self.ztf = True
             self.on_resize(event)
+            self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox still has keyboard focus
+            return
         else: self.ztf = False
 
         m = self.aspect_patt.match(self.view.aspect_cb.GetLabel())  # percent
@@ -448,6 +448,7 @@ class Controller():
                 self.view.aspect_cb.SetValue(str(int(m.group(0)))+'%')
         self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox still has keyboard focus
         self.resize_image()
+        self.view.canvas.Refresh()
 
     def on_image_info(self, event):
         try: self.image_info_controller.view.Raise()

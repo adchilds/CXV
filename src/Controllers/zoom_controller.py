@@ -34,14 +34,12 @@ class Controller():
         @var drag_coords - The rect that the user has selected
         """
         x1, y1, x2, y2 = drag_coords # Selected area dimensions
-        print 'drag_coords:', drag_coords
         rect_width, rect_height = (math.fabs(x2 - x1), math.fabs(y2 - y1)) # Rect dimensions
         scroll_width, scroll_height = self.view.scroll.GetSizeTuple() # ScrolledWindow dimensions
         
         # Ratio of the selected area to the ScrolledWindow
         # Calculates how far we're able to zoom in
         ratio = self.model.rect_ratio(rect_width, rect_height, scroll_width, scroll_height)
-        print 'Ratio:', ratio
         # Zoom the image accordingly
         if ratio > 1.20:
             self.view.aspect = 1.20
@@ -61,11 +59,9 @@ class Controller():
         # Just in case, lets round these values and cast them
         x1 = int(round(x1))
         y1 = int(round(y1))
-        print 'Scroll Units: (%i, %i)' % (x1, y1)
 
         # Resize and scroll the image
         self.dicom_controller.resize_image(x1, y1)
-        #self.dicom_controller.resize_image()
         self.view.canvas.SetFocus()
 
     def on_zoom(self, click, release):

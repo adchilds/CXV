@@ -28,6 +28,7 @@ class Model():
         self.drag = False
         self.adjust = False
         self.picked = ''
+        self.left = None
         
     def on_mouse_motion(self, event):
         if self.drag:
@@ -147,11 +148,40 @@ class Model():
         if self.dy > iHt:
             self.dy = iHt-10
         self.dicom_view.controller.changed = True
-        
+
+    def remove_lines(self):
+        """ Removes the lines from the axes so that they can be redrawn.
+        Stops major memory leak/usage issues.
+        """
+        try:
+            self.left.remove()
+            self.right.remove()
+            self.top.remove()
+            self.bottom.remove()
+            self.left_adj.remove()
+            self.right_adj.remove()
+            self.top_adj.remove()
+            self.bottom_adj.remove()
+            self.up_left_adj.remove()
+            self.low_left_adj.remove()
+            self.up_right_adj.remove()
+            self.low_right_adj.remove()
+        except ValueError:
+            pass
+
     def draw_rect(self, adjustable, locked, color):
         if not locked: c = color
         else: c = 'r'
         
+        if self.left and self.left_adj:
+            '''
+            Stops a major memory leak. Program will use TONS of
+            memory if we do not remove the old lines when moving
+            the rects. By TONS, I mean hundreds of MB, in a matter
+            of a few minutes!
+            '''
+            self.remove_lines()
+
         self.left = self.axes.vlines([self.sx], self.sy, self.dy, colors=c, linestyles='solid', linewidth=2, picker=1.0, animated=True)
         self.right = self.axes.vlines([self.dx], self.sy, self.dy, colors=c, linestyles='solid', linewidth=2, picker=1.0, animated=True)
         self.top = self.axes.hlines([self.sy], self.sx, self.dx, colors=c, linestyles='solid', linewidth=2, picker=1.0, animated=True)

@@ -85,6 +85,7 @@ class Controller():
         self.dicom_view.controller.enable_tools(['Lock Coral Slab'], False)
         self.dicom_view.controller.enable_tools(['Filtered Overlays'], False)
         self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Adjust Coral Slab'], False)
+        del self
 
     def on_popup_item_selected(self, event):
         """ Fired when the user selects a popup item on the rectangle model.

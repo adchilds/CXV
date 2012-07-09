@@ -216,7 +216,7 @@ class Controller():
         # Setting to (0, 0) first eludes the cropping of the image.
         # If this isn't here, the image will sometimes be cropped and the canvas size
         # will totally change. Weird error... Hopefully there's a better workaround than
-        # this. Fast computers shouldn't see the flicker of (0, 0) -> (sx, sy) too much.
+        # this.
         self.view.scroll.Scroll(0, 0)
         scroll_unit = self.view.aspect*100.0
         self.su = scroll_unit
@@ -224,8 +224,6 @@ class Controller():
                                       (x*self.view.aspect)/scroll_unit,
                                       (y*self.view.aspect)/scroll_unit)
         self.view.scroll.Scroll(sx, sy)
-        self.view.scroll.Refresh()
-        self.view.canvas.Refresh(eraseBackground=False)
 
     def cache_background(self):
         self.view.canvas.draw() # cache clean slate background
@@ -233,6 +231,11 @@ class Controller():
         self.draw_all()
 
     def draw_all(self):
+        """ Restores the canvas with the cached background,
+        then redraws the enabled widgets and finally blits
+        the contents of the AGG buffer back to the canvas for
+        the user to see.
+        """
         self.view.canvas.restore_region(self.background)
         if self.coral_controller:
             self.coral_controller.draw_rect(self.coral, self.coral_locked)
@@ -243,7 +246,7 @@ class Controller():
         self.view.canvas.blit(self.view.axes.bbox)
 
     def cleanup(self, event=None):
-        try:    # ignore first couple calls before canvas instantiation
+        try: # ignore first couple calls before canvas instantiation
             if event:
                 if wx.FindWindowById(event.GetId()) != self.view:
                     x, y = wx.FindWindowById(event.GetId()).GetPositionTuple()

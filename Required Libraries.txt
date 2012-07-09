@@ -1,0 +1,7 @@
+matplotlib
+numpy
+scipy
+chilkat (for python xml)
+dicom (from google code)
+wxpython (GUI)
+yapsy (plugin framework)

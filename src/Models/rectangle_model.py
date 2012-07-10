@@ -45,6 +45,8 @@ class Model():
         else:
             if self.dicom_view.controller.pan_image:
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+            elif self.dicom_view.controller.zoom:
+                self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
             elif self.left_adj.contains(event)[0] or self.right_adj.contains(event)[0]:
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZEWE))
             elif self.top_adj.contains(event)[0] or self.bottom_adj.contains(event)[0]:

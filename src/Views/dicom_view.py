@@ -39,6 +39,7 @@ class View(wx.Frame):
                           title="Coral X-Ray Viewer",
                           size=(850, 750),
                           pos=(0,0))
+        self.SetMinSize((100, 100))
 
         self.scroll = wx.ScrolledWindow(self, -1)
         self.scroll.SetBackgroundColour('grey')    
@@ -253,5 +254,5 @@ class View(wx.Frame):
                                         rectprops=rectprops,
                                         button=[1], # Left mouse button
                                         minspanx=1, minspany=1,
-                                        spancoords='pixels')
+                                        spancoords='data')
         self.toggle_selector.set_active(False)

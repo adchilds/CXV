@@ -173,7 +173,7 @@ class Controller():
 
     def on_lock_region(self, event):
         self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Adjust Calibration Region'], False)
-        self.dicom_view.controller.on_calibrate(event)
+        self.dicom_view.controller.on_calibrate(event, show=False)
 
     def on_set_density_params(self, event):
         self.dicom_view.controller.on_density_params(event)

@@ -191,7 +191,7 @@ class Controller():
         # Update the scrollbar with the new position
         self.view.scroll.Scroll(init_pos_x, init_pos_y)
 
-    def resize_image(self, hide=True, sx=0, sy=0):
+    def resize_image(self, sx=0, sy=0, hide=True):
         self.resize_mpl_widgets()
         if hide:
             self.view.scroll.Hide()

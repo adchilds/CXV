@@ -56,13 +56,18 @@ class Controller():
         x1 /= 100
         y1 /= 100
 
-        # Just in case, lets round these values and cast them
+        # Round these values and cast them as integers
         x1 = int(round(x1))
         y1 = int(round(y1))
 
         # Resize and scroll the image
         self.dicom_controller.resize_image(x1, y1)
+
+        # Transfer focus back to the canvas just in case
         self.view.canvas.SetFocus()
+
+        # Refresh the canvas so that we can see that boxes or polylines
+        self.view.canvas.Refresh()
 
     def on_zoom(self, click, release):
         """ Initiated when the user is using the RectangleSelector class.
@@ -94,8 +99,13 @@ class Controller():
             self.view.toggle_selector.update()
             self.view.toggle_selector.update_background(event)
 
+            # Redraw the canvas. If we don't, the components on the canvas
+            # will lose their lines and adjust boxes sometimes.
+            self.dicom_controller.draw_all()
+
         else: # Zoom OFF
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            self.view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
             self.view.toggle_selector.set_active(False)
 
     def on_zoom_out(self, event):

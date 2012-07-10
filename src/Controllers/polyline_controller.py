@@ -32,6 +32,8 @@ class Controller():
                           'Blue' : '#0000FF',
                           'Yellow' : '#FFFF00',
                           'Purple' : '#FF00FF',
+                          'Pink' : '#FF99FF',
+                          'Orange' : '#FF9900',
                           'White' : '#FFFFFF',
                           'Black' : '#000000'}
     
@@ -62,11 +64,11 @@ class Controller():
             self.on_left_click(event)
         elif event.button == 3:
             self.on_right_click(event)
-            
+
     def on_mouse_release(self, event):
         self.drag_v = False
         self.drag_pl = False
-            
+
     def on_left_click(self, event):
         if self.on_pick(event): return
         if self.connect:
@@ -78,7 +80,7 @@ class Controller():
             self.dicom_controller.changed = True
             
         self.curr_pl.add_vertex(event.xdata, event.ydata)
-            
+
     def on_right_click(self, event):
         if self.connect:
             self.tmp_line = None
@@ -91,7 +93,7 @@ class Controller():
             if self.picked.contains(event)[0]:
                 self.mpl_event = event
                 self.create_popup_menu(self.curr_pl.is_line(self.picked))
-                
+
     def on_pick(self, event):
         self.picked = None
         for polyline in self.polylines:
@@ -206,7 +208,7 @@ class Controller():
             y, = vertex.get_ydata()
             x += x_offset
             y += y_offset
-            self.curr_pl.set_vertex(vertex, x, y)    
+            self.curr_pl.set_vertex(vertex, x, y)  
         
     def draw_polylines(self, adjustable, locked):
         if self.tmp_line: self.axes.draw_artist(self.tmp_line)
@@ -258,6 +260,8 @@ class Controller():
                 ('Blue', self.set_color),
                 ('Yellow', self.set_color),
                 ('Purple', self.set_color),
+                ('Pink', self.set_color),
+                ('Orange', self.set_color),
                 ('White', self.set_color),
                 ('Black', self.set_color)
                 ]

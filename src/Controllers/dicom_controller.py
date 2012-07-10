@@ -190,20 +190,17 @@ class Controller():
 
         # Update the scrollbar with the new position
         self.view.scroll.Scroll(init_pos_x, init_pos_y)
-        self.view.scroll.Refresh()
 
-    def resize_image(self, sx=0, sy=0):
+    def resize_image(self, hide=True, sx=0, sy=0):
         self.resize_mpl_widgets()
-        # Ordering here determines a couple things:
-        # if self.cleanup() happens first, we see (0,0) in scrollbar,
-        # then it scrolls to the desired position
-        #
-        # if self.set_scrollbars() happens first, it scrolls first but
-        # we get an ugly overlapping image until the canvas refreshes
+        if hide:
+            self.view.scroll.Hide()
         self.set_scrollbars(sx, sy)
         self.cache_background()
+        self.view.scroll.Show()
         self.cleanup()
         self.update_overview()
+        self.view.canvas.Refresh()
 
     def resize_mpl_widgets(self):
         y, x = self.model.get_image_shape()
@@ -220,9 +217,15 @@ class Controller():
         self.view.scroll.Scroll(0, 0)
         scroll_unit = self.view.aspect*100.0
         self.su = scroll_unit
-        self.view.scroll.SetScrollbars(scroll_unit, scroll_unit,
-                                      (x*self.view.aspect)/scroll_unit,
-                                      (y*self.view.aspect)/scroll_unit)
+        try:
+            self.view.scroll.SetScrollbars(scroll_unit, scroll_unit,
+                                          (x*self.view.aspect)/scroll_unit,
+                                          (y*self.view.aspect)/scroll_unit)
+        except ZeroDivisionError:
+            # Thrown if the user resizes the entire frame to be too
+            # small (less than 0 on either axis). Still may abort
+            # the program, however.
+            pass
         self.view.scroll.Scroll(sx, sy)
 
     def cache_background(self):
@@ -340,15 +343,25 @@ class Controller():
             self.view.statusbar.SetStatusText("Pixel Position: (%i, %i)" % (x, y), 0)
             self.view.statusbar.SetStatusText("Pixel Intensity: %.4f" % self.overlay_controller.overlay[event.ydata][event.xdata], 1)
 
-        if not self.pan_image and not self.zoom:
+        if not self.pan_image:
             if self.polyline:
                 self.polyline_controller.on_mouse_motion(event)
             elif self.coral:
                 self.coral_controller.on_mouse_motion(event)
             elif self.calib:
                 self.calibrate_controller.on_mouse_motion(event)
-            self.draw_all()
-        self.view.canvas.Refresh(eraseBackground=False)
+
+            if self.coral_controller:
+                self.coral_controller.draw_rect(self.coral, self.coral_locked)
+            if self.polyline_controller:
+                self.polyline_controller.draw_polylines(self.polyline, self.polyline_locked)
+            if self.calibrate_controller:
+                self.calibrate_controller.draw_rect(self.calib, False)
+
+            if not self.zoom:
+                self.draw_all()
+
+        self.view.canvas.Refresh()
         
     def on_mouse_press(self, event):
         if event.button == 1: # Left mouse button
@@ -421,7 +434,7 @@ class Controller():
                 y, = self.view.scroll.GetSizeTuple()[-1:]
                 iHt, = self.model.get_image_shape()[:-1]
                 self.view.aspect = (float(y)/float(iHt))
-                self.resize_image()
+                self.resize_image(hide=False)
                 self.view.aspect_cb.SetValue('Zoom to fit')
                 self.view.canvas.Refresh()
             except AttributeError:
@@ -463,6 +476,7 @@ class Controller():
         except AttributeError: self.image_info_controller = image_info_controller.Controller(self, self.model)
         
     def on_coral(self, event):
+        self.zoom = False
         self.coral = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Coral Slab'])
         self.coral_locked = False
         self.polyline = False
@@ -532,7 +546,13 @@ class Controller():
         self.draw_all()
         
     def on_calibrate(self, event):
-        self.calib = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
+        """ Enables or disables the 'Adjust Calibration Region' """
+        if self.calib:
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
+            self.calib = False
+        else:
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], True)
+            self.calib = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
         self.coral = False
         self.polyline = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Coral Slab'], False)

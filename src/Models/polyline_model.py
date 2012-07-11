@@ -112,13 +112,13 @@ class Polyline():
         y += y_offset
         self.label.set_text('t'+str(i+1))
         self.label.set_position((x,y))
-        
+
     def get_label(self):
         return self.label.get_text()
-    
+
     def set_color(self, Line2D, color):
         Line2D.set_color(color)
-            
+
     def set_colors(self):
         self.set_color(self.label, self.color)
         if (self.color=='#FFFFFF') or (self.color=='#FFFF00'):
@@ -129,7 +129,7 @@ class Polyline():
             self.set_color(line, self.color)
         for vertex in self.verticies:
             self.set_color(vertex, self.color)
-        
+
     def print_info(self):
         print 'Polyline: ', id(self)
         print '\tverticies(%i):' % (len(self.verticies)), self.verticies

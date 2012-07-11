@@ -76,13 +76,13 @@ class Controller():
         """
         x1, y1 = click.xdata, click.ydata
         x2, y2 = release.xdata, release.ydata
+        self.dicom_controller.ztf = False
         self.on_drag_zoom([x1, y1, x2, y2])
 
     def on_zoom_in(self, event):
         """ Initiated when the user presses the zoom in button
         in the toolbar or menubar.
         """
-        self.dicom_controller.ztf = False
         self.dicom_controller.zoom = self.view.toolbar.GetToolState(self.view.toolbar_ids['Zoom In'])
 
         if self.dicom_controller.zoom: # Zoom ON
@@ -124,4 +124,7 @@ class Controller():
         else:
             self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
         self.dicom_controller.resize_image()
+        # Update toggle_selector's background. Otherwise, next time we try to
+        # drag zoom, the objects overlaying the image will disappear during drag
+        self.view.toggle_selector.update_background(event)
         self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox has keyboard focus

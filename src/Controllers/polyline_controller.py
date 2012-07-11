@@ -191,8 +191,14 @@ class Controller():
             
     def drag_polyline(self, event):
         self.dicom_controller.changed = True
+
+        # TODO: TypeError thrown here when the user's mouse
+        # goes outside of the canvas while dragging polyline
+        #
+        # Unsure how to write the try/except for this, however.
         x_offset = event.xdata - self.prev_event.xdata
         y_offset = event.ydata - self.prev_event.ydata
+
         for line in self.curr_pl.lines:
             x1, x2 = line.get_xdata()
             y1, y2 = line.get_ydata()

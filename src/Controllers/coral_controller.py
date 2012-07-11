@@ -20,13 +20,6 @@ class Controller():
         self.dicom_view = dicom_view
         self.model = rectangle_model.Model(self.dicom_view, background, 200, 200, 600, 600)
         self.dicom_view.controller.coral_slab = [self.model.sx, self.model.sy, self.model.dx, self.model.dy]
-        self.color_map = {'Red' : '#FF0000',
-                          'Green' : '#00FF00',
-                          'Blue' : '#0000FF',
-                          'Yellow' : '#FFFF00',
-                          'Purple' : '#FF00FF',
-                          'White' : '#FFFFFF',
-                          'Black' : '#000000'}
 
     def on_mouse_motion(self, event):
         self.model.on_mouse_motion(event)

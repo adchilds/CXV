@@ -16,7 +16,11 @@ class Model():
         pass
 
     def center_of_rect(self, x1, y1, x2, y2):
-        """ Calculates the center point of the given rect """
+        """ Calculates the center point of the given rect.
+        
+        @var (x1, y1): the top left corner of the rect
+        @var (x2, y2): the bottom right corner of the rect
+        """
 
         center_x = x1 + (math.fabs(x2 - x1) / 2)
         center_y = y1 + (math.fabs(y1 - y2) / 2)
@@ -24,10 +28,10 @@ class Model():
         return center_x, center_y
     
     def rect_ratio(self, x1, y1, x2, y2):
-        """ Calculates the ratio in size between the two given rectangles
+        """ Calculates the ratio in size between the two given rectangles.
         
-        @var x1, y1: The smaller rectangle
-        @var x2, y2: The larger rectangle
+        @var x1, y1: the smaller rectangle
+        @var x2, y2: the larger rectangle
         
         @return: The size ratio between the two rectangles
         """

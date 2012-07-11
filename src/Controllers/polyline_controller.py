@@ -36,7 +36,7 @@ class Controller():
                           'Orange' : '#FF9900',
                           'White' : '#FFFFFF',
                           'Black' : '#000000'}
-    
+
     def on_mouse_motion(self, event):
         if len(self.polylines) == 0: return
         if event.inaxes == self.dicom_view.ov_axes:
@@ -55,7 +55,7 @@ class Controller():
         self.prev_event = event
         try: self.curr_pl.set_label(self.polylines.index(self.curr_pl))
         except: pass
-    
+
     def on_mouse_press(self, event):
         if event.inaxes == self.dicom_view.ov_axes:
             event.xdata += self.dicom_controller.coral_slab[0]
@@ -78,7 +78,6 @@ class Controller():
             self.polylines.append(self.curr_pl)
             self.connect = True
             self.dicom_controller.changed = True
-            
         self.curr_pl.add_vertex(event.xdata, event.ydata)
 
     def on_right_click(self, event):
@@ -109,7 +108,7 @@ class Controller():
                     self.drag_v = True
         if not self.picked: return False
         else: return True
-        
+
     def delete_polyline(self, event):
         self.drag_v = False
         self.drag_pl = False
@@ -157,23 +156,23 @@ class Controller():
                                   [v.get_xdata()[0], l.get_xdata()[1]], 
                                   [v.get_ydata()[0], l.get_ydata()[1]])
         self.validate()
-        
+
     def set_color(self, event):
         self.drag_v = False
         self.drag_pl = False
         color = self.menu.FindItemById(event.GetId()).GetItemLabel()
         self.curr_pl.color = self.color_map[color]
         self.curr_pl.set_colors()
-                
+
     def append_tmp_line(self):
         self.curr_pl.add_line(self.tmp_line.get_xdata(), self.tmp_line.get_ydata())
         self.tmp_line = None
-        
+
     def validate(self):
         if self.curr_pl.is_alone():
             self.polylines.remove(self.curr_pl)
             self.curr_pl = None
-        
+
     def drag_vertex(self, event):
         self.dicom_controller.changed = True
         i = self.curr_pl.get_vertex_index(self.picked)
@@ -188,7 +187,7 @@ class Controller():
             self.curr_pl.set_line(line,
                                   [event.xdata, line.get_xdata()[1]],
                                   [event.ydata, line.get_ydata()[1]])
-            
+
     def drag_polyline(self, event):
         self.dicom_controller.changed = True
 
@@ -215,7 +214,7 @@ class Controller():
             x += x_offset
             y += y_offset
             self.curr_pl.set_vertex(vertex, x, y)  
-        
+
     def draw_polylines(self, adjustable, locked):
         if self.tmp_line: self.axes.draw_artist(self.tmp_line)
         for polyline in self.polylines:
@@ -225,7 +224,7 @@ class Controller():
                 for vertex in polyline.verticies:
                     self.axes.draw_artist(vertex)
             self.axes.draw_artist(polyline.label)
-                
+
     def create_popup_menu(self, line):
         if not self.picked: return
         self.menu = wx.Menu()
@@ -242,23 +241,23 @@ class Controller():
         try: self.dicom_view.PopupMenu(self.menu)
         except: pass    # avoid C++ assertion error
         self.menu.Destroy()
-        
+
     def add_option(self, menu, label, handler):
         option = menu.Append(-1, label)
         self.dicom_view.Bind(wx.EVT_MENU, handler, option)
-        
+
     def popup_line_data(self):
         label = 'Delete Polyline ' + self.curr_pl.get_label()
         return [('Add Vertex Here', self.add_vertex),
                 (label, self.delete_polyline)
                 ]
-        
+
     def popup_vertex_data(self):
         label = 'Delete Polyline ' + self.curr_pl.get_label()
         return [('Delete Vertex', self.delete_vertex),
                 (label, self.delete_polyline)
                 ]
-        
+
     def popup_color_data(self):
         return [
                 ('Red', self.set_color),

@@ -248,6 +248,20 @@ class Controller():
             self.calibrate_controller.draw_rect(self.calib, False)
         self.view.canvas.blit(self.view.axes.bbox)
 
+    def draw_lines(self):
+        """ Draws only the rects and polylines on the canvas.
+        Does not re-draw the canvas, in order to save time and memory.
+        Canvas can be redrawn using self.cache_background() or
+        self.draw_all().
+        """
+        if self.coral_controller:
+            self.coral_controller.draw_rect(self.coral, self.coral_locked)
+        if self.polyline_controller:
+            self.polyline_controller.draw_polylines(self.polyline, self.polyline_locked)
+        if self.calibrate_controller:
+            self.calibrate_controller.draw_rect(self.calib, False)
+        self.view.canvas.Refresh()
+
     def cleanup(self, event=None):
         try: # ignore first couple calls before canvas instantiation
             if event:
@@ -327,7 +341,6 @@ class Controller():
                     self.pan_view(x, self.previous_y)
                 else:
                     self.pan_view(x, y)
-                self.view.canvas.Refresh(eraseBackground=False)
 
         if event.inaxes == self.view.axes:
             try:
@@ -351,15 +364,10 @@ class Controller():
             elif self.calib:
                 self.calibrate_controller.on_mouse_motion(event)
 
-            if self.coral_controller:
-                self.coral_controller.draw_rect(self.coral, self.coral_locked)
-            if self.polyline_controller:
-                self.polyline_controller.draw_polylines(self.polyline, self.polyline_locked)
-            if self.calibrate_controller:
-                self.calibrate_controller.draw_rect(self.calib, False)
-
             if not self.zoom:
                 self.draw_all()
+            else:
+                self.draw_lines()
 
         self.view.canvas.Refresh()
         
@@ -399,6 +407,9 @@ class Controller():
             elif self.calib:
                 self.calib_region = self.calibrate_controller.on_mouse_release(event)
             self.draw_all()
+        elif self.zoom:
+            self.draw_all()
+
         # Update toggle_selector's background. Otherwise, next time we try to
         # drag zoom, the objects overlaying the image will disappear during drag
         self.view.toggle_selector.update_background(event)
@@ -436,6 +447,9 @@ class Controller():
                 self.view.aspect = (float(y)/float(iHt))
                 self.resize_image(hide=False)
                 self.view.aspect_cb.SetValue('Zoom to fit')
+                # Update toggle_selector's background. Otherwise, next time we try to
+                # drag zoom, the objects overlaying the image will disappear during drag
+                self.view.toggle_selector.update_background(event)
                 self.view.canvas.Refresh()
             except AttributeError:
                 pass
@@ -483,11 +497,12 @@ class Controller():
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
-        if not self.coral_controller:   # first open
+        self.enable_tools(['Filtered Overlays'], False)
+        if not self.coral_controller: # first open
             self.coral_controller = coral_controller.Controller(self.view, self.background)
             self.enable_tools(['Lock Coral Slab'], True)
         else:
-            try:    # remove overlay if already added
+            try: # remove overlay if already added
                 self.view.figure.delaxes(self.view.ov_axes)
                 self.overlay_controller.view.Destroy()
                 del self.overlay_controller

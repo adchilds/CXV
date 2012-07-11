@@ -85,6 +85,8 @@ class Controller():
         """
         self.dicom_controller.zoom = self.view.toolbar.GetToolState(self.view.toolbar_ids['Zoom In'])
 
+        # TODO: Un-toggle toolbar items that may currently be toggled
+
         if self.dicom_controller.zoom: # Zoom ON
             # Change the cursor
             #cur = wx.CursorFromImage(wx.Image("images/zoom_in.png", wx.BITMAP_TYPE_PNG))
@@ -98,11 +100,6 @@ class Controller():
             # box the first time that the user attempts to drag and zoom
             self.view.toggle_selector.update()
             self.view.toggle_selector.update_background(event)
-
-            # Redraw the canvas. If we don't, the components on the canvas
-            # will lose their lines and adjust boxes sometimes.
-            self.dicom_controller.draw_all()
-
         else: # Zoom OFF
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
             self.view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))

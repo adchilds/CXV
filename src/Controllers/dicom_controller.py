@@ -366,10 +366,6 @@ class Controller():
 
             if not self.zoom:
                 self.draw_all()
-            else:
-                self.draw_lines()
-
-        self.view.canvas.Refresh()
         
     def on_mouse_press(self, event):
         if event.button == 1: # Left mouse button
@@ -396,6 +392,7 @@ class Controller():
             elif self.calib:
                 self.calibrate_controller.on_mouse_press(event)
             self.draw_all()
+        self.view.toggle_selector.update_background(event)
 
     def on_mouse_release(self, event):
         self.left_down = False
@@ -567,7 +564,7 @@ class Controller():
             self.calib = False
         else:
             self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], True)
-            self.calib = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
+            self.calib = True
         self.coral = False
         self.polyline = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Coral Slab'], False)

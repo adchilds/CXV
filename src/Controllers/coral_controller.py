@@ -67,7 +67,7 @@ class Controller():
         self.dicom_view.Bind(wx.EVT_MENU, handler, option)
 
     def popup_line_data(self):
-        return [('Lock Coral Slab', self.on_popup_item_selected),
+        return [('Lock Target Area', self.on_popup_item_selected),
                 ('Delete Coral Slab', self.delete_coral_slab)]
 
     def delete_coral_slab(self, event):
@@ -75,10 +75,11 @@ class Controller():
         del self.model
         self.dicom_view.controller.coral = False
         self.dicom_view.controller.coral_controller = None
-        self.dicom_view.controller.enable_tools(['Lock Coral Slab'], False)
+        self.dicom_view.controller.enable_tools(['Lock Target Area'], False)
         self.dicom_view.controller.enable_tools(['Filtered Overlays'], False)
-        self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Adjust Coral Slab'], False)
-        del self
+        self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Adjust Target Area'], False)
+        self.dicom_view.controller.draw_all()
+        self.dicom_view.toggle_selector.update_background(event)
 
     def on_popup_item_selected(self, event):
         """ Fired when the user selects a popup item on the rectangle model.

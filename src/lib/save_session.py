@@ -135,7 +135,7 @@ class SaveSession():
         self.controller.coral_controller.model.sy = self.cs[1]
         self.controller.coral_controller.model.dx = self.cs[2]
         self.controller.coral_controller.model.dy = self.cs[3]
-        self.controller.enable_tools(['Lock Coral Slab', 'Overlay Images'], True)
+        self.controller.enable_tools(['Lock Target Area', 'Overlay Images'], True)
     
     def load_polylines(self):
         polylines = []

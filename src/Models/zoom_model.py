@@ -13,7 +13,7 @@ import math
 class Model():
     
     def __init__(self):
-        pass
+        self.view = None
 
     def center_of_rect(self, x1, y1, x2, y2):
         """ Calculates the center point of the given rect.
@@ -48,6 +48,28 @@ class Model():
         @var x2: the second point (note: only one axis [x or y])
         @var su: the scroll unit amount
         """
-        print 'Within: %i' % math.fabs(x2 - x1)
+        print 'Within:', math.fabs(x2 - x1)
         return math.fabs(x2 - x1) <= su
+
+    def get_viewable_rect(self, view):
+        """ Calculates the currently viewable portion of
+        the image in the wx.ScrolledWindow.
+        
+        @return: a tuple with (x1, y1) as top-left
+                 and (x2, y2) as bottom-right.
+        """
+        self.view = view
+        cx, cy = self.view.scroll.GetClientSizeTuple()
+        cx *= (1.0/self.view.aspect)
+        cy *= (1.0/self.view.aspect)
+        sx, sy = self.view.scroll.GetViewStart()
+        sx *= float(self.view.scroll.GetScrollPixelsPerUnit()[0])
+        sx *= (1.0/self.view.aspect)
+        sy *= float(self.view.scroll.GetScrollPixelsPerUnit()[1])
+        sy *= (1.0/self.view.aspect)
+        sx = int(sx)
+        sy = int(sy)
+        cx = int(cx) + sx
+        cy = int(cy) + sy
+        return [sx, sy, cx, cy]
         

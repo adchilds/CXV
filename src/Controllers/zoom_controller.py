@@ -24,7 +24,7 @@ class Controller():
         self.view = dicom_view
 
     def on_drag_zoom(self, drag_coords=None):
-        """ Initiated when the user has the zoom button in the toolbar
+        """ Invoked when the user has the zoom button in the toolbar
         toggled and then drags a rectangular area and releases the mouse.
         First, calculates the correct amount to zoom in where the entire selected area
         fills as most of the current window size without cutting any part of the
@@ -40,6 +40,7 @@ class Controller():
         # Ratio of the selected area to the ScrolledWindow
         # Calculates how far we're able to zoom in
         ratio = self.model.rect_ratio(rect_width, rect_height, scroll_width, scroll_height)
+
         # Zoom the image accordingly
         if ratio > 1.20:
             self.view.aspect = 1.20
@@ -50,7 +51,6 @@ class Controller():
         else:
             self.view.aspect = ratio
             self.view.aspect_cb.SetValue(str(int(ratio*100.0))+'%')
-        ratio = self.view.aspect # could be > 120, so lets set it to what it should be
 
         # Calculate how many scroll units we should move
         x1 /= 100
@@ -61,37 +61,54 @@ class Controller():
         y1 = int(round(y1))
 
         # Resize and scroll the image
-        self.dicom_controller.resize_image(x1, y1)
-
-        # Transfer focus back to the canvas just in case
-        self.view.canvas.SetFocus()
-
-        # Refresh the canvas so that we can see that boxes or polylines
-        self.view.canvas.Refresh()
+        self.dicom_controller.on_aspect(None, x1, y1)
 
     def on_zoom(self, click, release):
-        """ Initiated when the user is using the RectangleSelector class.
+        """ Invoked when the user is using the RectangleSelector class.
         In other words, the user is dragging a rectangular area with their
-        mouse, while the zoom in button is toggled.
+        mouse, while the zoom-in button is toggled.
         """
         x1, y1 = click.xdata, click.ydata
         x2, y2 = release.xdata, release.ydata
         self.dicom_controller.ztf = False
         self.on_drag_zoom([x1, y1, x2, y2])
+        self.dicom_controller.cache_background()
+
+    def on_zoom_in_menu(self, event):
+        """ Menu callback event zooming """
+        if not self.dicom_controller.zoom:
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Zoom In'], True)
+        else:
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Zoom In'], False)
+        self.on_zoom_in(event)
 
     def on_zoom_in(self, event):
-        """ Initiated when the user presses the zoom in button
+        """ Invoked when the user presses the zoom in button
         in the toolbar or menubar.
         """
         self.dicom_controller.zoom = self.view.toolbar.GetToolState(self.view.toolbar_ids['Zoom In'])
 
-        # TODO: Un-toggle toolbar items that may currently be toggled
-
         if self.dicom_controller.zoom: # Zoom ON
+            # Un-toggle toolbar items that may currently be toggled
+            coral_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Target Area'])
+            calib_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
+            polyline_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Draw Polylines'])
+
+            if coral_on: # Turn off coral region
+                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Target Area'], False)
+                self.dicom_controller.on_coral(None, zoom_off=False, pan_off=True)
+            if calib_on: # Turn off calibration region
+                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
+                self.dicom_controller.on_calibrate(None, zoom_off=False, pan_off=True)
+            if polyline_on: # Turn of polylines
+                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
+                self.dicom_controller.on_polyline(None, zoom_off=False, pan_off=True)
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], False)
+            self.dicom_controller.pan_image = False
+
             # Change the cursor
             #cur = wx.CursorFromImage(wx.Image("images/zoom_in.png", wx.BITMAP_TYPE_PNG))
-            cur = wx.StockCursor(wx.CURSOR_MAGNIFIER)
-            self.view.canvas.SetCursor(cur)
+            self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
 
             # Set the rectangle selector to active
             self.view.toggle_selector.set_active(True)
@@ -100,13 +117,18 @@ class Controller():
             # box the first time that the user attempts to drag and zoom
             self.view.toggle_selector.update()
             self.view.toggle_selector.update_background(event)
+
+            # Need to redraw the lines when the zoom-in button is pressed
+            # because otherwise, newly created rects or polylines will become
+            # invisible.
+            self.dicom_controller.draw_all()
         else: # Zoom OFF
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
             self.view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
             self.view.toggle_selector.set_active(False)
 
     def on_zoom_out(self, event):
-        """ Initiated when the user presses the zoom out button
+        """ Invoked when the user presses the zoom out button
         in the toolbar or menubar.
         """
         self.dicom_controller.zoom = False
@@ -120,7 +142,7 @@ class Controller():
             self.view.aspect_cb.SetValue('10%')
         else:
             self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
-        self.dicom_controller.resize_image()
+        self.dicom_controller.on_aspect(None)
         # Update toggle_selector's background. Otherwise, next time we try to
         # drag zoom, the objects overlaying the image will disappear during drag
         self.view.toggle_selector.update_background(event)

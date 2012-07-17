@@ -140,7 +140,7 @@ class Model():
         elif self.picked == 'low_right':
             self.dx = event.xdata
             self.dy = event.ydata
-        self.dicom_view.controller.changed = True
+        self.dicom_view.controller.state_changed(True)
             
     def check_bounds(self):
         iHt, iWd = self.dicom_view.model.get_image_shape()
@@ -152,7 +152,7 @@ class Model():
             self.dx = iWd-10
         if self.dy > iHt:
             self.dy = iHt-10
-        self.dicom_view.controller.changed = True
+        self.dicom_view.controller.state_changed(True)
 
     def remove_lines(self):
         """ Removes the lines from the axes so that they can be redrawn.

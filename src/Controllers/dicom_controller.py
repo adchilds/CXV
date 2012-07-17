@@ -94,12 +94,12 @@ class Controller():
                 self.open_saved_session(path, new)
                 savedsesh = True
             self.view.aspect_cb.Enable()
-            tools = ['&Save...\tCtrl+S',
-                     'Image Overview', 'Image Information', 
+            tools = ['Image Overview', 'Image Information', 
                      'Pan Image', 'Zoom In', 'Zoom Out', 'Adjust Contrast', 
                      'Adjust Target Area', 'Draw Polylines',
                      'Adjust Calibration Region']
             self.enable_tools(tools, True)
+            self.enable_tools(['&Save...\tCtrl+S'], False)
 
             # If the user loads a saved session, we don't want to set these to None!
             if not savedsesh:
@@ -137,7 +137,6 @@ class Controller():
 
     def open_saved_session(self, path, new):
         self.save_session = save_session.SaveSession(self, path)
-        #self.save_session.read()
         self.save_session.load_file()
         self.open_dicom_file(self.save_session.fn, new)
         self.save_session.load()
@@ -153,8 +152,8 @@ class Controller():
         self.enable_tools(['Lock Target Area', 'Filtered Overlays'], False)
 
     def on_quit(self, event):
-        self.save_prompt()
-        wx.Exit()
+        if self.save_prompt() is not -1:
+            wx.Exit()
 
     def save_prompt(self):
         if self.save_session and self.changed:
@@ -163,7 +162,7 @@ class Controller():
             dialog = wx.MessageDialog(self.view, msg, 'CXV', style=wx.YES_NO|wx.CANCEL)
             choice = dialog.ShowModal()
             if choice==wx.ID_CANCEL:
-                return
+                return -1
             elif choice==wx.ID_YES:
                 self.save_session.write()
 
@@ -201,6 +200,7 @@ class Controller():
 
         # Update the scrollbar with the new position
         self.view.scroll.Scroll(init_pos_x, init_pos_y)
+        self.state_changed(True)
 
     def resize_image(self, sx=0, sy=0, hide=True):
         self.resize_mpl_widgets()
@@ -239,6 +239,7 @@ class Controller():
             # set to (100, 100).
             pass
         self.view.scroll.Scroll(sx, sy)
+        self.state_changed(True)
 
     def cache_background(self):
         self.view.canvas.draw() # cache clean slate background
@@ -404,6 +405,7 @@ class Controller():
         if not self.pan_image and not self.zoom:
             if self.polyline:
                 self.polyline_controller.on_mouse_press(event)
+                self.state_changed(True)
             elif self.coral:
                 self.coral_controller.on_mouse_press(event)
             elif self.calib:
@@ -532,6 +534,7 @@ class Controller():
         self.view.toggle_selector.update_background(event)
         self.view.canvas.Refresh()
         self.view.canvas.SetFocus() # Sets focus back to the canvas, otherwise combobox still has keyboard focus
+        self.state_changed(True)
 
     def on_image_info(self, event):
         try: self.image_info_controller.view.Raise()
@@ -568,6 +571,7 @@ class Controller():
             except:
                 pass
         self.draw_all()
+        self.state_changed(True)
 
     def on_lock_coral(self, event, show=True, alg=True):
         if self.coral_locked: return  # already locked
@@ -620,6 +624,7 @@ class Controller():
             self.polyline_controller = polyline_controller.Controller(self, self.view, self.background)
             #self.enable_tools(['Lock Polylines'], True)
         self.draw_all()
+        self.state_changed(True)
 
     def on_lock_polyline(self, event):
         self.polyline = False
@@ -653,6 +658,7 @@ class Controller():
             self.calibrate_controller = calibrate_controller.Controller(self.view, self.background)
             self.enable_tools(['Set Density Parameters'], True)
         self.draw_all()
+        self.state_changed(True)
 
     def on_density_params(self, event, show=True):
         self.calib = False
@@ -660,6 +666,7 @@ class Controller():
         if show:
             self.calibrate_controller.on_density_params(event)
         self.draw_all()
+        self.state_changed(True)
 
     def on_save(self, event):
         if not self.save_session:
@@ -670,6 +677,7 @@ class Controller():
                 self.save_session.write()
         else:
             self.save_session.write()
+        self.state_changed(False)
 
     def on_plugin_properties(self, event=None):
         browse = browse_dialog.BrowseDialog(None, title='Default Plugin Directory')
@@ -767,3 +775,15 @@ class Controller():
         """ Used for testing and debugging purposes """
         if self.debug:
             print message
+
+    def state_changed(self, changed):
+        """ This method is called when the user changes something and the
+        current version differs from the previously saved version.
+        
+        @var changed - Does the program differ from the previously saved session?
+        """
+        if changed:
+            self.enable_tools(['&Save...\tCtrl+S'], True)
+        else:
+            self.enable_tools(['&Save...\tCtrl+S'], False)
+        self.changed = changed

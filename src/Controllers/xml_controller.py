@@ -62,29 +62,30 @@ class Controller():
         calib = self.xml.NewChild("calibration_region", "")
         calib.AddAttribute("exists", str(dc.calibrate_controller is not None))
         if dc.calibrate_controller:
-            thickness = calib.NewChild("thickness_range", "")
-            thickness.NewChild2("min", str(dc.calibrate_controller.min_thickness))
-            thickness.NewChild2("max", str(dc.calibrate_controller.max_thickness))
+            if dc.calibrate_controller.dw_grayscales is not None:
+                thickness = calib.NewChild("thickness_range", "")
+                thickness.NewChild2("min", str(dc.calibrate_controller.min_thickness))
+                thickness.NewChild2("max", str(dc.calibrate_controller.max_thickness))
+
+                grayscale = calib.NewChild("al_grayscale_range", "")
+                i = 0
+                for each in dc.calibrate_controller.dw_grayscales:
+                    grayscale.NewChild2(str(i), str(each))
+                    i = i + 1
+        
+                grayscale_al_thick = calib.NewChild("grayscale_to_al_thick", "")
+                i = 0
+                for each in dc.calibrate_controller.dw_linfit:
+                    grayscale_al_thick.NewChild2(str(i), str(each))
+                    i = i + 1
+        
+                grayscale_relative_density = calib.NewChild("grayscale_to_relative_density", "")
+                i = 0
+                for each in dc.calibrate_controller.dw_reldenfit:
+                    grayscale_relative_density.NewChild2(str(i), str(each))
+                    i = i + 1
     
-            grayscale = calib.NewChild("al_grayscale_range", "")
-            i = 0
-            for each in dc.calibrate_controller.dw_grayscales:
-                grayscale.NewChild2(str(i), str(each))
-                i = i + 1
-    
-            grayscale_al_thick = calib.NewChild("grayscale_to_al_thick", "")
-            i = 0
-            for each in dc.calibrate_controller.dw_linfit:
-                grayscale_al_thick.NewChild2(str(i), str(each))
-                i = i + 1
-    
-            grayscale_relative_density = calib.NewChild("grayscale_to_relative_density", "")
-            i = 0
-            for each in dc.calibrate_controller.dw_reldenfit:
-                grayscale_relative_density.NewChild2(str(i), str(each))
-                i = i + 1
-    
-            calib.NewChild2("density", str(dc.calibrate_controller.density))
+                calib.NewChild2("density", str(dc.calibrate_controller.density))
     
             x, y, dx, dy = dc.calib_region
             w = dx-x

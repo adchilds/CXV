@@ -36,6 +36,10 @@ class Controller():
                           'Orange' : '#FF9900',
                           'White' : '#FFFFFF',
                           'Black' : '#000000'}
+        image = wx.Image("images/cursor_cross2.png", wx.BITMAP_TYPE_PNG)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9) 
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9) 
+        self.cursor = wx.CursorFromImage(image)
 
     def on_mouse_motion(self, event):
         if len(self.polylines) == 0: return
@@ -43,8 +47,10 @@ class Controller():
             event.xdata += self.dicom_controller.coral_slab[0]
             event.ydata += self.dicom_controller.coral_slab[1]
         if self.drag_v:
+            self.dicom_view.canvas.SetCursor(self.cursor)
             self.drag_vertex(event)
         elif self.drag_pl:
+            self.dicom_view.canvas.SetCursor(self.cursor)
             self.drag_polyline(event)
         elif self.connect:
             x, = self.curr_pl.verticies[-1].get_xdata()
@@ -52,6 +58,15 @@ class Controller():
             self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
                                     c='#00FF00', marker='-',
                                     zorder=1, animated=True)
+        elif self.over_polyline(event):
+            if self.picked.contains(event)[0]:
+                if not self.dicom_controller.zoom and not self.dicom_controller.pan_image:
+                    self.dicom_view.canvas.SetCursor(self.cursor)
+                else:
+                    self.dicom_view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+        elif not self.over_polyline(event):
+            if not self.dicom_controller.zoom and not self.dicom_controller.pan_image:
+                self.dicom_view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
         self.prev_event = event
         try: self.curr_pl.set_label(self.polylines.index(self.curr_pl))
         except: pass
@@ -70,7 +85,9 @@ class Controller():
         self.drag_pl = False
 
     def on_left_click(self, event):
-        if self.on_pick(event): return
+        if self.on_pick(event):
+            self.dicom_view.canvas.SetCursor(self.cursor)
+            return
         if self.connect:
             self.append_tmp_line()
         else:
@@ -92,6 +109,8 @@ class Controller():
             if self.picked.contains(event)[0]:
                 self.mpl_event = event
                 self.create_popup_menu(self.curr_pl.is_line(self.picked))
+        else:
+            self.dicom_controller.on_polyline_menu(None) # Lock the polylines
 
     def on_pick(self, event):
         self.picked = None
@@ -106,6 +125,18 @@ class Controller():
                     self.picked = vertex
                     self.curr_pl = polyline
                     self.drag_v = True
+        if not self.picked: return False
+        else: return True
+
+    def over_polyline(self, event):
+        self.picked = None
+        for polyline in self.polylines:
+            for line in polyline.lines:
+                if line.contains(event)[0]:
+                    self.picked = line
+            for vertex in polyline.verticies:
+                if vertex.contains(event)[0]:
+                    self.picked = vertex
         if not self.picked: return False
         else: return True
 

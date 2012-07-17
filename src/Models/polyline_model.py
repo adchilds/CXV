@@ -130,6 +130,9 @@ class Polyline():
         for vertex in self.verticies:
             self.set_color(vertex, self.color)
 
+    def get_color(self):
+        return self.color
+
     def print_info(self):
         print 'Polyline: ', id(self)
         print '\tverticies(%i):' % (len(self.verticies)), self.verticies

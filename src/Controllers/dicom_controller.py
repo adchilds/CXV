@@ -79,7 +79,7 @@ class Controller():
             self.xml.create_config()
 
     def on_open(self, event):
-        dialog = wx.FileDialog(None, wildcard='DICOM (*.DCM)|*.DCM|Saved Session (*.txt)|*.txt', style=wx.FD_FILE_MUST_EXIST)
+        dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml)|*.DCM; *.xml|DICOM (*.DCM)|*.DCM|Saved session (*.xml)|*.xml', style=wx.FD_FILE_MUST_EXIST)
         if dialog.ShowModal() == wx.ID_OK:
             new = True
             if self.model.image_array is not None:  # opening a project on top of another
@@ -87,10 +87,12 @@ class Controller():
                 self.close_current()
                 new = False
             path = dialog.GetPath()
+            savedsesh = False
             if (path[-4:] == '.dcm') or (path[-4:] == '.DCM'):
                 self.open_dicom_file(path, new)
             else:
                 self.open_saved_session(path, new)
+                savedsesh = True
             self.view.aspect_cb.Enable()
             tools = ['&Save...\tCtrl+S',
                      'Image Overview', 'Image Information', 
@@ -98,12 +100,16 @@ class Controller():
                      'Adjust Target Area', 'Draw Polylines',
                      'Adjust Calibration Region']
             self.enable_tools(tools, True)
-            self.coral_controller = None
-            self.overlay_controller = None
-            self.polyline_controller = None
-            self.calibrate_controller = None
+
+            # If the user loads a saved session, we don't want to set these to None!
+            if not savedsesh:
+                self.coral_controller = None
+                self.overlay_controller = None
+                self.polyline_controller = None
+                self.calibrate_controller = None
 
     def open_dicom_file(self, path, new):
+        print path
         p = path.split(os.sep)
         p = p[:3] + p[-2:]
         p[2] = '...'
@@ -131,7 +137,8 @@ class Controller():
 
     def open_saved_session(self, path, new):
         self.save_session = save_session.SaveSession(self, path)
-        self.save_session.read()
+        #self.save_session.read()
+        self.save_session.load_file()
         self.open_dicom_file(self.save_session.fn, new)
         self.save_session.load()
 
@@ -420,9 +427,9 @@ class Controller():
             self.draw_all()
 
         # Set the cursor accordingly
-        if event.button == 1 and self.pan_image:
+        if (event.button == 1 or event.button == 3) and self.pan_image:
             self.view.canvas.SetCursor(self.cursor_hand)
-        elif event.button == 1 and self.zoom:
+        elif (event.button == 1 or event.button == 3) and self.zoom:
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
         else:
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
@@ -436,6 +443,12 @@ class Controller():
             if not self.pan_image:
                 self.pan_image = True
                 self.view.canvas.SetCursor(self.cursor_hand)
+        elif event.key == 'c': # Calibration
+            self.on_calibrate(event, True, True)
+        elif event.key == 'p': # Polylines
+            self.on_polyline(event, True, True)
+        elif event.key == 't': # Target Area
+            self.on_coral(event, True, True)
         elif event.key == 'd': # DEBUG
             if not self.debug:
                 self.debug = True
@@ -650,8 +663,8 @@ class Controller():
 
     def on_save(self, event):
         if not self.save_session:
-            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='Text File (*.txt)|*.txt')
-            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.txt')
+            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='XML File (*.xml)|*.xml')
+            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
             if dialog.ShowModal()==wx.ID_OK:
                 self.save_session = save_session.SaveSession(self, dialog.GetPath())
                 self.save_session.write()

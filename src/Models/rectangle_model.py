@@ -29,6 +29,7 @@ class Model():
         self.adjust = False
         self.picked = ''
         self.left = None
+        self.left_adj = None
         
     def on_mouse_motion(self, event):
         if self.drag:

@@ -36,7 +36,7 @@ class Controller():
                           'Orange' : '#FF9900',
                           'White' : '#FFFFFF',
                           'Black' : '#000000'}
-        image = wx.Image("images/cursor_cross2.png", wx.BITMAP_TYPE_PNG)
+        image = wx.Image("images/cursor_cross.png", wx.BITMAP_TYPE_PNG)
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9) 
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9) 
         self.cursor = wx.CursorFromImage(image)

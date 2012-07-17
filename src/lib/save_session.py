@@ -188,7 +188,7 @@ class SaveSession():
 
         # Redraw and resize the screen
         self.controller.view.aspect = float(aspect)
-        self.controller.view.aspect_cb.SetValue(str(int(float(aspect)*100.0))+'%')
+        self.controller.view.aspect_cb.SetValue(str(int(round(float(aspect)*100.0)))+'%')
         self.controller.on_aspect(None, int(scroll_x), int(scroll_y))
 
     def write(self):

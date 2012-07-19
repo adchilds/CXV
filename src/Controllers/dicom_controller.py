@@ -100,6 +100,7 @@ class Controller():
                      'Adjust Calibration Region']
             self.enable_tools(tools, True)
             self.enable_tools(['&Save...\tCtrl+S'], False)
+            self.view.menubar.FindItemById(self.view.menubar_ids['Export']).Enable(True)
 
             # If the user loads a saved session, we don't want to set these to None!
             if not savedsesh:
@@ -152,7 +153,7 @@ class Controller():
         self.enable_tools(['Lock Target Area', 'Filtered Overlays'], False)
 
     def on_quit(self, event):
-        if self.save_prompt() is not -1:
+        if self.save_prompt() is not -1: # Cancel button
             wx.Exit()
 
     def save_prompt(self):
@@ -202,13 +203,13 @@ class Controller():
         self.view.scroll.Scroll(init_pos_x, init_pos_y)
         self.state_changed(True)
 
-    def resize_image(self, sx=0, sy=0, hide=True):
+    def resize_image(self, sx=0, sy=0, hide=True, always_hide=False):
         self.resize_mpl_widgets()
         if hide:
             self.view.scroll.Hide()
         self.set_scrollbars(sx, sy)
         self.cache_background()
-        if hide:
+        if hide and not always_hide:
             self.view.scroll.Show()
         self.cleanup()
         self.update_overview()
@@ -472,6 +473,7 @@ class Controller():
     def on_scroll(self, event):
         event.Skip()
         self.update_overview()
+        self.state_changed(True)
 
     def on_resize(self, event):
         event.Skip()
@@ -492,7 +494,7 @@ class Controller():
             self.cleanup()
             self.update_overview()
 
-    def on_aspect(self, event, x=0, y=0):
+    def on_aspect(self, event, x=0, y=0, always_hide=False):
         m = self.ztf_patt.match(self.view.aspect_cb.GetLabel()) # Zoom to fit
         if m:
             if self.ztf:
@@ -525,9 +527,9 @@ class Controller():
             prev_vertical = self.view.scroll.GetScrollPos(wx.VERTICAL)
             prev_horizontal = self.view.scroll.GetScrollPos(wx.HORIZONTAL)
 
-            self.resize_image(prev_horizontal, prev_vertical)
+            self.resize_image(prev_horizontal, prev_vertical, always_hide=always_hide)
         else:
-            self.resize_image(x, y)
+            self.resize_image(x, y, always_hide=always_hide)
 
         # Update toggle_selector's background. Otherwise, next time we try to
         # drag zoom, the objects overlaying the image will disappear during drag
@@ -601,7 +603,55 @@ class Controller():
             self.overlay_controller.view.Raise()
 
     def on_plugin(self, event):
+        """ Filter Plugin submenu """
         pass
+
+    def on_export(self, event):
+        """ Export event
+        
+        Exports the DICOM image with all polylines, rectangles,
+        and overlays shown in the selected format.
+        
+        Formats include:
+            PNG (*.png)    - Portable Network Graphics
+            *****TIFF (*.tif)   - Tagged Image File Format (Tagged Image File (*.tif)|*.tif|)
+            DXF (*.dxf)    - Autodesk Drawing Exhange Format
+        """
+        wildcard = 'Portable Network Graphic (*.png)|*.png|Drawing Exchange Format (*.dxf)|*.dxf'
+        dialog = wx.FileDialog(self.view, "Export As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard)
+        dialog.SetFilename(self.model.get_image_name().split('.')[0])
+        if dialog.ShowModal()==wx.ID_OK:
+            pb = progress_bar.ProgressBar('Exporting Image', 'Initiating export', 5, self.view)
+            temp = self.view.aspect
+            self.view.aspect = 1.00
+            self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
+            pb.update('Calculating image size')
+            self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
+            pb.update('Saving image')
+
+            if self.get_file_extension(dialog.GetPath()) == '.tif': # Convert PNG to TIFF if .tif is selected
+                import Image # PIL (Python Image Library)
+
+                path = dialog.GetPath()
+                path = path.split('.')[0] + '.png'
+                self.view.figure.savefig(path, dpi=self.view.figure.dpi)
+                Image.open(path).save(path.split('.')[0] + '.tif', 'TIFF')
+                os.remove(path) # Remove the PNG but keep the TIFF
+            elif self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
+                print 'DXF'
+            else:
+                self.view.figure.savefig(dialog.GetPath(), dpi=self.view.figure.dpi)
+
+            self.view.aspect_cb.SetValue(str(int(temp*100.0))+'%')
+            pb.update('Finishing up...')
+            self.on_aspect(None, 0, 0) # Set back to current size
+            self.view.scroll.Show()
+            pb.finish('Complete!')
+
+    def get_file_extension(self, file_path):
+        """ Returns the file's extension, given the file's path """
+        fileName, file_extension = os.path.splitext(file_path)
+        return file_extension
 
     def on_polyline_menu(self, event):
         """ Menu callback event for drawing polylines """

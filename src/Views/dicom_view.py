@@ -49,12 +49,17 @@ class View(wx.Frame):
         self.create_statusbar()
 
         self.scroll.Bind(wx.EVT_SCROLLWIN, self.controller.on_scroll) # scroll event
+        self.scroll.Bind(wx.EVT_SCROLL, self.on_scroll)
         self.Bind(wx.EVT_SIZE, self.controller.on_resize)
         self.Bind(wx.EVT_ACTIVATE, self.controller.cleanup)
         self.Bind(wx.EVT_CLOSE, self.controller.on_quit)
         self.Bind(wx.EVT_CONTEXT_MENU, self.controller.on_show_popup)
 
         self.Show()
+
+    def on_scroll(self, event):
+        event.Skip()
+        self.controller.state_changed(True)
 
     def create_menubar(self):
         self.menubar = wx.MenuBar()
@@ -88,6 +93,8 @@ class View(wx.Frame):
         return ( [ # File
                   ('&Open...\tCtrl+O', (wx.ACCEL_CTRL, 'O'), self.controller.on_open, True, False, None),
                   ('&Save...\tCtrl+S', (wx.ACCEL_CTRL, 'S'), self.controller.on_save, False, False, None),
+                  ('', '', '', True, False, None),
+                  ('Export', (), self.controller.on_export, False, False, None),
                   ('', '', '', True, False, None),
                   ('&Quit\tCtrl+Q', (wx.ACCEL_CTRL, 'Q'), self.controller.on_quit, True, False, None)
                   ],

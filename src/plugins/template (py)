@@ -1,9 +1,8 @@
-from Controllers import plugin_controller
 from yapsy.IPlugin import IPlugin
 import wx
 
 class Filters(IPlugin):
-    """ SKELETON DESCRIPTION (REPLACE NECESSARY TEXT)"""
+    """ TEMPLATE DESCRIPTION (REPLACE NECESSARY TEXT)"""
 
     def __init__(self):
     	""" Can be left alone. Not necessary for the plugin to run

@@ -13,8 +13,9 @@
 #########################################################
 from Models import rectangle_model
 from Views import calibrate_view
-import wx
+import math
 import numpy as np
+import wx
 
 class Controller():
 
@@ -85,19 +86,31 @@ class Controller():
         self.max_thickness = float(params[2])
         self.update_calib_data()
         self.view.Hide()
+        self.print_info()
         
     def update_calib_data(self):
-        #load in original dicom pixel data and normalize
+        # Load in original dicom pixel data and normalize
         calib_region = self.dicom_view.model.ds.pixel_array.astype(np.double)
         calib_region = self.dicom_view.model.normalize_intensity(calib_region)
         #calib_region = self.dicom_view.model.invert_grayscale(calib_region)
-        #Cut down dicom pixel data to user defined calibration region
+
+        # Cut down dicom pixel data to user defined calibration region
         x, y, dx, dy = self.dicom_view.controller.calib_region
         calib_region = calib_region[y:dy-1, x:dx-1]
+
+        # Find out which side of the rectangle is longer (width or height)
+        if math.fabs(dx - x) > math.fabs(dy - y):
+            dw_grayscales = np.mean(calib_region, 1)
+        else:
+            dw_grayscales = np.mean(calib_region, 0)
+
+        """
         if np.mean(calib_region.std(0, ddof=1)) > np.mean(calib_region.std(1, ddof=1)):
             dw_grayscales = np.mean(calib_region, 1)
         else:
             dw_grayscales = np.mean(calib_region, 0)
+        """
+
         self.dw_grayscales = [dw_grayscales.max(), dw_grayscales.min()]
         b, m, r2 = self.my_least_sq(self.dw_grayscales,
                                     [self.min_thickness, self.max_thickness])
@@ -106,7 +119,7 @@ class Controller():
                                     [1., 100.])
         self.dw_reldenfit = [b, m, r2]
         self.dw_grayscales = [dw_grayscales.min(), dw_grayscales.max()]
-        
+
     def my_least_sq(self, X, Y):
         x = np.ndarray(len(X), np.double)
         for i in range(len(X)):
@@ -129,7 +142,7 @@ class Controller():
         totalSS = sum_y2 - (sum_y**2)/N
         regSS = m*(sum_xy - (sum_x*sum_y)/N)
         r2 = regSS / totalSS
-        
+
         return [b, m, r2]
     
     def on_close(self, event):

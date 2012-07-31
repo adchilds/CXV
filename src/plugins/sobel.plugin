@@ -3,7 +3,7 @@ Name = Sobel Filter
 Module = sobel
 
 [Documentation]
-Author = Luke Mueller
+Author = Luke Mueller via Dave Zawada's Matlab code
 Version = 1.0
 Website = http://www.usgs.gov
 Description = The sobel operator calculates the gradient of the image intensity at each point, giving the direction of the largest possible increase from light to dark and the rate of change in that direction. The result therefore shows how "abruptly" or "smoothly" the image changes at that point, and therefore how likely it is that that part of the image represents an edge, as well as how that edge is likely to be oriented.

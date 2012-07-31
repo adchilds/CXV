@@ -3,7 +3,7 @@ Name = FFT + Butterworth HPF
 Module = butterworth
 
 [Documentation]
-Author = Luke Mueller
+Author = Luke Mueller via Dave Zawada's Matlab code
 Version = 1.0
 Website = http://www.usgs.gov
 Description = The fast fourier transformation (FFT) algorithm, is used to obtain a frequency-filtered version of an image. The Butterworth filter is a type of signal processing filter designed to have as flat a frequency response as possible in the passband. It is also referred to as a maximally flat magnitude filter.

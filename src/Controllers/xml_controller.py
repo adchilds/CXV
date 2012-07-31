@@ -8,7 +8,6 @@
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
-import sys
 import chilkat # XML API
 import wx
 
@@ -24,6 +23,7 @@ class Controller():
 
     def load_file(self):
         """ Attempts to load the XML file on the given file_path """
+        self.file_path = self.file_path.encode('ascii', 'ignore')
         return self.xml.LoadXmlFile(self.file_path)
 
     def create_config(self):
@@ -129,7 +129,8 @@ class Controller():
                     i = i + 1
 
         # Save the file after we're done creating it
-        return self.xml.SaveXml(self.file_path)
+        file_path = self.file_path.encode('ascii', 'ignore')
+        return self.xml.SaveXml(file_path)
 
     def get_plugin_directory(self):
         """ Returns the user's default plugin directory as a string """
@@ -140,7 +141,10 @@ class Controller():
         
         @var file_path - The path to set plugin_directory to
         """
-        self.xml.UpdateChildContent('plugin_directory', file_path)
+        # Need to convert this to ascii from unicode, otherwise
+        # chilkat complains. Doesn't complain on Win XP though...?
+        file_path = file_path.encode('ascii', 'ignore')
+        self.xml.UpdateChildContent("plugin_directory", file_path)
         self.xml.SaveXml(self.file_path)
 
     def print_xml_file(self):

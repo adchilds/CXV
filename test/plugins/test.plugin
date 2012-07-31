@@ -1,9 +1,0 @@
-[Core]
-Name = Test Filter
-Module = test
-
-[Documentation]
-Author = Adam Childs
-Version = 0.1
-Website = http://www.usgs.gov
-Description = Test plugin

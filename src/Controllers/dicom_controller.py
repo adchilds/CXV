@@ -26,12 +26,12 @@ from lib import browse_dialog
 from lib import progress_bar
 from lib import save_session
 from Views import dicom_view
-import getpass
-import wx
-import wx.lib.filebrowsebutton as filebrowse
-import re
-import os
+import Image # PIL (Python Image Library)
 import math
+import os
+import re
+import shutil
+import wx
 
 class Controller():
     
@@ -53,30 +53,43 @@ class Controller():
         self.save_session = None
         self.changed = False
         self.pan_image = False # Is the user able to currently pan the image?
+        self.toolbar_pan = False
         self.left_down = False # Is the user holding the left mouse button?
         self.background = None
         self.xml = None
         self.plugin_directory = ""
         self.debug = False
         self.model = dicom_model.Model()
-        self.view = dicom_view.View(self, self.model)
         self.zoom_model = zoom_model.Model()
+
+        self.view = dicom_view.View(self, self.model)
         self.zoom_controller = zoom_controller.Controller(self, self.view, self.model)
-        self.cursor_hand = wx.CursorFromImage(wx.Image("images/cursor_hand_open.gif", wx.BITMAP_TYPE_GIF))
-        self.cursor_hand_drag = wx.CursorFromImage(wx.Image("images/cursor_hand_closed.gif", wx.BITMAP_TYPE_GIF))
 
         # Check for the XML config file. If it's installed,
         # read the corresponding data. If it's not installed,
         # install it to the user's home directory, setting
         # default values.
         path = os.path.expanduser('~')
-        if os.path.exists(r'' + path + '\.cxvrc.xml'):
-            self.xml = xml_controller.Controller(path + '\.cxvrc.xml')
+        if os.path.exists(r'' + path + os.sep + '.cxvrc.xml'):
+            self.xml = xml_controller.Controller(path + os.sep + '.cxvrc.xml')
             self.xml.load_file()
             self.plugin_directory = self.xml.get_plugin_directory()
         else:
-            self.xml = xml_controller.Controller(path + '\.cxvrc.xml')
+            self.xml = xml_controller.Controller(path + os.sep + '.cxvrc.xml')
             self.xml.create_config()
+
+        path = os.path.expanduser('~') + os.sep + "plugins" + os.sep
+
+        # Move the plugins to a plugins folder for the user's main directory
+        # Only copies over the file if it doesn't already exist in the directory
+        if not os.path.exists(path):
+            os.makedirs(path)
+        for file in os.listdir(self.view.get_main_dir() + os.sep + "plugins"):
+            if not os.path.exists(path + os.sep + file):
+                shutil.copy("plugins" + os.sep + file, path)
+        
+        self.cursor_hand = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_open.gif', wx.BITMAP_TYPE_GIF))
+        self.cursor_hand_drag = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_closed.gif', wx.BITMAP_TYPE_GIF))
 
     def on_open(self, event):
         dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml)|*.DCM; *.xml|DICOM (*.DCM)|*.DCM|Saved session (*.xml)|*.xml', style=wx.FD_FILE_MUST_EXIST)
@@ -95,7 +108,7 @@ class Controller():
                 savedsesh = True
             self.view.aspect_cb.Enable()
             tools = ['Image Overview', 'Image Information', 
-                     'Pan Image', 'Zoom In', 'Zoom Out', 'Adjust Contrast', 
+                     'Pan Image', 'Zoom In', 'Zoom Out', 
                      'Adjust Target Area', 'Draw Polylines',
                      'Adjust Calibration Region']
             self.enable_tools(tools, True)
@@ -118,29 +131,41 @@ class Controller():
         for each in p:
             label += (each + os.sep)
         label = label[:-1]
-        pb = progress_bar.ProgressBar('Loading DICOM', label, 7, self.view)
+        self.pb = progress_bar.ProgressBar('Loading DICOM', label, 7, self.view)
         self.model.image_array = self.model.load_dicom_image(path)
-        pb.update(label)
+        self.pb.update(label)
         y, x = self.model.get_image_shape()
-        pb.update(label)
+        self.pb.update(label)
         try: rgba, self.ptr = self.model.allocate_array((y, x, 4))
         except ValueError: rgba, self.ptr = self.model.allocate_array((y, x, 4))
-        pb.update(label)
+        self.pb.update(label)
         self.model.image_array = self.model.normalize_intensity(self.model.image_array)
-        pb.update(label)
+        self.pb.update(label)
         self.model.image_array = self.model.invert_grayscale(self.model.image_array)
-        pb.update(label)
+        self.pb.update(label)
         self.model.image_array = self.model.set_display_data(rgba, self.model.image_array, 1.0)
-        pb.update(label)
+        self.pb.update(label)
         self.view.init_plot(new)
-        pb.finish(label)
+        self.pb.finish(label)
         self.cleanup()
+        self.pb = None
 
     def open_saved_session(self, path, new):
+        if self.view.figure is not None:
+            self.view.figure.clear()
         self.save_session = save_session.SaveSession(self, path)
         self.save_session.load_file()
-        self.open_dicom_file(self.save_session.fn, new)
+        try:
+            self.open_dicom_file(self.save_session.fn, new)
+        except IOError:
+            self.save_session = None
+            self.pb.Destroy()
+            self.pb = None
+            # Image path not found, prompt user to edit XML file with correct path to image
+            wx.MessageBox('Image location not found! Please edit the saved session XML file and add the correct image location between the "filename" tags.', 'Invalid Image Path', wx.OK | wx.ICON_ERROR)
+            return
         self.save_session.load()
+        self.changed = False
 
     def close_current(self):
         self.model.deallocate_array(self.ptr)
@@ -446,6 +471,7 @@ class Controller():
             if not self.pan_image:
                 self.pan_image = True
                 self.view.canvas.SetCursor(self.cursor_hand)
+                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], True)
         elif event.key == 'c': # Calibration
             self.on_calibrate(event, True, True)
         elif event.key == 'p': # Polylines
@@ -456,15 +482,16 @@ class Controller():
             if not self.debug:
                 self.debug = True
                 self.debug_message("DEBUG Activated...")
+                self.view.create_menubar()
             else:
                 self.debug = False
                 print "DEBUG De-Activated..."
 
     def on_key_release(self, event):
-        toolbar_pan = self.view.toolbar.GetToolState(self.view.toolbar_ids['Pan Image'])
-        if not toolbar_pan:
+        if not self.toolbar_pan:
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], False)
 
     def on_figure_leave(self, event):
         self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
@@ -607,15 +634,13 @@ class Controller():
         pass
 
     def on_export(self, event):
-        """ Export event
-        
-        Exports the DICOM image with all polylines, rectangles,
+        """ Exports the DICOM image with all polylines, rectangles,
         and overlays shown in the selected format.
         
         Formats include:
             PNG (*.png)    - Portable Network Graphics
-            *****TIFF (*.tif)   - Tagged Image File Format (Tagged Image File (*.tif)|*.tif|)
             DXF (*.dxf)    - Autodesk Drawing Exhange Format
+            **REMOVED**TIFF (*.tif)   - Tagged Image File Format (Tagged Image File (*.tif)|*.tif|)
         """
         wildcard = 'Portable Network Graphic (*.png)|*.png|Drawing Exchange Format (*.dxf)|*.dxf'
         dialog = wx.FileDialog(self.view, "Export As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard)
@@ -629,24 +654,38 @@ class Controller():
             self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
             pb.update('Saving image')
 
+            """
+            # TIFF IMAGE STUFF HERE (REMOVED)
+            # Converting to TIFF double original image size, so we just export to PNG instead
             if self.get_file_extension(dialog.GetPath()) == '.tif': # Convert PNG to TIFF if .tif is selected
-                import Image # PIL (Python Image Library)
-
                 path = dialog.GetPath()
                 path = path.split('.')[0] + '.png'
                 self.view.figure.savefig(path, dpi=self.view.figure.dpi)
                 Image.open(path).save(path.split('.')[0] + '.tif', 'TIFF')
                 os.remove(path) # Remove the PNG but keep the TIFF
-            elif self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
-                print 'DXF'
+            el
+            """
+            if self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
+                self.create_dxf(dialog.GetPath())
             else:
+                # Toggle polyline animation off
+                lw = self.polyline_controller.get_line_width()
+                self.polyline_controller.set_animated(False, lw+3)
+
+                # Save the figure
                 self.view.figure.savefig(dialog.GetPath(), dpi=self.view.figure.dpi)
+
+                # Toggle polyline animation on
+                self.polyline_controller.set_animated(True, lw)
 
             self.view.aspect_cb.SetValue(str(int(temp*100.0))+'%')
             pb.update('Finishing up...')
             self.on_aspect(None, 0, 0) # Set back to current size
             self.view.scroll.Show()
             pb.finish('Complete!')
+
+    def create_dxf(self, file_path):
+        print file_path
 
     def get_file_extension(self, file_path):
         """ Returns the file's extension, given the file's path """
@@ -771,6 +810,11 @@ class Controller():
         self.on_pan_image(event)
 
     def on_pan_image(self, event):
+        if self.toolbar_pan:
+            self.toolbar_pan = False
+        else:
+            self.toolbar_pan = True
+
         if self.view.toolbar.GetToolState(self.view.toolbar_ids['Pan Image']):
             self.pan_image = True
 

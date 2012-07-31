@@ -94,8 +94,16 @@ class View(wx.MiniFrame):
         path = os.path.expanduser('~')
         xml = xml_controller.Controller(path + '\.cxvrc.xml')
         xml.load_file()
-        xml.get_plugin_directory()
-        directory = ["plugins", xml.get_plugin_directory()]
+
+        if os.path.exists(os.path.expanduser('~') + os.sep + "plugins"):
+            default_dir = os.path.expanduser('~') + os.sep + "plugins"
+        else:
+            default_dir = self.dicom_view.get_main_dir() + os.sep + "plugins"
+
+        if xml.get_plugin_directory() == "":
+            directory = [default_dir]
+        else:
+            directory = [default_dir, xml.get_plugin_directory()]
 
         # Load the plugins from the default plugin directory.
         manager = PluginManager()

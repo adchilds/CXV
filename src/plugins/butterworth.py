@@ -1,4 +1,3 @@
-from Controllers import plugin_controller
 from yapsy.IPlugin import IPlugin
 import math
 import numpy as np

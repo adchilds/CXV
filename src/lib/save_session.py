@@ -17,7 +17,6 @@ from Controllers import calibrate_controller
 from Controllers import xml_controller
 from Models import polyline_model
 import chilkat # XML API
-import re
 
 class SaveSession():
     
@@ -28,7 +27,8 @@ class SaveSession():
 
     def load_file(self):
         xml = chilkat.CkXml()
-        xml.LoadXmlFile(self.path)
+        path = self.path.encode('ascii', 'ignore')
+        xml.LoadXmlFile(path)
         xml.UnzipTree()
         self.fn = xml.getChildContent("filename")
 
@@ -37,7 +37,8 @@ class SaveSession():
         zoom factor, scrollbars, etc.) from the saved session (*.xml) file.
         """
         xml = chilkat.CkXml()
-        xml.LoadXmlFile(self.path)
+        path = self.path.encode('ascii', 'ignore')
+        xml.LoadXmlFile(path)
 
         # Load Calibration Region
         calib = xml.SearchForContent(xml, "calibration_region", "")

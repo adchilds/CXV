@@ -9,6 +9,7 @@
 #             Department of Interior (DOI)
 #########################################################
 from Models import polyline_model as pl
+import os
 import wx
 
 class Controller():
@@ -36,7 +37,7 @@ class Controller():
                           'Orange' : '#FF9900',
                           'White' : '#FFFFFF',
                           'Black' : '#000000'}
-        image = wx.Image("images/cursor_cross.png", wx.BITMAP_TYPE_PNG)
+        image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_cross.png", wx.BITMAP_TYPE_PNG)
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9) 
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9) 
         self.cursor = wx.CursorFromImage(image)
@@ -301,3 +302,26 @@ class Controller():
                 ('White', self.set_color),
                 ('Black', self.set_color)
                 ]
+
+    def get_line_width(self):
+        """ Returns the current width of the polylines. We only
+        need to check the first one, since they should all be the
+        same.
+        """
+        for polyline in self.polylines:
+            for line in polyline.lines:
+                return line.get_linewidth()
+        return None # if no lines exist
+
+    def set_animated(self, anim, line_width):
+        """ Toggles the animation of lines on or off. Used when saving
+        the figure. If lines are animated, they do not show in the saved
+        image.
+        
+        @var anim - boolean value indicating whether or not the lines should be animated
+        @var line_width - the line width the change the polylines to (bigger is better for saving)
+        """
+        for polyline in self.polylines:
+            for line in polyline.lines:
+                line.set_animated(anim)
+                line.set_linewidth(line_width)

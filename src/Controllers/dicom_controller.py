@@ -20,6 +20,7 @@ from Controllers import overview_controller
 from Controllers import polyline_controller
 from Controllers import xml_controller
 from Controllers import zoom_controller
+from dxfwrite import DXFEngine as dxf
 from Models import dicom_model
 from Models import zoom_model
 from lib import browse_dialog
@@ -46,19 +47,20 @@ class Controller():
         self.polyline = False
         self.polyline_locked = False
         self.calib = False
+        self.changed = False
+        self.pan_image = False # Is the user able to currently pan the image?
+        self.toolbar_pan = False
+        self.left_down = False # Is the user holding the left mouse button?
+        self.polyline_cursor_on = False
+        self.debug = False
         self.coral_controller = None
         self.overlay_controller = None
         self.polyline_controller = None
         self.calibrate_controller = None
         self.save_session = None
-        self.changed = False
-        self.pan_image = False # Is the user able to currently pan the image?
-        self.toolbar_pan = False
-        self.left_down = False # Is the user holding the left mouse button?
         self.background = None
         self.xml = None
         self.plugin_directory = ""
-        self.debug = False
         self.model = dicom_model.Model()
         self.zoom_model = zoom_model.Model()
 
@@ -80,7 +82,7 @@ class Controller():
 
         path = os.path.expanduser('~') + os.sep + "plugins" + os.sep
 
-        # Move the plugins to a plugins folder for the user's main directory
+        # Move the plugins to a plugins folder for the user's home directory
         # Only copies over the file if it doesn't already exist in the directory
         if not os.path.exists(path):
             os.makedirs(path)
@@ -90,6 +92,10 @@ class Controller():
         
         self.cursor_hand = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_open.gif', wx.BITMAP_TYPE_GIF))
         self.cursor_hand_drag = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_closed.gif', wx.BITMAP_TYPE_GIF))
+        image = wx.Image(self.view.get_main_dir() + os.sep + "images" + os.sep + "cursor_cross.png", wx.BITMAP_TYPE_PNG)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9)
+        self.cursor_polyline = wx.CursorFromImage(image)
 
     def on_open(self, event):
         dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml)|*.DCM; *.xml|DICOM (*.DCM)|*.DCM|Saved session (*.xml)|*.xml', style=wx.FD_FILE_MUST_EXIST)
@@ -123,7 +129,6 @@ class Controller():
                 self.calibrate_controller = None
 
     def open_dicom_file(self, path, new):
-        print path
         p = path.split(os.sep)
         p = p[:3] + p[-2:]
         p[2] = '...'
@@ -421,6 +426,8 @@ class Controller():
                 self.view.canvas.SetCursor(self.cursor_hand_drag)
             elif self.zoom:
                 self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+            elif self.polyline_cursor_on:
+                self.view.canvas.SetCursor(self.cursor_polyline)
             else:
                 self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
         elif event.button == 2: # Scroll-wheel button??
@@ -459,6 +466,8 @@ class Controller():
             self.view.canvas.SetCursor(self.cursor_hand)
         elif (event.button == 1 or event.button == 3) and self.zoom:
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+        elif (event.button == 1 or event.button == 3) and self.polyline_cursor_on:
+            self.view.canvas.SetCursor(self.cursor_polyline)
         else:
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
@@ -652,7 +661,6 @@ class Controller():
             self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
             pb.update('Calculating image size')
             self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
-            pb.update('Saving image')
 
             """
             # TIFF IMAGE STUFF HERE (REMOVED)
@@ -666,8 +674,10 @@ class Controller():
             el
             """
             if self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
+                pb.update('Saving DXF file')
                 self.create_dxf(dialog.GetPath())
             else:
+                pb.update('Saving image')
                 # Toggle polyline animation off
                 lw = self.polyline_controller.get_line_width()
                 self.polyline_controller.set_animated(False, lw+3)
@@ -685,7 +695,46 @@ class Controller():
             pb.finish('Complete!')
 
     def create_dxf(self, file_path):
-        print file_path
+        """ Creates a DXF file with the coordinates of the polylines on the image """
+        if self.polyline_controller:
+            # Create a DXF object
+            drawing = dxf.drawing(file_path)
+            points = []
+
+            # Header information
+            drawing.header['$ACADVER'] = 'AC1014'
+
+            """
+            drawing.add_layer('LINES', color=2)
+            # Loops through all polylines
+            for polyline in self.polyline_controller.polylines:
+                # Loops through all verticies of each polyline
+                for vertex in polyline.verticies:
+                    x = vertex.get_xdata()
+                    y = vertex.get_ydata()
+                    points.append((x, y))
+                
+                # Adds the points to a line object, which is added to the DXF file
+                for i in xrange(len(points) - 1):
+                    drawing.add(dxf.line(points[i], points[i+1]))
+
+                points = [] # Reset points for the next polyline to use
+
+            """
+            drawing.add_layer('POLYLINES', color=2)
+            # Loops through all polylines
+            for polyline in self.polyline_controller.polylines:
+                # Loops through all verticies of each polyline
+                for vertex in polyline.verticies:
+                    x = int(vertex.get_xdata())
+                    y = int(vertex.get_ydata())
+                    points.append((x, y))
+                
+                # Adds the points to a polyline object, which is added to the DXF file
+                drawing.add(dxf.polyline(points))
+                points = [] # Reset points for the next polyline to use
+
+            drawing.save()
 
     def get_file_extension(self, file_path):
         """ Returns the file's extension, given the file's path """
@@ -707,11 +756,18 @@ class Controller():
         self.polyline_locked = False
         self.coral = False
         self.calib = False
+
+        if not self.polyline_cursor_on:
+            self.view.canvas.SetCursor(self.cursor_polyline)
+            self.polyline_cursor_on = True
+        else:
+            self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            self.polyline_cursor_on = False
+
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Target Area'], False)
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         if not self.polyline_controller:
             self.polyline_controller = polyline_controller.Controller(self, self.view, self.background)
-            #self.enable_tools(['Lock Polylines'], True)
         self.draw_all()
         self.state_changed(True)
 
@@ -745,7 +801,7 @@ class Controller():
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
         if not self.calibrate_controller:
             self.calibrate_controller = calibrate_controller.Controller(self.view, self.background)
-            self.enable_tools(['Set Density Parameters'], True)
+            self.enable_tools(['Set Calibration Parameters'], True)
         self.draw_all()
         self.state_changed(True)
 

@@ -86,7 +86,6 @@ class Controller():
         self.max_thickness = float(params[2])
         self.update_calib_data()
         self.view.Hide()
-        self.print_info()
         
     def update_calib_data(self):
         # Load in original dicom pixel data and normalize
@@ -104,13 +103,6 @@ class Controller():
         else:
             dw_grayscales = np.mean(calib_region, 0)
 
-        """
-        if np.mean(calib_region.std(0, ddof=1)) > np.mean(calib_region.std(1, ddof=1)):
-            dw_grayscales = np.mean(calib_region, 1)
-        else:
-            dw_grayscales = np.mean(calib_region, 0)
-        """
-
         self.dw_grayscales = [dw_grayscales.max(), dw_grayscales.min()]
         b, m, r2 = self.my_least_sq(self.dw_grayscales,
                                     [self.min_thickness, self.max_thickness])
@@ -127,7 +119,7 @@ class Controller():
         y = np.ndarray(len(Y), np.double)
         for i in range(len(Y)):
             y[i] = Y[i]
-            
+
         N = len(x)
         sum_x = np.sum(x)
         sum_x2 = np.sum(x*x)
@@ -135,10 +127,10 @@ class Controller():
         sum_y2 = np.sum(y*y)
         sum_xy = np.sum(x*y)
         sum_xx2 = sum_x2 - ((sum_x**2)/N)
-        
+
         m = (sum_xy - (sum_x*sum_y)/N) / sum_xx2
         b = np.mean(y) - m*np.mean(x)
-        
+
         totalSS = sum_y2 - (sum_y**2)/N
         regSS = m*(sum_xy - (sum_x*sum_y)/N)
         r2 = regSS / totalSS

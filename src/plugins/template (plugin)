@@ -1,6 +1,6 @@
 [Core]
 Name = PLUGIN NAME
-Module = MODULE NAME
+Module = MODULE NAME (Python file without the .py extension)
 
 [Documentation]
 Author = AUTHOR OF PLUGIN

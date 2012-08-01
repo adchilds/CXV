@@ -42,9 +42,14 @@ class Filters(IPlugin):
         execution.
         """
         # Update the progress bar to show beginning
-        wx.CallAfter(self.pb.update, 'Applying SOME FILTER to overlay #')
+        wx.CallAfter(self.pb.update, 'Applying SOME FILTER to overlay ' + str(self.overlay_num))
 
-		# Code here for applying the filter (ALGORITHM GOES HERE)
+		# Code here for applying the filter (ALGORITHM GOES BELOW THIS LINE)
+
+		# Create the overlay and append it to the list
+		# NOTE: User's algorithm should change 'self.coral_slab' which holds the raw data
+        self.overlay_controller.overlays.append(self.coral_slab)
+        self.overlay_controller.alphas.append(0)
 
 		# Update the progress bar to show completion
 		wx.CallAfter(self.pb.update, 'Completed SOME FILTER')

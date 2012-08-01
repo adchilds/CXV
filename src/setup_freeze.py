@@ -117,7 +117,7 @@ executables = [
 
 cx_Freeze.setup(
         name = "Coral X-Ray Viewer",
-        version = "0.1",
+        version = "1.0",
         author = 'US Geological Survey',
         description = "Coral x-ray image viewing software for USGS",
         executables = executables,

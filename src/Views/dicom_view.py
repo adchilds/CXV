@@ -120,9 +120,9 @@ class View(wx.Frame):
                   ('Filter Plugins', (), self.controller.on_plugin, True, True, None),
                   ('', '', '', True, False, None),
                   ('Adjust Calibration Region', (), self.controller.on_calibrate_menu, False, False, None),
-                  ('Set Density Parameters', (), self.controller.on_density_params, False, False, None),
+                  ('Set Calibration Parameters', (), self.controller.on_density_params, False, False, None),
                   ('', '', '', True, False, None),
-                  ('Draw Polylines', (), self.controller.on_polyline_menu, False, False, None)
+                  ('Draw Polylines', (), self.controller.on_polyline_menu, False, False, None),
                   ]
                 )
 
@@ -147,7 +147,7 @@ class View(wx.Frame):
         else:
             default_dir = self.get_main_dir() + os.sep + "plugins"
 
-        if xml.get_plugin_directory() == "":
+        if xml.get_plugin_directory() == "" or xml.get_plugin_directory() is None:
             directory = [default_dir]
         else:
             directory = [default_dir, xml.get_plugin_directory()]
@@ -219,9 +219,9 @@ class View(wx.Frame):
                 ('simple', 'Filtered Overlays', 'images' + os.sep + 'overlay.png', self.controller.on_overlay, False),
                 ('separator', '', '', '', ''),
                 ('toggle', 'Adjust Calibration Region', 'images' + os.sep + 'calibrate.png', self.controller.on_calibrate, False),
-                ('simple', 'Set Density Parameters', 'images' + os.sep + 'density.png', self.controller.on_density_params, False),
+                ('simple', 'Set Calibration Parameters', 'images' + os.sep + 'density.png', self.controller.on_density_params, False),
                 ('separator', '', '', '', ''),
-                ('toggle', 'Draw Polylines', 'images' + os.sep + 'polyline.png', self.controller.on_polyline, False)
+                ('toggle', 'Draw Polylines', 'images' + os.sep + 'polyline.png', self.controller.on_polyline, False),
                )
         
     def create_statusbar(self):

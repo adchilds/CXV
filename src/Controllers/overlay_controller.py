@@ -45,7 +45,7 @@ class Controller():
         else:
             default_dir = self.dicom_view.get_main_dir() + os.sep + "plugins"
 
-        if xml.get_plugin_directory() == "":
+        if xml.get_plugin_directory() == "" or xml.get_plugin_directory() is None:
             directory = [default_dir]
         else:
             directory = [default_dir, xml.get_plugin_directory()]

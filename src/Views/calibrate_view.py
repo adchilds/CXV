@@ -4,6 +4,9 @@
 # @author:    Luke Mueller
 # @contact:   muellelj@eckerd.edu or lmueller62@gmail.com
 #
+# @author:    Adam Childs
+# @contact:   adchilds@eckerd.edu
+#
 # @copyright: owned and maintained by the
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
@@ -14,92 +17,141 @@ class View(wx.MiniFrame):
     
     def __init__(self, controller):
         self.controller = controller
+        self.unit_selected = 'mm (MILLIMETERS)'
+        self.pixels_per_unit = ''
+        self.wedge_density = 2.790
+        self.min_wedge_thickness = 1.0
+        self.max_wedge_thickness = 5.0
+        self.density_panel = None # Holds our density parameter widgets
+        self.tc1 = None # Holds our pixels_per_unit value
+        self.dens = None
+        self.min = None
+        self.max = None
         
         wx.MiniFrame.__init__(self,
                               parent=None,
                               title="Set Calibration Parameters",
-                              size=(300, 400),
+                              size=(300, 300),
                               style=wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.RESIZE_BOX | wx.MAXIMIZE_BOX))
         
-        self.panel = wx.Panel(self)
+        panel = wx.Panel(self)
         panel_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        self.add_unit_pane(self.panel, panel_sizer, 'Unit of Measurement:')
-
-        for each in self.density_pane_data():
-            self.add_density_pane(self.panel, panel_sizer, *each)
-        
-        apply = wx.Button(self.panel, -1, 'Save')
-        panel_sizer.Add(apply, 0, wx.ALIGN_CENTER)
+        panel_sizer.Add(self.add_unit_pane(panel, panel_sizer), 0, wx.EXPAND)
         panel_sizer.AddSpacer(5)
-        self.panel.SetSizerAndFit(panel_sizer)
+        panel_sizer.Add(self.add_density_pane(panel, panel_sizer), 0, wx.EXPAND)
+        panel_sizer.AddSpacer(5)
+        save_button = wx.Button(panel, 0, 'Save')
+        panel_sizer.Add(save_button, 0, wx.CENTER)
+        panel.SetSizerAndFit(panel_sizer)
 
-        self.Bind(wx.EVT_BUTTON, self.controller.on_apply, apply)
+
+        self.Bind(wx.EVT_BUTTON, self.controller.on_apply, save_button)
         self.Bind(wx.EVT_CLOSE, self.controller.on_close)
-
-    def add_unit_pane(self, panel, panel_sizer, label):
-        outer_sb = wx.StaticBox(panel, -1, label)
-        sbs = wx.StaticBoxSizer(outer_sb, wx.VERTICAL)
-
-        # Inner 1
-        unit_st = wx.StaticText(panel, -1, 'Unit:')
-        rb1 = wx.RadioButton(panel, label='in', style=wx.RB_GROUP)
-        rb2 = wx.RadioButton(panel, label='cm')
-        rb3 = wx.RadioButton(panel, label='mm')
-
-        # Inner 2
-        pixels_st = wx.StaticText(panel, -1, '# of Pixels per Unit:')
-        pixels_ta = wx.TextCtrl(panel, style=wx.TE_LEFT, value='0')
-
-        # Inner 3
-        set = wx.Button(panel, -1, 'Set')
-
-        # Add Inner 1 to Sizer 1
-        inner_sb = wx.StaticBox(panel, -1, '')
-        sizer_one = wx.StaticBoxSizer(inner_sb, wx.HORIZONTAL)
-        sizer_one.Add(unit_st)
-        sizer_one.AddSpacer(5)
-        sizer_one.Add(rb1)
-        sizer_one.Add(rb2)
-        sizer_one.Add(rb3)
-
-        # Add Inner 2 to Sizer 2
-        sizer_two = wx.StaticBoxSizer(inner_sb, wx.HORIZONTAL)
-        sizer_two.Add(pixels_st)
-        sizer_two.AddSpacer(5)
-        sizer_two.Add(pixels_ta)
-
-        #self.rb1.Bind(wx.EVT_RADIOBUTTON, self.SetVal)
-        #self.rb2.Bind(wx.EVT_RADIOBUTTON, self.SetVal)
-        #self.rb3.Bind(wx.EVT_RADIOBUTTON, self.SetVal)
-
-        sbs.Add(sizer_one, 1, wx.EXPAND)
-        sbs.Add(sizer_two, 1, wx.EXPAND)
-        sbs.AddSpacer(5)
-        sbs.Add(set, 0, wx.ALIGN_CENTER)
-
-        panel_sizer.Add(sbs, 1, wx.EXPAND)
-        panel_sizer.AddSpacer(5)
-
-    def add_density_pane(self, panel, panel_sizer, label, units, default):
-        sb = wx.StaticBox(panel, -1, '')
-        sbs = wx.StaticBoxSizer(sb, wx.HORIZONTAL)
-        st = wx.StaticText(panel, -1, label, size=(110, -1))
-        tc = wx.TextCtrl(panel, -1, default, size=(100, -1))
-        st2 = wx.StaticText(panel, -1, units)
-        
-        sbs.Add(st)
-        sbs.AddSpacer(5)
-        sbs.Add(tc)
-        sbs.AddSpacer(5)
-        sbs.Add(st2)
-        
-        panel_sizer.Add(sbs, 1, wx.EXPAND)
-        panel_sizer.AddSpacer(5)
 
     def density_pane_data(self):
         return [
-                ('Wedge density: ', 'g/cm'+u'\u00B3', '2.790'),
-                ('Min wedge thickness: ', 'mm', '1.0'),
-                ('Max wedge thickness: ', 'mm', '5.0')
+                ('Wedge density: ', 'g/cm'+u'\u00B3', str(self.wedge_density)),
+                ('Min wedge thickness: ', 'mm', str(self.min_wedge_thickness)),
+                ('Max wedge thickness: ', 'mm', str(self.max_wedge_thickness))
                 ]
+
+    def add_density_pane(self, panel, panel_sizer):
+        """ Creates the Density Parameters panel """
+        self.density_panel = wx.StaticBox(panel, -1, 'Density Parameters')
+        density_panel_sizer = wx.StaticBoxSizer(self.density_panel, wx.VERTICAL)
+
+        # Create a horizontal row of widgets
+        i = 0
+        for each in self.density_pane_data():
+            sb = wx.StaticBox(panel, -1, '')
+            sbs = wx.StaticBoxSizer(sb, wx.HORIZONTAL)
+            st = wx.StaticText(panel, -1, each[0], size=(110, -1))
+
+            if i == 0:
+                self.dens = wx.TextCtrl(panel, -1, each[2], size=(100, -1), style=wx.TE_RIGHT)
+            elif i == 1:
+                self.min = wx.TextCtrl(panel, -1, each[2], size=(100, -1), style=wx.TE_RIGHT)
+            else:
+                self.max = wx.TextCtrl(panel, -1, each[2], size=(100, -1), style=wx.TE_RIGHT)
+
+            st2 = wx.StaticText(panel, -1, each[1])
+            
+            sbs.Add(st)
+            sbs.AddSpacer(5)
+
+            if i == 0:
+                sbs.Add(self.dens)
+            elif i == 1:
+                sbs.Add(self.min)
+            else:
+                sbs.Add(self.max)
+
+            sbs.AddSpacer(5)
+            sbs.Add(st2)
+            
+            density_panel_sizer.Add(sbs, 1, wx.EXPAND)
+            density_panel_sizer.AddSpacer(5)
+            i += 1
+
+        return density_panel_sizer
+
+    def add_unit_pane(self, panel, panel_sizer):
+        """ Creates the Unit Measurement panel """
+        unit_panel = wx.StaticBox(panel, -1, 'Unit of Measurement')
+        unit_panel_sizer = wx.StaticBoxSizer(unit_panel, wx.VERTICAL)
+
+        # Create horizontal row of widgets 1
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+
+        st1 = wx.StaticText(panel, label='UNIT:', size=(110, -1))
+        self.unit_choices = ['in (INCHES)',
+                            'cm (CENTIMETERS)',
+                            'mm (MILLIMETERS)'
+                            ]
+        unit_cb = wx.ComboBox(panel, -1, '100%',
+                                         choices=self.unit_choices,
+                                         style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        unit_cb.SetValue(self.unit_selected)
+        unit_cb.Bind(wx.EVT_COMBOBOX, self.on_unit_choice)
+
+        hbox1.Add(st1)
+        hbox1.AddSpacer(5)
+        hbox1.Add(unit_cb)
+
+        # Create horizontal row of widgets 2
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.st2 = wx.StaticText(panel, label='Pixels per unit (mm):', size=(110, -1))
+        self.tc1 = wx.TextCtrl(panel, style=wx.TE_RIGHT)
+        self.tc1.SetValue(self.pixels_per_unit)
+        st3 = wx.StaticText(panel, -1, 'px')
+
+        hbox2.Add(self.st2)
+        hbox2.AddSpacer(5)
+        hbox2.Add(self.tc1)
+        hbox2.AddSpacer(5)
+        hbox2.Add(st3)
+
+        # Create horizontal row of widgets 3
+        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
+        set_button = wx.Button(panel, -1, 'Set')
+        #set_button.SetToolTip(wx.ToolTip('Click two points that represent one unit'))
+        self.Bind(wx.EVT_BUTTON, self.controller.on_set_pixel_unit, set_button)
+        hbox3.Add(set_button)
+
+        # Add all other sizers to the main unit_panel_sizer
+        unit_panel_sizer.Add(hbox1)
+        unit_panel_sizer.AddSpacer(5)
+        unit_panel_sizer.Add(hbox2)
+        unit_panel_sizer.AddSpacer(5)
+        unit_panel_sizer.Add(hbox3, 0, wx.CENTER)
+
+        # Return the unit_panel_sizer
+        return unit_panel_sizer
+
+    def on_unit_choice(self, event):
+        """ Fired when the user selects a unit of measurement to use from
+        the dropdown combobox.
+        """
+        print self.unit_choices[event.GetSelection()]
+        self.st2.SetLabel('Pixels per unit (' + self.unit_choices[event.GetSelection()][:2] + '):')

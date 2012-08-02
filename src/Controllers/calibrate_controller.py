@@ -11,6 +11,7 @@
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
+from Controllers import polyline_controller
 from Models import rectangle_model
 from Views import calibrate_view
 import math
@@ -30,11 +31,23 @@ class Controller():
         self.dw_grayscales = None
         self.dw_linfit = None
         self.dw_reldenfit = None
+        self.polyline_controller = None
+        self.clicks = 0
+        self.click_points = []
         
     def on_mouse_motion(self, event):
-        self.model.on_mouse_motion(event)
+        if self.polyline_controller:
+            self.polyline_controller.on_mouse_motion(event)
+        else:
+            self.model.on_mouse_motion(event)
         
     def on_mouse_press(self, event):
+        if self.clicks < 2:
+            if self.polyline_controller:
+                self.polyline_controller.on_mouse_press(event, False)
+                self.click_points.append((event.xdata, event.ydata))
+                return
+
         if event.button == 1: # Left click
             pass
         elif event.button == 2: # Scroll-wheel click
@@ -47,6 +60,26 @@ class Controller():
         self.model.on_mouse_press(event)
     
     def on_mouse_release(self, event):
+        if self.clicks < 2:
+            if self.polyline_controller:
+                self.polyline_controller.on_mouse_release(event)
+                if self.clicks + 1 == 2:
+                    self.clicks = 0
+                    self.polyline_controller = None
+                    x1, y1 = self.click_points[0]
+                    x2, y2 = self.click_points[1]
+                    
+                    if math.fabs(x2 - x1) > math.fabs(y2 - y1):
+                        self.view.pixels_per_unit = str(math.fabs(x2 - x1))
+                    else:
+                        self.view.pixels_per_unit = str(math.fabs(y2 - y1))
+
+                    self.view.tc1.SetValue(self.view.pixels_per_unit)
+                    self.view.Show()
+                    self.click_points = []
+                else:
+                    self.clicks += 1
+                return
         return self.model.on_mouse_release(event)
         
     def on_pick(self, event):
@@ -62,31 +95,33 @@ class Controller():
         self.model.draw_rect(adjustable, locked, 'b')
         
     def on_density_params(self, event):
-        i = 0
-        for child in self.view.panel.GetChildren():
-            if type(child) == wx._controls.TextCtrl:
-                if i == 0:
-                    child.SetValue(str(self.density))
-                elif i == 1:
-                    child.SetValue(str(self.min_thickness))
-                elif i == 2:
-                    child.SetValue(str(self.max_thickness))
-                i += 1
         self.view.Show()
         self.view.Raise()
-        
-        
+
     def on_apply(self, event):
-        params = []
-        for child in self.view.panel.GetChildren():
-            if type(child) == wx._controls.TextCtrl:
-                params.append(child.GetValue())
-        self.density = float(params[0])
-        self.min_thickness = float(params[1])
-        self.max_thickness = float(params[2])
+        self.pixels_per_unit = self.view.tc1.GetValue()
+        self.density = self.view.dens.GetValue()
+        self.view.wedge_density = self.view.dens.GetValue()
+        self.min_thickness = self.view.min.GetValue()
+        self.view.min_wedge_thickness = self.view.min.GetValue()
+        self.max_thickness = self.view.max.GetValue()
+        self.view.max_wedge_thickness = self.view.max.GetValue()
         self.update_calib_data()
         self.view.Hide()
-        
+
+        print self.pixels_per_unit
+        print self.density
+        print self.min_thickness
+        print self.max_thickness
+
+    def on_set_pixel_unit(self, event):
+        self.view.Hide()
+        self.polyline_controller = polyline_controller.Controller(self.dicom_view.controller, self.dicom_view, self.dicom_view.controller.background)
+        self.dicom_view.controller.draw_all()
+        self.dicom_view.controller.state_changed(True)
+        self.dicom_view.controller.calib = True
+        print 'SET PIXEL UNIT'
+
     def update_calib_data(self):
         # Load in original dicom pixel data and normalize
         calib_region = self.dicom_view.model.ds.pixel_array.astype(np.double)
@@ -165,7 +200,7 @@ class Controller():
         
     def popup_line_data(self):
         return [('Lock Calibration Region', self.on_lock_region),
-                ('Set Density Parameters', self.on_set_density_params),
+                ('Set Calibration Parameters', self.on_set_density_params),
                 ('Delete Calibration Region', self.delete_calibration)]
 
     def delete_calibration(self, event):

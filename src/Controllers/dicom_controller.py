@@ -290,6 +290,13 @@ class Controller():
             self.polyline_controller.draw_polylines(self.polyline, self.polyline_locked)
         if self.calibrate_controller:
             self.calibrate_controller.draw_rect(self.calib, False)
+            
+            # Initiated when the user is calibrating pixels per unit
+            if self.calibrate_controller.polyline_controller:
+                if self.calibrate_controller.clicks > 0:
+                    if self.calibrate_controller.polyline_controller is not None:
+                        self.calibrate_controller.polyline_controller.draw_polylines(self.polyline, self.polyline_locked, False)
+
         self.view.canvas.blit(self.view.axes.bbox)
 
     def draw_lines(self):

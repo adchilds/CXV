@@ -50,7 +50,10 @@ class Polyline():
         return self.verticies[index]
         
     def get_vertex_index(self, vertex):
-        return self.verticies.index(vertex)
+        try:
+            return self.verticies.index(vertex)
+        except ValueError:
+            pass
     
     def is_first(self, vertex):
         if self.verticies.index(vertex) == 0: 

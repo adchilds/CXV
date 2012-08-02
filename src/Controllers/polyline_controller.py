@@ -4,6 +4,9 @@
 # @author:    Luke Mueller
 # @contact:   muellelj@eckerd.edu or lmueller62@gmail.com
 #
+# @author:    Adam Childs
+# @contact:   adchilds@eckerd.edu
+#
 # @copyright: owned and maintained by the
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
@@ -67,12 +70,12 @@ class Controller():
         try: self.curr_pl.set_label(self.polylines.index(self.curr_pl))
         except: pass
 
-    def on_mouse_press(self, event):
+    def on_mouse_press(self, event, vert=True):
         if event.inaxes == self.dicom_view.ov_axes:
             event.xdata += self.dicom_controller.coral_slab[0]
             event.ydata += self.dicom_controller.coral_slab[1]
         if event.button == 1:
-            self.on_left_click(event)
+            self.on_left_click(event, vert)
         elif event.button == 3:
             self.on_right_click(event)
 
@@ -80,8 +83,8 @@ class Controller():
         self.drag_v = False
         self.drag_pl = False
 
-    def on_left_click(self, event):
-        if self.on_pick(event):
+    def on_left_click(self, event, vert=True):
+        if self.on_pick(event, vert):
             self.dicom_view.canvas.SetCursor(self.cursor)
             return
         if self.connect:
@@ -108,7 +111,7 @@ class Controller():
         else:
             self.dicom_controller.on_polyline_menu(None) # Lock the polylines
 
-    def on_pick(self, event):
+    def on_pick(self, event, vert=True):
         self.picked = None
         for polyline in self.polylines:
             for line in polyline.lines:
@@ -116,11 +119,12 @@ class Controller():
                     self.picked = line
                     self.curr_pl = polyline
                     self.drag_pl = True
-            for vertex in polyline.verticies:
-                if vertex.contains(event)[0]:
-                    self.picked = vertex
-                    self.curr_pl = polyline
-                    self.drag_v = True
+            if vert:
+                for vertex in polyline.verticies:
+                    if vertex.contains(event)[0]:
+                        self.picked = vertex
+                        self.curr_pl = polyline
+                        self.drag_v = True
         if not self.picked: return False
         else: return True
 
@@ -242,7 +246,7 @@ class Controller():
             y += y_offset
             self.curr_pl.set_vertex(vertex, x, y)  
 
-    def draw_polylines(self, adjustable, locked):
+    def draw_polylines(self, adjustable, locked, show_label=True):
         if self.tmp_line: self.axes.draw_artist(self.tmp_line)
         for polyline in self.polylines:
             for line in polyline.lines:
@@ -250,7 +254,8 @@ class Controller():
             if adjustable:
                 for vertex in polyline.verticies:
                     self.axes.draw_artist(vertex)
-            self.axes.draw_artist(polyline.label)
+            if show_label:
+                self.axes.draw_artist(polyline.label)
 
     def create_popup_menu(self, line):
         if not self.picked: return

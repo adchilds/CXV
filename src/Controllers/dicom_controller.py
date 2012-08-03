@@ -414,6 +414,9 @@ class Controller():
             elif self.coral:
                 self.coral_controller.on_mouse_motion(event)
             elif self.calib:
+                if self.calibrate_controller is None:
+                    self.calib = False
+                    return
                 self.calibrate_controller.on_mouse_motion(event)
 
             if not self.zoom:
@@ -490,6 +493,9 @@ class Controller():
                 self.pan_image = True
                 self.view.canvas.SetCursor(self.cursor_hand)
                 self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], True)
+        elif event.key == 'shift': # Holding SHIFT while setting pixel_per_unit
+            if self.calibrate_controller.polyline_controller is not None:
+                self.calibrate_controller.polyline_controller.shift_down = True
         elif event.key == 'c': # Calibration
             self.on_calibrate(event, True, True)
         elif event.key == 'p': # Polylines
@@ -510,6 +516,8 @@ class Controller():
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
             self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], False)
+        if self.calibrate_controller.polyline_controller is not None:
+            self.calibrate_controller.polyline_controller.shift_down = False
 
     def on_figure_leave(self, event):
         self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
@@ -725,24 +733,9 @@ class Controller():
             # Header information
             drawing.header['$ACADVER'] = 'AC1014'
 
-            """
-            drawing.add_layer('LINES', color=2)
-            # Loops through all polylines
-            for polyline in self.polyline_controller.polylines:
-                # Loops through all verticies of each polyline
-                for vertex in polyline.verticies:
-                    x = vertex.get_xdata()
-                    y = vertex.get_ydata()
-                    points.append((x, y))
-                
-                # Adds the points to a line object, which is added to the DXF file
-                for i in xrange(len(points) - 1):
-                    drawing.add(dxf.line(points[i], points[i+1]))
-
-                points = [] # Reset points for the next polyline to use
-
-            """
+            # Add the polylines
             drawing.add_layer('POLYLINES', color=2)
+
             # Loops through all polylines
             for polyline in self.polyline_controller.polylines:
                 # Loops through all verticies of each polyline

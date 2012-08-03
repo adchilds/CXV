@@ -12,12 +12,13 @@
 #             Department of Interior (DOI)
 #########################################################
 from Models import polyline_model as pl
+import math
 import os
 import wx
 
 class Controller():
 
-    def __init__(self, dicom_controller, dicom_view, background):
+    def __init__(self, dicom_controller, dicom_view, background, calib=False):
         self.dicom_controller = dicom_controller
         self.dicom_view = dicom_view
         self.canvas = self.dicom_view.canvas
@@ -27,8 +28,11 @@ class Controller():
         self.drag_pl = False
         self.prev_event = None
         self.tmp_line = None
+        self.right_line = None
+        self.left_line = None
         self.picked = None
         self.connect = False
+        self.shift_down = False
         self.polylines = []
         self.curr_pl = None
         self.color_map = {'Red' : '#FF0000',
@@ -44,6 +48,7 @@ class Controller():
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9) 
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9) 
         self.cursor = wx.CursorFromImage(image)
+        self.calib = calib
 
     def on_mouse_motion(self, event):
         if len(self.polylines) == 0: return
@@ -59,9 +64,46 @@ class Controller():
         elif self.connect:
             x, = self.curr_pl.verticies[-1].get_xdata()
             y, = self.curr_pl.verticies[-1].get_ydata()
-            self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
+
+            # Is the user's mouse moving horizontal or vertical?
+            if math.fabs(x - event.xdata) > math.fabs(y - event.ydata):
+                moving_horizontal = True
+            else:
+                moving_horizontal = False
+
+            if self.calib:
+                # If setting pixels_per_unit, draw the line like: |---------|
+                # So the user can see the start and end point clearly
+                self.left_line, = self.axes.plot([x, x], [y+10, y-10],
                                     c='#00FF00', marker='-',
                                     zorder=1, animated=True)
+                
+                if self.shift_down:
+                    if moving_horizontal:
+                        self.tmp_line, = self.axes.plot([x, event.xdata], [y, y],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
+                        self.right_line, = self.axes.plot([event.xdata, event.xdata], [y+10, y-10],
+                                                          c='#00FF00', marker='-',
+                                                          zorder=1, animated=True)
+                    else:
+                        self.tmp_line, = self.axes.plot([x, x], [y, event.ydata],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
+                        self.right_line, = self.axes.plot([x+10, x-10], [event.ydata, event.ydata],
+                                                          c='#00FF00', marker='-',
+                                                          zorder=1, animated=True)
+                else:
+                    self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
+                                                    c='#00FF00', marker='-',
+                                                    zorder=1, animated=True)
+                    self.right_line, = self.axes.plot([event.xdata, event.xdata], [event.ydata+10, event.ydata-10],
+                                                      c='#00FF00', marker='-',
+                                                      zorder=1, animated=True)
+            else:
+                self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
+                                                c='#00FF00', marker='-',
+                                                zorder=1, animated=True)
         elif self.over_polyline(event):
             if self.picked.contains(event)[0]:
                 if not self.dicom_controller.zoom and not self.dicom_controller.pan_image:
@@ -82,6 +124,12 @@ class Controller():
     def on_mouse_release(self, event):
         self.drag_v = False
         self.drag_pl = False
+
+    def on_key_press(self, event, shift=False):
+        self.shift_down = shift
+
+    def on_key_release(self, event):
+        self.shift_down = False
 
     def on_left_click(self, event, vert=True):
         if self.on_pick(event, vert):
@@ -248,6 +296,9 @@ class Controller():
 
     def draw_polylines(self, adjustable, locked, show_label=True):
         if self.tmp_line: self.axes.draw_artist(self.tmp_line)
+        if self.right_line:
+            self.axes.draw_artist(self.right_line)
+            self.axes.draw_artist(self.left_line)
         for polyline in self.polylines:
             for line in polyline.lines:
                 self.axes.draw_artist(line)

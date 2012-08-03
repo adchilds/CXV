@@ -131,7 +131,7 @@ class Controller():
         if self.view is None:
             self.init_view()
         self.view.Hide()
-        self.polyline_controller = polyline_controller.Controller(self.dicom_view.controller, self.dicom_view, self.dicom_view.controller.background)
+        self.polyline_controller = polyline_controller.Controller(self.dicom_view.controller, self.dicom_view, self.dicom_view.controller.background, calib=True)
         self.dicom_view.controller.draw_all()
         self.dicom_view.controller.state_changed(True)
         self.dicom_view.controller.calib = True

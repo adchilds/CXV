@@ -119,6 +119,6 @@ cx_Freeze.setup(
         name = "Coral X-Ray Viewer",
         version = "1.0",
         author = 'US Geological Survey',
-        description = "Coral x-ray image viewing software for USGS",
+        description = "Coral x-ray image viewing software for the U.S. Geological Survey",
         executables = executables,
         options = dict(build_exe = buildOptions))

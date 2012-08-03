@@ -47,7 +47,7 @@ class Controller():
         self.xml.put_Tag("session")
 
         # File path/name
-        self.xml.NewChild2("filename", dc.model.get_dicom_path())
+        self.xml.NewChild2("filename", dc.model.get_dicom_path().encode('ascii', 'ignore'))
 
         # Zoom factor/viewable area of screen
         screen = self.xml.NewChild("screen", "")
@@ -86,6 +86,10 @@ class Controller():
                     i = i + 1
     
                 calib.NewChild2("density", str(dc.calibrate_controller.density))
+                
+                calib.NewChild2("pixels_per_unit", str(dc.calibrate_controller.pixels_per_unit))
+                
+                calib.NewChild2("unit_selected", str(dc.calibrate_controller.unit))
     
             x, y, dx, dy = dc.calib_region
             w = dx-x

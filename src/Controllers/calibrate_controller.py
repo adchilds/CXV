@@ -24,7 +24,8 @@ class Controller():
         self.dicom_view = dicom_view
         self.model = rectangle_model.Model(self.dicom_view, background, 400, 400, 800, 800)
         self.dicom_view.controller.calib_region = [self.model.sx, self.model.sy, self.model.dx, self.model.dy]
-        self.view = calibrate_view.View(self)
+        self.unit = 'mm'
+        self.pixels_per_unit = ''
         self.density = 2.79
         self.min_thickness = 1.0
         self.max_thickness = 5.0
@@ -35,6 +36,14 @@ class Controller():
         self.clicks = 0
         self.click_points = []
         
+        # Instantiate the view last
+        self.view = None
+
+    def init_view(self):
+        self.view = calibrate_view.View(self, self.unit, self.pixels_per_unit,
+                                        self.density, self.min_thickness,
+                                        self.max_thickness)
+
     def on_mouse_motion(self, event):
         if self.polyline_controller:
             self.polyline_controller.on_mouse_motion(event)
@@ -68,7 +77,10 @@ class Controller():
                     self.polyline_controller = None
                     x1, y1 = self.click_points[0]
                     x2, y2 = self.click_points[1]
-                    
+
+                    if self.view is None:
+                        self.init_view()
+
                     if math.fabs(x2 - x1) > math.fabs(y2 - y1):
                         self.view.pixels_per_unit = str(math.fabs(x2 - x1))
                     else:
@@ -79,7 +91,6 @@ class Controller():
                     self.click_points = []
                 else:
                     self.clicks += 1
-                return
         return self.model.on_mouse_release(event)
         
     def on_pick(self, event):
@@ -95,10 +106,16 @@ class Controller():
         self.model.draw_rect(adjustable, locked, 'b')
         
     def on_density_params(self, event):
+        if self.view is None:
+            self.init_view()
         self.view.Show()
         self.view.Raise()
 
     def on_apply(self, event):
+        if self.view is None:
+            self.init_view()
+
+        self.unit = self.view.unit_selected[:2]
         self.pixels_per_unit = self.view.tc1.GetValue()
         self.density = self.view.dens.GetValue()
         self.view.wedge_density = self.view.dens.GetValue()
@@ -108,19 +125,16 @@ class Controller():
         self.view.max_wedge_thickness = self.view.max.GetValue()
         self.update_calib_data()
         self.view.Hide()
-
-        print self.pixels_per_unit
-        print self.density
-        print self.min_thickness
-        print self.max_thickness
+        self.dicom_view.controller.set_pixels_per_unit = True
 
     def on_set_pixel_unit(self, event):
+        if self.view is None:
+            self.init_view()
         self.view.Hide()
         self.polyline_controller = polyline_controller.Controller(self.dicom_view.controller, self.dicom_view, self.dicom_view.controller.background)
         self.dicom_view.controller.draw_all()
         self.dicom_view.controller.state_changed(True)
         self.dicom_view.controller.calib = True
-        print 'SET PIXEL UNIT'
 
     def update_calib_data(self):
         # Load in original dicom pixel data and normalize
@@ -173,6 +187,8 @@ class Controller():
         return [b, m, r2]
     
     def on_close(self, event):
+        if self.view is None:
+            self.init_view()
         self.view.Hide()
         
     def print_info(self):
@@ -182,7 +198,9 @@ class Controller():
         print 'Grayscale-to-relative density:', self.dw_reldenfit
         print 'Calibration density:', self.density
         print 'Calibration region:', self.dicom_view.controller.calib_region
-        print
+        print 'Unit selected:', self.unit
+        print 'Pixels per unit:', self.pixels_per_unit
+        print ''
 
     def create_popup_menu(self):
         self.menu = wx.Menu()
@@ -208,12 +226,12 @@ class Controller():
         del self.model
         self.dicom_view.controller.calib = False
         self.dicom_view.controller.calibrate_controller = None
-        self.dicom_view.controller.enable_tools(['Set Density Parameters'], False)
+        self.dicom_view.controller.enable_tools(['Set Calibration Parameters'], False)
         self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Adjust Calibration Region'], False)
 
     def on_lock_region(self, event):
         self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Adjust Calibration Region'], False)
-        self.dicom_view.controller.on_calibrate(event, show=False)
+        self.dicom_view.controller.on_calibrate(event)
 
     def on_set_density_params(self, event):
         self.dicom_view.controller.on_density_params(event)

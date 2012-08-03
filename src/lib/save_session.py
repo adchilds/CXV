@@ -92,6 +92,16 @@ class SaveSession():
             if density is not None:
                 self.controller.calibrate_controller.density = float(calib.getChildContent("density"))
 
+            # Pixels Per Unit
+            ppu = xml.SearchForTag(calib, "pixels_per_unit")
+            if ppu is not None:
+                self.controller.calibrate_controller.pixels_per_unit = float(calib.getChildContent("pixels_per_unit"))
+
+            # Unit selected
+            unit = xml.SearchForTag(calib, "unit_selected")
+            if unit is not None:
+                self.controller.calibrate_controller.unit = calib.getChildContent("unit_selected")
+    
             # Region (x, y, width, height)
             region = xml.SearchForTag(calib, "region")
             if region is not None:
@@ -108,7 +118,7 @@ class SaveSession():
                 self.controller.calibrate_controller.model.dx = data[2]
                 self.controller.calibrate_controller.model.dy = data[3]
 
-            self.controller.enable_tools(['Set Density Parameters'], True)
+            self.controller.enable_tools(['Set Calibration Parameters'], True)
             self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Calibration Region'], False)
 
         # Load Target Area

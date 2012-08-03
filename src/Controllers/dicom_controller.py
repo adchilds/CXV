@@ -53,6 +53,7 @@ class Controller():
         self.left_down = False # Is the user holding the left mouse button?
         self.polyline_cursor_on = False
         self.debug = False
+        self.set_pixels_per_unit = False
         self.coral_controller = None
         self.overlay_controller = None
         self.polyline_controller = None
@@ -86,9 +87,9 @@ class Controller():
         # Only copies over the file if it doesn't already exist in the directory
         if not os.path.exists(path):
             os.makedirs(path)
-        for file in os.listdir(self.view.get_main_dir() + os.sep + "plugins"):
-            if not os.path.exists(path + os.sep + file):
-                shutil.copy("plugins" + os.sep + file, path)
+        for fil in os.listdir(self.view.get_main_dir() + os.sep + "plugins"):
+            if not os.path.exists(path + os.sep + fil):
+                shutil.copy("plugins" + os.sep + fil, path)
         
         self.cursor_hand = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_open.gif', wx.BITMAP_TYPE_GIF))
         self.cursor_hand_drag = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_closed.gif', wx.BITMAP_TYPE_GIF))
@@ -344,23 +345,24 @@ class Controller():
 
     def on_show_popup(self, event):
         if not self.ztf and not self.zoom:
-            self.popup_menu = wx.Menu()
-            self.popup_menu.Append(-1, 'Zoom to fit')
-
-            # Better to set this event here when we need it because if it's set in
-            # the view class, all menu items will fire this event.
-            self.view.Bind(wx.EVT_MENU, self.on_popup_item_selected)
-            x, y = wx.GetMousePosition()
-            y -= 35 # Ugly but GetMousePosition returns y position too low
-            pos = x, y
-            self.view.PopupMenu(self.popup_menu, pos)
-
-            # Unbind the event, otherwise we get a screen flickering if the user opens
-            # multiple popupmenu's without selecting an item. This is caused because
-            # there would now be multiple events open and waiting for input. Once input
-            # is given, all those events are fired at once, resizing our screen multiple
-            # times.
-            self.view.Unbind(wx.EVT_MENU)
+            if not self.polyline:
+                self.popup_menu = wx.Menu()
+                self.popup_menu.Append(-1, 'Zoom to fit')
+    
+                # Better to set this event here when we need it because if it's set in
+                # the view class, all menu items will fire this event.
+                self.view.Bind(wx.EVT_MENU, self.on_popup_item_selected)
+                x, y = wx.GetMousePosition()
+                y -= 35 # Ugly but GetMousePosition returns y position too low
+                pos = x, y
+                self.view.PopupMenu(self.popup_menu, pos)
+    
+                # Unbind the event, otherwise we get a screen flickering if the user opens
+                # multiple popupmenu's without selecting an item. This is caused because
+                # there would now be multiple events open and waiting for input. Once input
+                # is given, all those events are fired at once, resizing our screen multiple
+                # times.
+                self.view.Unbind(wx.EVT_MENU)
 
     def on_popup_item_selected(self, event):
         self.ztf = True
@@ -519,7 +521,8 @@ class Controller():
         self.state_changed(True)
 
     def on_resize(self, event):
-        event.Skip()
+        if event is not None:
+            event.Skip()
         if self.ztf:
             try: # ignore first few events before controller instantiation
                 y, = self.view.scroll.GetSizeTuple()[-1:]
@@ -662,8 +665,20 @@ class Controller():
         dialog = wx.FileDialog(self.view, "Export As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard)
         dialog.SetFilename(self.model.get_image_name().split('.')[0])
         if dialog.ShowModal()==wx.ID_OK:
+            
+            # If exporting a DXF, have they set the pixels_per_unit?
+            if self.get_file_extension(dialog.GetPath()) == '.dxf':
+                if not self.set_pixels_per_unit:
+                    wx.MessageBox('Please set the pixels per unit first, using the "Set Calibration Parameters" tool', 'Pixels Per Unit not set!', wx.OK | wx.ICON_ERROR)
+                    return
+
             pb = progress_bar.ProgressBar('Exporting Image', 'Initiating export', 5, self.view)
             temp = self.view.aspect
+            
+            # Change to ZTF first to stop memory issues
+            self.view.aspect_cb.SetValue('Zoom to fit')
+            self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
+            
             self.view.aspect = 1.00
             self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
             pb.update('Calculating image size')
@@ -678,7 +693,6 @@ class Controller():
                 self.view.figure.savefig(path, dpi=self.view.figure.dpi)
                 Image.open(path).save(path.split('.')[0] + '.tif', 'TIFF')
                 os.remove(path) # Remove the PNG but keep the TIFF
-            el
             """
             if self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
                 pb.update('Saving DXF file')
@@ -735,6 +749,18 @@ class Controller():
                 for vertex in polyline.verticies:
                     x = int(vertex.get_xdata())
                     y = int(vertex.get_ydata())
+                    
+                    x /= float(self.calibrate_controller.pixels_per_unit)
+                    y /= float(self.calibrate_controller.pixels_per_unit)
+
+                    # Set the units in mm
+                    if self.calibrate_controller.unit == 'cm':
+                        x *= 10
+                        y *= 10
+                    elif self.calibrate_controller.unit == 'in':
+                        x *= 25.4
+                        y *= 25.4
+
                     points.append((x, y))
                 
                 # Adds the points to a polyline object, which is added to the DXF file
@@ -742,6 +768,9 @@ class Controller():
                 points = [] # Reset points for the next polyline to use
 
             drawing.save()
+        else:
+            wx.MessageBox('No polylines have been found. Please add some.', 'No polylines!', wx.OK | wx.ICON_ERROR)
+            return
 
     def get_file_extension(self, file_path):
         """ Returns the file's extension, given the file's path """
@@ -812,7 +841,10 @@ class Controller():
         self.draw_all()
         self.state_changed(True)
 
-    def on_density_params(self, event, show=True):
+    def on_density_params(self, event, show=True, zoom_off=True, pan_off=True):
+        """ Opens the calibration parameters dialog """
+        self.toggle_zoom(zoom_off)
+        self.toggle_pan(pan_off)
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         if show:
@@ -852,8 +884,8 @@ class Controller():
         description = plugin.description
         span = 10
         words = description.split(" ")
-        list = [" ".join(words[i:i+span]) for i in range(0, len(words), span)]
-        description = '\n'.join(list)
+        li = [" ".join(words[i:i+span]) for i in range(0, len(words), span)]
+        description = '\n'.join(li)
 
         info = wx.AboutDialogInfo()
         info.SetName(plugin.name)

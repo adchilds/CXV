@@ -11,6 +11,7 @@
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
+import os
 import wx
 
 class Model():
@@ -89,10 +90,20 @@ class Model():
             elif self.picked == 'top' or self.picked == 'bottom':
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZENS))
 
-    def on_mouse_release(self, event):
+    def on_mouse_release(self, event, setting_ppu=False):
         self.drag = False 
         self.adjust = False
-        self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+
+        if not setting_ppu:
+            self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+        else:
+            # Setting pixels per unit cursor
+            image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_ppu.png", wx.BITMAP_TYPE_PNG)
+            image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 10) 
+            image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 10)
+            cursor_ppu = wx.CursorFromImage(image)
+            self.dicom_view.SetCursor(cursor_ppu)
+
         return [self.sx, self.sy, self.dx, self.dy]
 
     def is_mouse_in_rect(self, event):

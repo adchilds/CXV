@@ -117,7 +117,7 @@ class Controller():
             tools = ['Image Overview', 'Image Information', 
                      'Pan Image', 'Zoom In', 'Zoom Out', 
                      'Adjust Target Area', 'Draw Polylines',
-                     'Adjust Calibration Region']
+                     'Adjust Calibration Region'] #, 'Rotate Image']
             self.enable_tools(tools, True)
             self.enable_tools(['&Save...\tCtrl+S'], False)
             self.view.menubar.FindItemById(self.view.menubar_ids['Export']).Enable(True)
@@ -516,8 +516,9 @@ class Controller():
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
             self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], False)
-        if self.calibrate_controller.polyline_controller is not None:
-            self.calibrate_controller.polyline_controller.shift_down = False
+        if self.calibrate_controller is not None:
+            if self.calibrate_controller.polyline_controller is not None:
+                self.calibrate_controller.polyline_controller.shift_down = False
 
     def on_figure_leave(self, event):
         self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
@@ -677,7 +678,7 @@ class Controller():
             # If exporting a DXF, have they set the pixels_per_unit?
             if self.get_file_extension(dialog.GetPath()) == '.dxf':
                 if not self.set_pixels_per_unit:
-                    wx.MessageBox('Please set the pixels per unit first, using the "Set Calibration Parameters" tool', 'Pixels Per Unit not set!', wx.OK | wx.ICON_ERROR)
+                    wx.MessageBox('Please set the pixels per unit first, using the "Set Calibration Parameters" tool.', 'Pixels Per Unit not set!', wx.OK | wx.ICON_ERROR)
                     return
 
             pb = progress_bar.ProgressBar('Exporting Image', 'Initiating export', 5, self.view)
@@ -907,19 +908,10 @@ class Controller():
             self.pan_image = True
 
             # Un-toggle toolbar items that may currently be toggled
-            coral_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Target Area'])
-            calib_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
-            polyline_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Draw Polylines'])
+            self.toggle_target_area()
+            self.toggle_calibration_region()
+            self.toggle_polyline()
 
-            if coral_on: # Turn off coral region
-                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Target Area'], False)
-                self.on_coral(None, zoom_off=True, pan_off=False)
-            if calib_on: # Turn off calibration region
-                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
-                self.on_calibrate(None, zoom_off=True, pan_off=False)
-            if polyline_on: # Turn of polylines
-                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
-                self.on_polyline(None, zoom_off=True, pan_off=False)
             self.view.toolbar.ToggleTool(self.view.toolbar_ids['Zoom In'], False)
             self.zoom = False
             self.view.toggle_selector.set_active(False)
@@ -928,6 +920,32 @@ class Controller():
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
+    def toggle_target_area(self):
+        """ Toggles off the target area button in the toolbar if it's enabled. """
+
+        # Un-toggle toolbar items that may currently be toggled
+        coral_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Target Area'])
+
+        if coral_on: # Turn off coral region
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Target Area'], False)
+            self.on_coral(None, zoom_off=True, pan_off=False)
+
+    def toggle_calibration_region(self):
+        """ Toggles off the calibration region button in the toolbar if it's enabled. """
+        calib_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
+
+        if calib_on: # Turn off calibration region
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
+            self.on_calibrate(None, zoom_off=True, pan_off=False)
+
+    def toggle_polyline(self):
+        """ Toggles off the polyline button in the toolbar if it's enabled. """
+        polyline_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Draw Polylines'])
+
+        if polyline_on: # Turn of polylines
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
+            self.on_polyline(None, zoom_off=True, pan_off=False)
+    
     def toggle_zoom(self, zoom_off):
         """ Toggles the zoom button in the toolbar, given the
         zoom_off parameter.
@@ -969,3 +987,14 @@ class Controller():
         else:
             self.enable_tools(['&Save...\tCtrl+S'], False)
         self.changed = changed
+
+    def on_rotate_image(self, event):
+        # Rotate the image array
+        self.model.image_array = self.model.rotate_image(self.model.image_array)
+
+        # Redraw the canvas to show the rotated image
+        self.view.axes.cla() # Clear the axes
+        self.view.figure.clf() # Clear the figure
+        self.view.init_plot(False) # Redraw
+        self.cache_background()
+        self.draw_all()

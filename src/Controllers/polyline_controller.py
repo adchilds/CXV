@@ -44,10 +44,19 @@ class Controller():
                           'Orange' : '#FF9900',
                           'White' : '#FFFFFF',
                           'Black' : '#000000'}
+
+        # Polyline cursor
         image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_cross.png", wx.BITMAP_TYPE_PNG)
-        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9) 
-        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9) 
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9)
         self.cursor = wx.CursorFromImage(image)
+
+        # Setting pixels per unit cursor
+        image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_ppu.png", wx.BITMAP_TYPE_PNG)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 10) 
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 10)
+        self.cursor_ppu = wx.CursorFromImage(image)
+ 
         self.calib = calib
 
     def on_mouse_motion(self, event):
@@ -66,20 +75,26 @@ class Controller():
             y, = self.curr_pl.verticies[-1].get_ydata()
 
             # Is the user's mouse moving horizontal or vertical?
-            if math.fabs(x - event.xdata) > math.fabs(y - event.ydata):
+            try:
+                if math.fabs(x - event.xdata) > math.fabs(y - event.ydata):
+                    moving_horizontal = True
+                else:
+                    moving_horizontal = False
+            except TypeError:
                 moving_horizontal = True
-            else:
-                moving_horizontal = False
 
             if self.calib:
+                # Set the cursor
+                self.dicom_view.canvas.SetCursor(self.cursor_ppu)
+
                 # If setting pixels_per_unit, draw the line like: |---------|
                 # So the user can see the start and end point clearly
-                self.left_line, = self.axes.plot([x, x], [y+10, y-10],
-                                    c='#00FF00', marker='-',
-                                    zorder=1, animated=True)
                 
                 if self.shift_down:
                     if moving_horizontal:
+                        self.left_line, = self.axes.plot([x, x], [y+10, y-10],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
                         self.tmp_line, = self.axes.plot([x, event.xdata], [y, y],
                                                         c='#00FF00', marker='-',
                                                         zorder=1, animated=True)
@@ -87,6 +102,9 @@ class Controller():
                                                           c='#00FF00', marker='-',
                                                           zorder=1, animated=True)
                     else:
+                        self.left_line, = self.axes.plot([x+10, x-10], [y, y],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
                         self.tmp_line, = self.axes.plot([x, x], [y, event.ydata],
                                                         c='#00FF00', marker='-',
                                                         zorder=1, animated=True)
@@ -94,12 +112,23 @@ class Controller():
                                                           c='#00FF00', marker='-',
                                                           zorder=1, animated=True)
                 else:
+                    if moving_horizontal:
+                        self.left_line, = self.axes.plot([x, x], [y+10, y-10],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
+                        self.right_line, = self.axes.plot([event.xdata, event.xdata], [event.ydata+10, event.ydata-10],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
+                    else:
+                        self.left_line, = self.axes.plot([x+10, x-10], [y, y],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
+                        self.right_line, = self.axes.plot([event.xdata+10, event.xdata-10], [event.ydata, event.ydata],
+                                                        c='#00FF00', marker='-',
+                                                        zorder=1, animated=True)
                     self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
                                                     c='#00FF00', marker='-',
                                                     zorder=1, animated=True)
-                    self.right_line, = self.axes.plot([event.xdata, event.xdata], [event.ydata+10, event.ydata-10],
-                                                      c='#00FF00', marker='-',
-                                                      zorder=1, animated=True)
             else:
                 self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
                                                 c='#00FF00', marker='-',
@@ -133,7 +162,8 @@ class Controller():
 
     def on_left_click(self, event, vert=True):
         if self.on_pick(event, vert):
-            self.dicom_view.canvas.SetCursor(self.cursor)
+            if vert:
+                self.dicom_view.canvas.SetCursor(self.cursor)
             return
         if self.connect:
             self.append_tmp_line()

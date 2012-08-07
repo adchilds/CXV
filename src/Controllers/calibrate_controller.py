@@ -16,6 +16,7 @@ from Models import rectangle_model
 from Views import calibrate_view
 import math
 import numpy as np
+import os
 import wx
 
 class Controller():
@@ -35,7 +36,13 @@ class Controller():
         self.polyline_controller = None
         self.clicks = 0
         self.click_points = []
-        
+
+        # Setting pixels per unit cursor
+        image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_ppu.png", wx.BITMAP_TYPE_PNG)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 10) 
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 10)
+        self.cursor_ppu = wx.CursorFromImage(image)
+
         # Instantiate the view last
         self.view = None
 
@@ -53,6 +60,7 @@ class Controller():
     def on_mouse_press(self, event):
         if self.clicks < 2:
             if self.polyline_controller:
+                self.dicom_view.canvas.SetCursor(self.cursor_ppu)
                 self.polyline_controller.on_mouse_press(event, False)
                 self.click_points.append((event.xdata, event.ydata))
                 return
@@ -69,8 +77,11 @@ class Controller():
         self.model.on_mouse_press(event)
     
     def on_mouse_release(self, event):
+        setting_ppu = False
         if self.clicks < 2:
             if self.polyline_controller:
+                setting_ppu = True
+                self.dicom_view.canvas.SetCursor(self.cursor_ppu)
                 self.polyline_controller.on_mouse_release(event)
                 if self.clicks + 1 == 2:
                     self.clicks = 0
@@ -89,9 +100,10 @@ class Controller():
                     self.view.tc1.SetValue(self.view.pixels_per_unit)
                     self.view.Show()
                     self.click_points = []
+                    self.dicom_view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
                 else:
                     self.clicks += 1
-        return self.model.on_mouse_release(event)
+        return self.model.on_mouse_release(event, setting_ppu=setting_ppu)
         
     def on_pick(self, event):
         self.model.on_pick(event)
@@ -131,6 +143,9 @@ class Controller():
         if self.view is None:
             self.init_view()
         self.view.Hide()
+
+        self.dicom_view.canvas.SetCursor(self.cursor_ppu)
+
         self.polyline_controller = polyline_controller.Controller(self.dicom_view.controller, self.dicom_view, self.dicom_view.controller.background, calib=True)
         self.dicom_view.controller.draw_all()
         self.dicom_view.controller.state_changed(True)

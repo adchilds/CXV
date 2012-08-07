@@ -1,8 +1,15 @@
 matplotlib (matlab interface for python)
+
 numpy
+
 scipy
+
 chilkat (for python xml)
+
 dicom (from google code)
+
 wxpython (GUI)
+
 yapsy (plugin framework)
+
 python image library (tiff exporting)

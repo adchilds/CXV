@@ -76,15 +76,15 @@ class View(wx.Frame):
         if not label:
             menu.AppendSeparator()
         else:
-            id = wx.NewId()
-            self.menubar_ids[label] = id
+            menu_id = wx.NewId()
+            self.menubar_ids[label] = menu_id
             if has_submenu:
                 if label == 'Filter Plugins':
-                    option = menu.AppendMenu(id, label, self.plugin_submenu())
+                    option = menu.AppendMenu(menu_id, label, self.plugin_submenu())
                 else:
-                    option = menu.AppendMenu(id, label, submenu)
+                    option = menu.AppendMenu(menu_id, label, submenu)
             else:
-                option = menu.Append(id, label)
+                option = menu.Append(menu_id, label)
             option.Enable(enabled)
             if accel:
                 wx.AcceleratorTable([ (accel[0], ord(accel[1]), option.GetId()) ])
@@ -107,6 +107,7 @@ class View(wx.Frame):
                   ('Image Overview', (), self.controller.on_overview, False, False, None),
                   ('Image Information', (), self.controller.on_image_info, False, False, None),
                   ('', '', '', True, False, None),
+                  ('Rotate Image', (), self.controller.on_rotate_image, False, False, None), 
                   ('Pan Image', (), self.controller.on_pan_image_menu, False, False, None),
                   ('Zoom In', (), self.zoom_controller.on_zoom_in_menu, False, False, None),
                   ('Zoom Out', (), self.zoom_controller.on_zoom_out, False, False, None),
@@ -174,20 +175,20 @@ class View(wx.Frame):
             self.add_tool(self.toolbar, *each)
         self.toolbar.Realize()
     
-    def add_tool(self, toolbar, type, label, bmp, handler, enabled):
-        if type == 'separator':
+    def add_tool(self, toolbar, tool_type, label, bmp, handler, enabled):
+        if tool_type == 'separator':
             toolbar.AddSeparator()
-        elif type == 'control':
+        elif tool_type == 'control':
             toolbar.AddControl(label)
         else:
             bmp = wx.Image(self.get_main_dir() + os.sep + bmp, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
-            id = wx.NewId()
-            self.toolbar_ids[label] = id
-            if type == 'toggle':
-                tool = toolbar.AddCheckTool(id, bmp, wx.NullBitmap, label, '')
-            elif type == 'simple':
-                tool = toolbar.AddSimpleTool(id, bmp, label, '')
-            toolbar.EnableTool(id, enabled)
+            tool_id = wx.NewId()
+            self.toolbar_ids[label] = tool_id
+            if tool_type == 'toggle':
+                tool = toolbar.AddCheckTool(tool_id, bmp, wx.NullBitmap, label, '')
+            elif tool_type == 'simple':
+                tool = toolbar.AddSimpleTool(tool_id, bmp, label, '')
+            toolbar.EnableTool(tool_id, enabled)
             self.Bind(wx.EVT_MENU, handler, tool)
         
     def toolbar_data(self):
@@ -206,6 +207,7 @@ class View(wx.Frame):
                 ('simple', 'Image Overview', 'images' + os.sep + 'overview.png', self.controller.on_overview, False),
                 ('simple', 'Image Information', 'images' + os.sep + 'info.png', self.controller.on_image_info, False),
                 ('separator', '', '', '', ''),
+                ('simple', 'Rotate Image', 'images' + os.sep + 'rotate_counter-clock.png', self.controller.on_rotate_image, False),
                 ('toggle', 'Pan Image', 'images' + os.sep + 'cursor_hand.png', self.controller.on_pan_image, False),
                 ('toggle', 'Zoom In', 'images' + os.sep + 'zoom_in_toolbar.png', self.zoom_controller.on_zoom_in, False),
                 ('simple', 'Zoom Out', 'images' + os.sep + 'zoom_out_toolbar.png', self.zoom_controller.on_zoom_out, False),

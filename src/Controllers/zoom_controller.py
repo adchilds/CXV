@@ -36,7 +36,10 @@ class Controller():
         x1, y1, x2, y2 = drag_coords # Selected area dimensions
         rect_width, rect_height = (math.fabs(x2 - x1), math.fabs(y2 - y1)) # Rect dimensions
         scroll_width, scroll_height = self.view.scroll.GetSizeTuple() # ScrolledWindow dimensions
-        
+
+        # Get the center point of the dragged area
+        dX, dY = self.model.center_of_rect(x1, y1, x2, y2)
+
         # Ratio of the selected area to the ScrolledWindow
         # Calculates how far we're able to zoom in
         ratio = self.model.rect_ratio(rect_width, rect_height, scroll_width, scroll_height)
@@ -52,9 +55,16 @@ class Controller():
             self.view.aspect = ratio
             self.view.aspect_cb.SetValue(str(int(ratio*100.0))+'%')
 
-        # Calculate how many scroll units we should move
-        x1 /= 100
-        y1 /= 100
+        # Resize behind the scenes so we can calculate scrollbar positions correctly
+        self.dicom_controller.resize_mpl_widgets()
+
+        # Get the center point of the view
+        c = self.model.get_viewable_rect(self.view)
+        vX, vY = self.model.center_of_rect(c[0], c[1], c[2], c[3])
+
+        # Calculate how many scroll units they're apart by
+        x1 = math.fabs(vX - dX) / 100
+        y1 = math.fabs(vY - dY) / 100
 
         # Round these values and cast them as integers
         x1 = int(round(x1))

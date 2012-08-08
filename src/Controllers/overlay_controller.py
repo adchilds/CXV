@@ -148,7 +148,6 @@ class Controller():
         b = 1.0 - (dy/iH)
         w = (dx-x)/iW
         h = (dy-y)/iH
-        
         self.dicom_view.ov_axes = self.dicom_view.figure.add_axes((l,b,w,h))
         self.dicom_view.ov_axes.set_axis_off()
         self.dicom_view.ov_axes.patch.set_facecolor('none')
@@ -169,9 +168,15 @@ class Controller():
                 self.overlay += (alphas[ov]/100.0) * self.overlays[ov]
         self.overlay = self.model.invert_grayscale(self.overlay)
 
-    def display(self, event=None, alphas=None):
+    def display(self, event=None, alphas=None, dx=0, dy=0):
         self.calc_overlay(alphas)
-        y, x = self.overlay.shape
+
+        if dx > 0:
+            x = dx
+            y = dy
+        else:
+            y, x = self.overlay.shape
+
         rgba, ptr = self.model.allocate_array((y, x, 4))
         rgba = self.model.set_display_data(rgba, self.overlay, 1.0)
 

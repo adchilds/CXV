@@ -51,6 +51,12 @@ class Controller():
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9)
         self.cursor = wx.CursorFromImage(image)
 
+        # Polyline cursor focus
+        image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_cross_dot.png", wx.BITMAP_TYPE_PNG)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9)
+        self.cursor_dot = wx.CursorFromImage(image)
+
         # Setting pixels per unit cursor
         image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_ppu.png", wx.BITMAP_TYPE_PNG)
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 10) 
@@ -136,7 +142,9 @@ class Controller():
         elif self.over_polyline(event):
             if self.picked.contains(event)[0]:
                 if not self.dicom_controller.zoom and not self.dicom_controller.pan_image:
-                    self.dicom_view.canvas.SetCursor(self.cursor)
+                    self.dicom_view.canvas.SetCursor(self.cursor_dot)
+        else:
+            self.dicom_view.canvas.SetCursor(self.cursor)
         self.prev_event = event
         try: self.curr_pl.set_label(self.polylines.index(self.curr_pl))
         except: pass
@@ -148,7 +156,7 @@ class Controller():
         if event.button == 1:
             self.on_left_click(event, vert)
         elif event.button == 3:
-            self.on_right_click(event)
+            self.on_right_click(event, vert)
 
     def on_mouse_release(self, event):
         self.drag_v = False
@@ -174,14 +182,14 @@ class Controller():
             self.dicom_controller.changed = True
         self.curr_pl.add_vertex(event.xdata, event.ydata)
 
-    def on_right_click(self, event):
+    def on_right_click(self, event, vert=True):
         if self.connect:
             self.tmp_line = None
             self.connect = False
             self.curr_pl.color = '#FF0000'
             self.curr_pl.set_colors()
             self.validate()
-        elif self.on_pick(event):
+        elif self.on_pick(event, vert):
             self.dicom_controller.draw_all()
             if self.picked.contains(event)[0]:
                 self.mpl_event = event
@@ -307,22 +315,25 @@ class Controller():
         x_offset = event.xdata - self.prev_event.xdata
         y_offset = event.ydata - self.prev_event.ydata
 
-        for line in self.curr_pl.lines:
-            x1, x2 = line.get_xdata()
-            y1, y2 = line.get_ydata()
-            x1 += x_offset
-            x2 += x_offset
-            y1 += y_offset
-            y2 += y_offset
-            self.curr_pl.set_line(line,
-                                  [x1, x2],
-                                  [y1, y2])
-        for vertex in self.curr_pl.verticies:
-            x, = vertex.get_xdata()
-            y, = vertex.get_ydata()
-            x += x_offset
-            y += y_offset
-            self.curr_pl.set_vertex(vertex, x, y)  
+        try:
+            for line in self.curr_pl.lines:
+                x1, x2 = line.get_xdata()
+                y1, y2 = line.get_ydata()
+                x1 += x_offset
+                x2 += x_offset
+                y1 += y_offset
+                y2 += y_offset
+                self.curr_pl.set_line(line,
+                                      [x1, x2],
+                                      [y1, y2])
+            for vertex in self.curr_pl.verticies:
+                x, = vertex.get_xdata()
+                y, = vertex.get_ydata()
+                x += x_offset
+                y += y_offset
+                self.curr_pl.set_vertex(vertex, x, y)
+        except ValueError:
+            pass
 
     def draw_polylines(self, adjustable, locked, show_label=True):
         if self.tmp_line: self.axes.draw_artist(self.tmp_line)
@@ -360,15 +371,15 @@ class Controller():
         self.dicom_view.Bind(wx.EVT_MENU, handler, option)
 
     def popup_line_data(self):
-        label = 'Delete Polyline ' + self.curr_pl.get_label()
         return [('Add Vertex Here', self.add_vertex),
-                (label, self.delete_polyline)
+                ('Delete Polyline ' + self.curr_pl.get_label(), self.delete_polyline)
+#                ('Duplicate Polyline', self.on_duplicate)
                 ]
 
     def popup_vertex_data(self):
-        label = 'Delete Polyline ' + self.curr_pl.get_label()
         return [('Delete Vertex', self.delete_vertex),
-                (label, self.delete_polyline)
+                ('Delete Polyline ' + self.curr_pl.get_label(), self.delete_polyline)
+#                ('Duplicate Polyline', self.on_duplicate)
                 ]
 
     def popup_color_data(self):
@@ -406,3 +417,8 @@ class Controller():
             for line in polyline.lines:
                 line.set_animated(anim)
                 line.set_linewidth(line_width)
+
+    def on_duplicate(self, event):
+        """ Creates an exact copy of another polyline and places it
+        a few pixels away from the other one. """
+        print 'Duplicate Polyline'

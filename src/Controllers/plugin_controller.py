@@ -71,7 +71,7 @@ class Controller(threading.Thread):
             plugin.plugin_object.initPlugin(self.controller, coral_slab, self.model, self.pb, count)
 
             # Print a little information about the plugin (DEBUG)
-            plugin.plugin_object.print_information()
+#            plugin.plugin_object.print_information()
 
             # Run the plugin's algorithm
             plugin.plugin_object.calc_filter()

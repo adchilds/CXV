@@ -13,6 +13,7 @@
 #########################################################
 from Controllers import polyline_controller
 from Models import rectangle_model
+from Models import zoom_model
 from Views import calibrate_view
 import math
 import numpy as np
@@ -23,7 +24,9 @@ class Controller():
 
     def __init__(self, dicom_view, background):
         self.dicom_view = dicom_view
-        self.model = rectangle_model.Model(self.dicom_view, background, 400, 400, 800, 800)
+        self.zoom_model = zoom_model.Model()
+        x1, y1, x2, y2 = self.zoom_model.get_viewable_rect(self.dicom_view)
+        self.model = rectangle_model.Model(self.dicom_view, background, x1+125, y1+125, x1+525, y1+525)
         self.dicom_view.controller.calib_region = [self.model.sx, self.model.sy, self.model.dx, self.model.dy]
         self.unit = 'mm'
         self.pixels_per_unit = ''
@@ -137,7 +140,13 @@ class Controller():
         self.view.max_wedge_thickness = self.view.max.GetValue()
         self.update_calib_data()
         self.view.Hide()
-        self.dicom_view.controller.set_pixels_per_unit = True
+
+        if len(self.pixels_per_unit) > 0:
+            self.dicom_view.controller.set_pixels_per_unit = True
+        else:
+            self.dicom_view.controller.set_pixels_per_unit = False
+
+        self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Set Calibration Parameters'], False)
 
     def on_set_pixel_unit(self, event):
         if self.view is None:
@@ -202,10 +211,8 @@ class Controller():
         return [b, m, r2]
     
     def on_close(self, event):
-        if self.view is None:
-            self.init_view()
-        self.view.Hide()
-        
+        self.on_apply(event)
+
     def print_info(self):
         print 'Thickness range:', self.min_thickness, self.max_thickness
         print 'AL Grayscale range:', self.dw_grayscales

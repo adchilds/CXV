@@ -43,8 +43,11 @@ class Polyline():
         self.verticies.remove(self.get_vertex(index))
         
     def set_vertex(self, vertex, x, y):
-        vertex.set_xdata([x])
-        vertex.set_ydata([y])
+        try:
+            vertex.set_xdata([x])
+            vertex.set_ydata([y])
+        except AttributeError:
+            pass
         
     def get_vertex(self, index):
         return self.verticies[index]
@@ -56,9 +59,11 @@ class Polyline():
             pass
     
     def is_first(self, vertex):
-        if self.verticies.index(vertex) == 0: 
-            return True
-        return False
+        try:
+            if self.verticies.index(vertex) == 0: 
+                return True
+        except ValueError:
+            return False
     
     def is_last(self, vertex):
         if self.verticies.index(vertex) == len(self.verticies)-1:

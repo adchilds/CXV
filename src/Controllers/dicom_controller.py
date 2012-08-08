@@ -47,6 +47,7 @@ class Controller():
         self.polyline = False
         self.polyline_locked = False
         self.calib = False
+        self.calib_locked = False
         self.changed = False
         self.pan_image = False # Is the user able to currently pan the image?
         self.toolbar_pan = False
@@ -181,7 +182,7 @@ class Controller():
         self.polyline_controller = None
         self.save_session = None
         self.changed = False
-        self.enable_tools(['Lock Target Area', 'Filtered Overlays'], False)
+        self.enable_tools(['Filtered Overlays'], False)
 
     def on_quit(self, event):
         if self.save_prompt() is not -1: # Cancel button
@@ -453,7 +454,7 @@ class Controller():
                 self.state_changed(True)
             elif self.coral:
                 self.coral_controller.on_mouse_press(event)
-            elif self.calib:
+            elif self.calib or self.calib_locked:
                 self.calibrate_controller.on_mouse_press(event)
             self.draw_all()
 
@@ -481,7 +482,8 @@ class Controller():
         elif (event.button == 1 or event.button == 3) and self.polyline_cursor_on:
             self.view.canvas.SetCursor(self.cursor_polyline)
         else:
-            self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            if event.button is not 2:
+                self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
         # Update toggle_selector's background. Otherwise, next time we try to
         # drag zoom, the objects overlaying the image will disappear during drag
@@ -614,10 +616,9 @@ class Controller():
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
-        self.enable_tools(['Filtered Overlays'], False)
         if not self.coral_controller: # first open
             self.coral_controller = coral_controller.Controller(self.view, self.background)
-            self.enable_tools(['Lock Target Area'], True)
+            self.enable_tools(['Filtered Overlays'], True)
         else:
             try: # remove overlay if already added
                 self.view.figure.delaxes(self.view.ov_axes)
@@ -842,13 +843,14 @@ class Controller():
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         if show:
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Set Calibration Parameters'], True)
             self.calibrate_controller.on_density_params(event)
         self.draw_all()
         self.state_changed(True)
 
     def on_save(self, event):
         if not self.save_session:
-            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='XML File (*.xml)|*.xml')
+            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='Session File (*.xml)|*.xml')
             dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
             if dialog.ShowModal()==wx.ID_OK:
                 self.save_session = save_session.SaveSession(self, dialog.GetPath())

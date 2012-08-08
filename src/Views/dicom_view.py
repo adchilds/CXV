@@ -107,7 +107,7 @@ class View(wx.Frame):
                   ('Image Overview', (), self.controller.on_overview, False, False, None),
                   ('Image Information', (), self.controller.on_image_info, False, False, None),
                   ('', '', '', True, False, None),
-                  ('Rotate Image', (), self.controller.on_rotate_image, False, False, None), 
+#                  ('Rotate Image', (), self.controller.on_rotate_image, False, False, None), 
                   ('Pan Image', (), self.controller.on_pan_image_menu, False, False, None),
                   ('Zoom In', (), self.zoom_controller.on_zoom_in_menu, False, False, None),
                   ('Zoom Out', (), self.zoom_controller.on_zoom_out, False, False, None),
@@ -132,7 +132,7 @@ class View(wx.Frame):
         and allows the user to specify a secondary plugin directory.
         """
         menu = wx.Menu()
-        props = wx.MenuItem(menu, wx.ID_ANY, 'Properties')
+        props = wx.MenuItem(menu, wx.ID_ANY, 'Set Directory')
         menu.AppendItem(props)
         self.Bind(wx.EVT_MENU, self.controller.on_plugin_properties, props)
 
@@ -207,7 +207,7 @@ class View(wx.Frame):
                 ('simple', 'Image Overview', 'images' + os.sep + 'overview.png', self.controller.on_overview, False),
                 ('simple', 'Image Information', 'images' + os.sep + 'info.png', self.controller.on_image_info, False),
                 ('separator', '', '', '', ''),
-                ('simple', 'Rotate Image', 'images' + os.sep + 'rotate_counter-clock.png', self.controller.on_rotate_image, False),
+#                ('simple', 'Rotate Image', 'images' + os.sep + 'rotate_counter-clock.png', self.controller.on_rotate_image, False),
                 ('toggle', 'Pan Image', 'images' + os.sep + 'cursor_hand.png', self.controller.on_pan_image, False),
                 ('toggle', 'Zoom In', 'images' + os.sep + 'zoom_in_toolbar.png', self.zoom_controller.on_zoom_in, False),
                 ('simple', 'Zoom Out', 'images' + os.sep + 'zoom_out_toolbar.png', self.zoom_controller.on_zoom_out, False),
@@ -216,12 +216,12 @@ class View(wx.Frame):
 #                ('simple', 'Adjust Contrast', 'images' + os.sep + 'contrast.png', self.controller.on_contrast, False),
 #                ('separator', '', '', '', ''),
                 ('toggle', 'Adjust Target Area', 'images' + os.sep + 'coral.png', self.controller.on_coral, False),
-                ('simple', 'Lock Target Area', 'images' + os.sep + 'lock_coral.png', self.controller.on_lock_coral, False),
-                ('separator', '', '', '', ''),
+#                ('simple', 'Lock Target Area', 'images' + os.sep + 'lock_coral.png', self.controller.on_lock_coral, False),
+#                ('separator', '', '', '', ''),
                 ('simple', 'Filtered Overlays', 'images' + os.sep + 'overlay.png', self.controller.on_overlay, False),
                 ('separator', '', '', '', ''),
                 ('toggle', 'Adjust Calibration Region', 'images' + os.sep + 'calibrate.png', self.controller.on_calibrate, False),
-                ('simple', 'Set Calibration Parameters', 'images' + os.sep + 'density.png', self.controller.on_density_params, False),
+                ('toggle', 'Set Calibration Parameters', 'images' + os.sep + 'density.png', self.controller.on_density_params, False),
                 ('separator', '', '', '', ''),
                 ('toggle', 'Draw Polylines', 'images' + os.sep + 'polyline.png', self.controller.on_polyline, False),
                )

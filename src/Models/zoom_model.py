@@ -21,7 +21,6 @@ class Model():
         @var (x1, y1): the top left corner of the rect
         @var (x2, y2): the bottom right corner of the rect
         """
-
         center_x = x1 + (math.fabs(x2 - x1) / 2)
         center_y = y1 + (math.fabs(y1 - y2) / 2)
 
@@ -50,6 +49,13 @@ class Model():
         """
         print 'Within:', math.fabs(x2 - x1)
         return math.fabs(x2 - x1) <= su
+
+    def scroll_units_apart(self, center_points):
+        """ Calculates how many scroll units apart the two given center_points are.
+        
+        @return: # of [x, y] units the centers are apart by
+        """
+        return [math.fabs(center_points[0] - center_points[2]) / 100, math.fabs(center_points[1] - center_points[3]) / 100]
 
     def get_viewable_rect(self, view):
         """ Calculates the currently viewable portion of

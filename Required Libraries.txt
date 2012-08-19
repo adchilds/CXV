@@ -6,7 +6,7 @@ scipy
 
 chilkat (for python xml)
 
-dicom (from google code)
+pydicom (from google code)
 
 wxpython (GUI)
 

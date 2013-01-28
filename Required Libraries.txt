@@ -16,9 +16,13 @@ Numpy
 
 Scipy
 
+<<<<<<< HEAD
 	1. Another scientific computing library for Python
 	2. 0.9.0
 	3. http://scipy.org
+=======
+pydicom (from google code)
+>>>>>>> origin/master
 
 Chilkat
 	1. XML interfacing for Python

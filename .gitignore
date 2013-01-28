@@ -1,63 +1,21 @@
 # Ignore the following files:
 
-<<<<<<< HEAD
-
-
 	# Directories:
-
 *src/build/
-
 *src/dist/
-
 *.hg/
 
-
-
 	# File extensions:
-
 *.DS_Store		# DS_Store
 *._.DS_Store		# DS_Store
 .project		# Project file
-
 .pydevproject		# Pydev Project file
-
 *.pyc			# Compiled Python files
 *.pyd			# Python Dynamic Library files (Similar to DLLs)
-
 *.dll			# Dynamic Link Library files
-
 *.png			# png images
-
 *.gif			# gif images
-
 *.db			# Database files
-
 *.zip			# Compressed zip files
-
 *.exe			# Executables
-
 *.afm			# Fonts
-=======
-  # Directories:
-*src/build/
-*src/dist/
-*.hg/
-
-  # File extensions:
-*.DS_Store            # DS_Store files
-.project              # Project file
-.pydevproject         # Pydev Project file
-*.pyc                 # compiled Python files
-*.pyd                 # Python Dynamic Library files (Similar to DLLs)
-*.dll                 # Dynamic Link Library files
-*.png                 # png images
-*.gif                 # gif images
-*.db                  # Database files
-*.zip                 # Compressed zip files
-*.exe                 # Executables
-*.afm                 # Fonts
-*.ttf                 #
-*.ppm                 #
-*.svg                 #
-*.xpm                 #
->>>>>>> origin/master

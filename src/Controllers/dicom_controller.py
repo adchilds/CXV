@@ -86,11 +86,14 @@ class Controller():
 
         # Move the plugins to a plugins folder for the user's home directory
         # Only copies over the file if it doesn't already exist in the directory
-        if not os.path.exists(path):
-            os.makedirs(path)
-        for fil in os.listdir(self.view.get_main_dir() + os.sep + "plugins"):
-            if not os.path.exists(path + os.sep + fil):
-                shutil.copy("plugins" + os.sep + fil, path)
+# DGZ 14 Aug 2012:  Commented out the following 4 lines to try and solve a
+# plugin-related problem with the cxfreeze installer.
+#
+#        if not os.path.exists(path):
+#            os.makedirs(path)
+#        for fil in os.listdir(self.view.get_main_dir() + os.sep + "plugins"):
+#            if not os.path.exists(path + os.sep + fil):
+#                shutil.copy("plugins" + os.sep + fil, path)
         
         self.cursor_hand = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_open.gif', wx.BITMAP_TYPE_GIF))
         self.cursor_hand_drag = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_closed.gif', wx.BITMAP_TYPE_GIF))
@@ -169,7 +172,9 @@ class Controller():
             self.pb.Destroy()
             self.pb = None
             # Image path not found, prompt user to edit XML file with correct path to image
-            wx.MessageBox('Image location not found! Please edit the saved session XML file and add the correct image location between the "filename" tags.', 'Invalid Image Path', wx.OK | wx.ICON_ERROR)
+            # TODO: Add section number from manual to this messageBox text
+            wx.MessageBox('Image location not found! Please edit the saved session XML file and add the correct image location between the "filename" tags. ' +
+                            'For more information on this issue, please consult the CXV manual under section SECTION_NUMBER.', 'Invalid Image Path', wx.OK | wx.ICON_ERROR)
             return
         self.save_session.load()
         self.changed = False
@@ -742,8 +747,25 @@ class Controller():
             for polyline in self.polyline_controller.polylines:
                 # Loops through all verticies of each polyline
                 for vertex in polyline.verticies:
-                    x = int(vertex.get_xdata())
-                    y = int(vertex.get_ydata())
+                    try:
+                        x = int(vertex.get_xdata())
+                        y = int(vertex.get_ydata())
+                    except TypeError:
+                        # This error is thrown when one of the user's polylines goes outside the coordinates of the image.
+                        # For some reason (that I'm not sure of at the moment), the data is put into a 1 element list. So
+                        # the fix is to just take the 0th element of the list and then cast it to an integer...
+                        # 
+                        # Adam Childs (11/17/2012)
+                        x = int(vertex.get_xdata()[0])
+                        y = int(vertex.get_ydata()[0])
+                    
+                    # DGZ 16 Aug 2012
+                    # Bug fix for DXF y-axis flipping error
+                    # code provided by Adam Childs
+                    # Convert (0, 0) to bottom-left instead of upper-left for drill program
+                    #
+                    sY, sX = self.model.get_image_shape()
+                    y = sY - y
                     
                     x /= float(self.calibrate_controller.pixels_per_unit)
                     y /= float(self.calibrate_controller.pixels_per_unit)

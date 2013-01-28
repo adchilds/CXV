@@ -21,18 +21,17 @@ from Controllers import overview_controller
 from Controllers import polyline_controller
 from Controllers import xml_controller
 from Controllers import zoom_controller
-from dxfwrite import DXFEngine as dxf
 from Models import dicom_model
 from Models import zoom_model
 from lib import browse_dialog
 from lib import progress_bar
 from lib import save_session
 from Views import dicom_view
-import Image # PIL (Python Image Library)
+#import Image # PIL (Python Image Library)
 import math
 import os
 import re
-import shutil
+#import shutil
 import wx
 
 class Controller():

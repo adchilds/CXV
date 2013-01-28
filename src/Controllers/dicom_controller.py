@@ -14,6 +14,7 @@
 from Controllers import calibrate_controller
 from Controllers import contrast_controller
 from Controllers import coral_controller
+from Controllers import dxf_controller
 from Controllers import image_info_controller
 from Controllers import overlay_controller
 from Controllers import overview_controller
@@ -699,19 +700,9 @@ class Controller():
             pb.update('Calculating image size')
             self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
 
-            """
-            # TIFF IMAGE STUFF HERE (REMOVED)
-            # Converting to TIFF double original image size, so we just export to PNG instead
-            if self.get_file_extension(dialog.GetPath()) == '.tif': # Convert PNG to TIFF if .tif is selected
-                path = dialog.GetPath()
-                path = path.split('.')[0] + '.png'
-                self.view.figure.savefig(path, dpi=self.view.figure.dpi)
-                Image.open(path).save(path.split('.')[0] + '.tif', 'TIFF')
-                os.remove(path) # Remove the PNG but keep the TIFF
-            """
             if self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
                 pb.update('Saving DXF file')
-                self.create_dxf(dialog.GetPath())
+                dxf_controller.Controllers().get_model().create_dxf(dialog.GetPath(), self.polyline_controller, self.model, self.calibrate_controller)
             else:
                 pb.update('Saving image')
                 # Toggle polyline animation off
@@ -729,65 +720,6 @@ class Controller():
             self.on_aspect(None, 0, 0) # Set back to current size
             self.view.scroll.Show()
             pb.finish('Complete!')
-
-    def create_dxf(self, file_path):
-        """ Creates a DXF file with the coordinates of the polylines on the image """
-        if self.polyline_controller:
-            # Create a DXF object
-            drawing = dxf.drawing(file_path)
-            points = []
-
-            # Header information
-            drawing.header['$ACADVER'] = 'AC1014'
-
-            # Add the polylines
-            drawing.add_layer('POLYLINES', color=2)
-
-            # Loops through all polylines
-            for polyline in self.polyline_controller.polylines:
-                # Loops through all verticies of each polyline
-                for vertex in polyline.verticies:
-                    try:
-                        x = int(vertex.get_xdata())
-                        y = int(vertex.get_ydata())
-                    except TypeError:
-                        # This error is thrown when one of the user's polylines goes outside the coordinates of the image.
-                        # For some reason (that I'm not sure of at the moment), the data is put into a 1 element list. So
-                        # the fix is to just take the 0th element of the list and then cast it to an integer...
-                        # 
-                        # Adam Childs (11/17/2012)
-                        x = int(vertex.get_xdata()[0])
-                        y = int(vertex.get_ydata()[0])
-                    
-                    # DGZ 16 Aug 2012
-                    # Bug fix for DXF y-axis flipping error
-                    # code provided by Adam Childs
-                    # Convert (0, 0) to bottom-left instead of upper-left for drill program
-                    #
-                    sY, sX = self.model.get_image_shape()
-                    y = sY - y
-                    
-                    x /= float(self.calibrate_controller.pixels_per_unit)
-                    y /= float(self.calibrate_controller.pixels_per_unit)
-
-                    # Set the units in mm
-                    if self.calibrate_controller.unit == 'cm':
-                        x *= 10
-                        y *= 10
-                    elif self.calibrate_controller.unit == 'in':
-                        x *= 25.4
-                        y *= 25.4
-
-                    points.append((x, y))
-                
-                # Adds the points to a polyline object, which is added to the DXF file
-                drawing.add(dxf.polyline(points))
-                points = [] # Reset points for the next polyline to use
-
-            drawing.save()
-        else:
-            wx.MessageBox('No polylines have been found. Please add some.', 'No polylines!', wx.OK | wx.ICON_ERROR)
-            return
 
     def get_file_extension(self, file_path):
         """ Returns the file's extension, given the file's path """

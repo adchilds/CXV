@@ -14,26 +14,25 @@
 
 	# File extensions:
 
-*.DS_Store            # DS_Store files
+*.DS_Store		# DS_Store
+*._.DS_Store		# DS_Store
+.project		# Project file
 
-.project              # Project file
+.pydevproject		# Pydev Project file
 
-.pydevproject         # Pydev Project file
+*.pyc			# Compiled Python files
+*.pyd			# Python Dynamic Library files (Similar to DLLs)
 
-*.pyc                 # Compiled Python files
+*.dll			# Dynamic Link Library files
 
-*.pyd                 # Python Dynamic Library files (Similar to DLLs)
+*.png			# png images
 
-*.dll                 # Dynamic Link Library files
+*.gif			# gif images
 
-*.png                 # png images
+*.db			# Database files
 
-*.gif                 # gif images
+*.zip			# Compressed zip files
 
-*.db                  # Database files
+*.exe			# Executables
 
-*.zip                 # Compressed zip files
-
-*.exe                 # Executables
-
-*.afm                 # Fonts
+*.afm			# Fonts

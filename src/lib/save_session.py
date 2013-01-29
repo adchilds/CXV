@@ -127,8 +127,10 @@ class SaveSession():
         if target == 'True':
             target = xml.SearchForTag(xml, "target_area") # Reset target
 
-            self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Target Area'], True)
-            #self.controller.on_coral(None)
+            self.controller.enable_tools(['Adjust Target Area', 'Filtered Overlays'], True)
+#            self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Target Area'], True)
+#            self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Filtered Overlays'], True)
+#            self.controller.on_coral(None)
             self.controller.coral_controller  = coral_controller.Controller(self.controller.view, self.controller.background)
 
             coords = []
@@ -144,7 +146,7 @@ class SaveSession():
             self.controller.coral_controller.model.dx = coords[2]
             self.controller.coral_controller.model.dy = coords[3]
 
-            self.controller.enable_tools(['Lock Target Area'], True)
+            #self.controller.enable_tools(['Lock Target Area'], True)
             self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Target Area'], False)
 
         # Load Polylines

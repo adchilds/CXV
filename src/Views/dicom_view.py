@@ -115,7 +115,6 @@ class View(wx.Frame):
 #                  ('Adjust Contrast', (), self.controller.on_contrast, False, False, None),
 #                  ('', '', '', True, False, None),
                   ('Adjust Target Area', (), self.controller.on_coral_menu, False, False, None),
-                  ('Lock Target Area', (), self.controller.on_lock_coral, False, False, None),
                   ('', '', '', True, False, None),
                   ('Filtered Overlays', (), self.controller.on_overlay, False, False, None),
                   ('Filter Plugins', (), self.controller.on_plugin, True, True, None),
@@ -132,6 +131,15 @@ class View(wx.Frame):
         and allows the user to specify a secondary plugin directory.
         """
         menu = wx.Menu()
+
+        """
+        # Add a plugin from another directory to the default directory
+        addPlugin = wx.MenuItem(menu, wx.ID_ANY, 'Add Plugin')
+        menu.AppendItem(addPlugin)
+        self.Bind(wx.EVT_MENU, self.controller.on_add_plugin, addPlugin)
+        """
+
+        # Set directory where extra plugins are held
         props = wx.MenuItem(menu, wx.ID_ANY, 'Set Directory')
         menu.AppendItem(props)
         self.Bind(wx.EVT_MENU, self.controller.on_plugin_properties, props)

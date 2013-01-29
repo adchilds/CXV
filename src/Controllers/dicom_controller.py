@@ -103,7 +103,7 @@ class Controller():
         self.cursor_polyline = wx.CursorFromImage(image)
 
     def on_open(self, event):
-        dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml)|*.DCM; *.xml|DICOM (*.DCM)|*.DCM|Saved session (*.xml)|*.xml', style=wx.FD_FILE_MUST_EXIST)
+        dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml; *.cxv)|*.DCM; *.xml; *.cxv|DICOM (*.DCM)|*.DCM|Saved session (*.xml; *.cxv)|*.xml; *.cxv', style=wx.FD_FILE_MUST_EXIST)
         if dialog.ShowModal() == wx.ID_OK:
             new = True
             if self.model.image_array is not None:  # opening a project on top of another
@@ -199,10 +199,10 @@ class Controller():
             ' has changed.\n\n Do you want to save the changes?'
             dialog = wx.MessageDialog(self.view, msg, 'CXV', style=wx.YES_NO|wx.CANCEL)
             choice = dialog.ShowModal()
-            if choice==wx.ID_CANCEL:
-                return -1
-            elif choice==wx.ID_YES:
+            if choice==wx.ID_YES:
                 self.save_session.write()
+            else:
+                return -1
 
     def enable_tools(self, tools, enable):
         for tool in tools:
@@ -803,8 +803,14 @@ class Controller():
 
     def on_save(self, event):
         if not self.save_session:
-            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='Session File (*.xml)|*.xml')
-            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
+            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='CXV Session File (*.cxv)|*.cxv|XML Document (*.xml)|*.xml')
+
+            # Is the user saving a CXV Session file or XML file?
+            if self.get_file_extension(dialog.GetPath()) == '.cxv':
+                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
+            else:
+                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
+
             if dialog.ShowModal()==wx.ID_OK:
                 self.save_session = save_session.SaveSession(self, dialog.GetPath())
                 self.save_session.write()
@@ -925,11 +931,6 @@ class Controller():
             self.view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
         else:
             self.pan_image = True
-
-    def debug_message(self, message):
-        """ Used for testing and debugging purposes """
-        if self.debug:
-            print message
 
     def state_changed(self, changed):
         """ This method is called when the user changes something and the

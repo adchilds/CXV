@@ -46,11 +46,12 @@ class Model():
         ctypes.pythonapi.PyMem_Free(ptr)
 
     def rotate_image(self, img):
-        """ Rotates the given image by 90 degrees (counter-clockwise)
+        """ Rotates the given image by 90 degrees (counter-clockwise) three times;
+        therefore, the image appears to only have rotated 90 degrees clockwise.
         
         @var img - The image array to rotate
         """
-        return np.rot90(img)
+        return np.rot90(img, 3)
 
     def normalize_intensity(self, img):
         """Normalizes raw intensity values to real values between 0.0 and 1.0"""

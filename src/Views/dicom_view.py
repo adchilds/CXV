@@ -97,7 +97,8 @@ class View(wx.Frame):
         """ ('TEXT', (ACCELERATOR), HANDLER, ENABLED, HAS_SUBMENU, SUBMENU METHOD """
         return ( [ # File
                   ('&Open...\tCtrl+O', (wx.ACCEL_CTRL, 'O'), self.controller.on_open, True, False, None),
-                  ('&Save...\tCtrl+S', (wx.ACCEL_CTRL, 'S'), self.controller.on_save, False, False, None),
+                  ('&Save\tCtrl+S', (wx.ACCEL_CTRL, 'S'), self.controller.on_save, False, False, None),
+                  ('Save As...', (), self.controller.on_save_as, False, False, None),
                   ('', '', '', True, False, None),
                   ('Export', (), self.controller.on_export, False, False, None),
                   ('', '', '', True, False, None),
@@ -211,7 +212,7 @@ class View(wx.Frame):
         self.aspect_cb.Disable()
         return (# tool type, description text, icon directory, handler
                 ('simple', '&Open...\tCtrl+O', 'images' + os.sep + 'open.png', self.controller.on_open, True),
-                ('simple', '&Save...\tCtrl+S', 'images' + os.sep + 'save.png', self.controller.on_save, False),
+                ('simple', '&Save\tCtrl+S', 'images' + os.sep + 'save.png', self.controller.on_save, False),
                 ('separator', '', '', '', ''),
                 ('simple', 'Image Overview', 'images' + os.sep + 'overview.png', self.controller.on_overview, False),
                 ('simple', 'Image Information', 'images' + os.sep + 'info.png', self.controller.on_image_info, False),

@@ -124,7 +124,8 @@ class Controller():
                      'Adjust Target Area', 'Draw Polylines',
                      'Adjust Calibration Region']
             self.enable_tools(tools, True)
-            self.enable_tools(['&Save...\tCtrl+S'], False)
+            self.enable_tools(['&Save\tCtrl+S'], False)
+            self.view.menubar.FindItemById(self.view.menubar_ids['Save As...']).Enable(True)
             self.view.menubar.FindItemById(self.view.menubar_ids['Export']).Enable(True)
 
             # If the user loads a saved session, we don't want to set these to None!
@@ -504,17 +505,10 @@ class Controller():
         elif event.key == 'shift': # Holding SHIFT while setting pixel_per_unit
             if self.calibrate_controller.polyline_controller is not None:
                 self.calibrate_controller.polyline_controller.shift_down = True
-        elif event.key == 'c': # Calibration
-            self.on_calibrate(event, True, True)
-        elif event.key == 'p': # Polylines
-            self.on_polyline(event, True, True)
-        elif event.key == 't': # Target Area
-            self.on_coral(event, True, True)
         elif event.key == 'd': # DEBUG
             if not self.debug:
                 self.debug = True
-                self.debug_message("DEBUG Activated...")
-                self.view.create_menubar()
+                print "DEBUG Activated..."
             else:
                 self.debug = False
                 print "DEBUG De-Activated..."
@@ -804,20 +798,26 @@ class Controller():
 
     def on_save(self, event):
         if not self.save_session:
-            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='CXV Session File (*.cxv)|*.cxv|XML Document (*.xml)|*.xml')
-
-            # Is the user saving a CXV Session file or XML file?
-            if self.get_file_extension(dialog.GetPath()) == '.cxv':
-                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
-            else:
-                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
-
-            if dialog.ShowModal()==wx.ID_OK:
-                self.save_session = save_session.SaveSession(self, dialog.GetPath())
-                self.save_session.write()
+            self.on_save_as(event)
         else:
             self.save_session.write()
         self.state_changed(False)
+
+    def on_save_as(self, event):
+        """ Shows a save as dialog where the user choose to save the file
+        on their system with a specific filename and extension.
+        """
+        dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='CXV Session File (*.cxv)|*.cxv|XML Document (*.xml)|*.xml')
+
+        # Is the user saving a CXV Session file or XML file?
+        if self.get_file_extension(dialog.GetPath()) == '.cxv':
+            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
+        else:
+            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
+
+        if dialog.ShowModal()==wx.ID_OK:
+            self.save_session = save_session.SaveSession(self, dialog.GetPath())
+            self.save_session.write()
 
     def on_plugin_properties(self, event=None):
         browse = browse_dialog.BrowseDialog(None, title='Default Plugin Directory')
@@ -951,7 +951,7 @@ class Controller():
         @var changed - Does the program differ from the previously saved session?
         """
         if changed:
-            self.enable_tools(['&Save...\tCtrl+S'], True)
+            self.enable_tools(['&Save\tCtrl+S'], True)
         else:
-            self.enable_tools(['&Save...\tCtrl+S'], False)
+            self.enable_tools(['&Save\tCtrl+S'], False)
         self.changed = changed

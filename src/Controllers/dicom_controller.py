@@ -31,6 +31,7 @@ from Views import dicom_view
 import math
 import os
 import re
+import numpy as np
 #import shutil
 import wx
 
@@ -119,9 +120,9 @@ class Controller():
                 savedsesh = True
             self.view.aspect_cb.Enable()
             tools = ['Image Overview', 'Image Information', 
-                     'Pan Image', 'Zoom In', 'Zoom Out', 
+                     'Pan Image', 'Rotate Image', 'Zoom In', 'Zoom Out', 
                      'Adjust Target Area', 'Draw Polylines',
-                     'Adjust Calibration Region'] #, 'Rotate Image']
+                     'Adjust Calibration Region']
             self.enable_tools(tools, True)
             self.enable_tools(['&Save...\tCtrl+S'], False)
             self.view.menubar.FindItemById(self.view.menubar_ids['Export']).Enable(True)
@@ -201,7 +202,7 @@ class Controller():
             choice = dialog.ShowModal()
             if choice==wx.ID_YES:
                 self.save_session.write()
-            else:
+            elif choice == wx.ID_CANCEL:
                 return -1
 
     def enable_tools(self, tools, enable):
@@ -881,6 +882,17 @@ class Controller():
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
+    def on_rotate(self, event):
+        # Rotate the image array
+        self.model.image_array = self.model.rotate_image(self.model.image_array)
+
+        # Redraw the canvas to show the rotated image
+        self.view.axes.cla() # Clear the axes
+        #self.view.figure.clf() # Clear the figure
+        self.view.init_plot(False) # Redraw
+        self.cache_background()
+        self.draw_all()
+
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """
 
@@ -943,14 +955,3 @@ class Controller():
         else:
             self.enable_tools(['&Save...\tCtrl+S'], False)
         self.changed = changed
-
-    def on_rotate_image(self, event):
-        # Rotate the image array
-        self.model.image_array = self.model.rotate_image(self.model.image_array)
-
-        # Redraw the canvas to show the rotated image
-        self.view.axes.cla() # Clear the axes
-        self.view.figure.clf() # Clear the figure
-        self.view.init_plot(False) # Redraw
-        self.cache_background()
-        self.draw_all()

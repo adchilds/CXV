@@ -120,9 +120,9 @@ class Controller():
                 savedsesh = True
             self.view.aspect_cb.Enable()
             tools = ['Image Overview', 'Image Information', 
-                     'Pan Image', 'Rotate Image', 'Zoom In', 'Zoom Out', 
+                     'Pan Image', 'Zoom In', 'Zoom Out', 
                      'Adjust Target Area', 'Draw Polylines',
-                     'Adjust Calibration Region']
+                     'Adjust Calibration Region', 'Rotate Image']
             self.enable_tools(tools, True)
             self.enable_tools(['&Save\tCtrl+S'], False)
             self.view.menubar.FindItemById(self.view.menubar_ids['Save As...']).Enable(True)
@@ -801,7 +801,7 @@ class Controller():
             self.on_save_as(event)
         else:
             self.save_session.write()
-        self.state_changed(False)
+            self.state_changed(False)
 
     def on_save_as(self, event):
         """ Shows a save as dialog where the user choose to save the file
@@ -810,14 +810,18 @@ class Controller():
         dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='CXV Session File (*.cxv)|*.cxv|XML Document (*.xml)|*.xml')
 
         # Is the user saving a CXV Session file or XML file?
-        if self.get_file_extension(dialog.GetPath()) == '.cxv':
+        path = dialog.GetPath()
+        if self.get_file_extension(path) == '.cxv':
             dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
         else:
             dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
 
         if dialog.ShowModal()==wx.ID_OK:
-            self.save_session = save_session.SaveSession(self, dialog.GetPath())
+            self.save_session = save_session.SaveSession(self, path)
             self.save_session.write()
+            self.state_changed(False)
+        else:
+            self.state_changed(True)
 
     def on_plugin_properties(self, event=None):
         browse = browse_dialog.BrowseDialog(None, title='Default Plugin Directory')
@@ -888,10 +892,9 @@ class Controller():
 
         # Redraw the canvas to show the rotated image
         self.view.axes.cla() # Clear the axes
-        #self.view.figure.clf() # Clear the figure
         self.view.init_plot(False) # Redraw
-        self.cache_background()
-        self.draw_all()
+#        self.cache_background()
+#        self.draw_all()
 
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """

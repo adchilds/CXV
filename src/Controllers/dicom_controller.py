@@ -886,15 +886,44 @@ class Controller():
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
+    def on_help(self, event):
+        print 'Help'
+        pass
+
+    def on_about(self, event):
+        print 'About'
+        pass
+
     def on_rotate(self, event):
         # Rotate the image array
-        self.model.image_array = self.model.rotate_image(self.model.image_array)
+#        self.model.image_array = self.model.rotate_image(self.model.image_array)
 
         # Redraw the canvas to show the rotated image
-        self.view.axes.cla() # Clear the axes
-        self.view.init_plot(False) # Redraw
-#        self.cache_background()
-#        self.draw_all()
+#        self.view.axes.cla() # Clear the axes
+#        self.view.init_plot(False) # Redraw
+        self.rotate_lines()
+        self.cache_background()
+
+    def rotate_lines(self):
+        for i, polyline in enumerate(self.polyline_controller.polylines): # for each polyline
+            for vertex in polyline.verticies: # for each vertex of each polyline
+                # get the x and y position of the vertex
+                try:
+                    x = int(vertex.get_xdata())
+                    y = int(vertex.get_ydata())
+                except TypeError:
+                    x = int(vertex.get_xdata()[0])
+                    y = int(vertex.get_ydata()[0])
+
+                # rotate the x and y by 90 degrees
+                rotDegree = 90
+                newX = math.fabs(x * math.cos(rotDegree) - y * math.sin(rotDegree))
+                newY = math.fabs(x * math.sin(rotDegree) + y * math.cos(rotDegree))
+                print "(" + str(x) + ", " + str(y) + ") -> (" + str(int(newX)) + ", " + str(int(newY)) + ")"
+                polyline.set_vertex(vertex, int(newX), int(newY))
+
+                # get correct line between two verticies to move
+                polyline.set_line(polyline.get_line(i), int(newX), int(newY))
 
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """

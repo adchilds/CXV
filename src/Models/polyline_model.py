@@ -47,6 +47,7 @@ class Polyline():
             vertex.set_xdata([x])
             vertex.set_ydata([y])
         except AttributeError:
+            print "AttributeError while trying to change vertex (x, y) position"
             pass
         
     def get_vertex(self, index):

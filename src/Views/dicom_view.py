@@ -91,7 +91,7 @@ class View(wx.Frame):
             self.Bind(wx.EVT_MENU, handler, option)
         
     def menu_names(self):
-        return ('File', 'Tools')
+        return ('File', 'Tools', 'Help')
     
     def menu_options(self):
         """ ('TEXT', (ACCELERATOR), HANDLER, ENABLED, HAS_SUBMENU, SUBMENU METHOD """
@@ -125,6 +125,10 @@ class View(wx.Frame):
                   ('Set Calibration Parameters', (), self.controller.on_density_params, False, False, None),
                   ('', '', '', True, False, None),
                   ('Draw Polylines', (), self.controller.on_polyline_menu, False, False, None),
+                  ],
+                 [ # Help
+                  ('Help', (), self.controller.on_help, True, False, None),
+                  ('About', (), self.controller.on_about, True, False, None)
                   ]
                 )
 

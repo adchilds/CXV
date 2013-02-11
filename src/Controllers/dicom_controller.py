@@ -809,14 +809,16 @@ class Controller():
         """
         dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='CXV Session File (*.cxv)|*.cxv|XML Document (*.xml)|*.xml')
 
-        # Is the user saving a CXV Session file or XML file?
-        path = dialog.GetPath()
-        if self.get_file_extension(path) == '.cxv':
-            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
-        else:
-            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
+        dialog.SetFilename(self.model.get_image_name().split('.')[0])
 
-        if dialog.ShowModal()==wx.ID_OK:
+        if dialog.ShowModal() == wx.ID_OK:
+            # Is the user saving a CXV Session file or XML file?
+            path = dialog.GetPath()
+            if self.get_file_extension(path) == '.cxv':
+                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
+            else:
+                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
+
             self.save_session = save_session.SaveSession(self, path)
             self.save_session.write()
             self.state_changed(False)

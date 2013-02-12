@@ -85,10 +85,12 @@ buildOptions = dict(
                          'images/calibrate.png',
                          'images/contrast.png',
                          'images/coral.png',
+                         'images/cursor_cross_dot.png',
                          'images/cursor_cross.png',
                          'images/cursor_hand_closed.gif',
                          'images/cursor_hand_open.gif',
                          'images/cursor_hand.png',
+                         'images/cursor_ppu.png',
                          'images/density.png',
                          'images/info.png',
                          'images/lock_calibrate.png',
@@ -102,8 +104,7 @@ buildOptions = dict(
                          'images/zoom_in_toolbar.png',
                          'images/zoom_out_toolbar.png',
                          'images/Thumbs.db',
-                         'images/cursor_cross_dot.png',
-                         'images/cursor_ppu.png'
+                         'images/rotate_image.png'
                         ]
         )
 
@@ -119,7 +120,17 @@ executables = [
 
 cx_Freeze.setup(
         name = "Coral X-Ray Viewer",
-        version = "1.0",
+        # Format of version number:
+        # A.B.CD
+        # A = major releases (0 is beta)
+        #
+        # B and CD represent the individual changes made
+        # B = hundreds
+        # CD = tens
+        #
+        # So for example, "1.1.05" would be major release 1,
+        # with 105 updates/changes.
+        version = "1.1.05",
         author = 'US Geological Survey',
         description = "Coral x-ray image viewing software for the U.S. Geological Survey",
         executables = executables,

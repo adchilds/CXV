@@ -16,6 +16,7 @@ from Controllers import zoom_controller
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 from matplotlib.widgets import RectangleSelector
+import matplotlib.transforms as transforms
 from yapsy.PluginManager import PluginManager
 import imp
 import os
@@ -300,8 +301,8 @@ class View(wx.Frame):
         
     def main_is_frozen(self):
         return (hasattr(sys, "frozen") or # new py2exe
-            hasattr(sys, "importers") # old py2exe
-            or imp.is_frozen("__main__")) # tools/freeze
+            hasattr(sys, "importers") or # old py2exe
+            imp.is_frozen("__main__")) # tools/freeze
         
     def get_main_dir(self):
         if self.main_is_frozen():

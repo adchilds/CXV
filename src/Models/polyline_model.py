@@ -49,10 +49,10 @@ class Polyline():
         except AttributeError:
             print "AttributeError while trying to change vertex (x, y) position"
             pass
-        
+
     def get_vertex(self, index):
         return self.verticies[index]
-        
+    
     def get_vertex_index(self, vertex):
         try:
             return self.verticies.index(vertex)
@@ -96,7 +96,7 @@ class Polyline():
     def set_line(self, line, xdata, ydata):
         line.set_xdata(xdata)
         line.set_ydata(ydata)
-        
+
     def get_line(self, index):
         return self.lines[index]
         

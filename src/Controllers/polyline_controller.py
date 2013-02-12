@@ -6,7 +6,6 @@
 #
 # @author:    Adam Childs
 # @contact:   adchilds@eckerd.edu
-#
 # @copyright: owned and maintained by the
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
@@ -213,6 +212,66 @@ class Controller():
                         self.drag_v = True
         if not self.picked: return False
         else: return True
+
+    def rotate_lines(self, deg=-90):
+        # Convert from degrees to radians
+        theta = math.radians(deg)
+
+        # Get the polyline's center point
+        sumX = 0
+        sumY = 0
+        count = 0
+        for pl in self.polylines:
+            for line in pl.lines:
+                sumX += line.get_xdata()[0]
+                sumY += line.get_ydata()[0]
+                count += 1
+        cx = sumX / count
+        cy = sumY / count
+
+        for pl in self.polylines:
+            self.curr_pl = pl
+            for line in pl.lines:
+                # Get the vertices of the line
+                px, ox = line.get_xdata()
+                py, oy = line.get_ydata()
+
+                # Translation step:
+                # Subtract the x and y value of the point of rotation
+                # from each coordinate
+                px -= cx
+                ox -= cx
+                py -= cy
+                oy -= cy
+
+                # Get the center of the line
+#                cx = math.fabs(px - ox) / 2 + px
+#                cy = math.fabs(py - oy) / 2 + py
+
+                print str(px) + ", " + str(py)
+                print str(ox) + ", " + str(oy)
+                
+                # Rotate line around center point
+                p1x = cx - ((px - cx) * math.cos(theta)) - ((py - cy) * math.sin(theta))
+                p1y = cy - ((px - cx) * math.sin(theta)) + ((py - cy) * math.cos(theta))
+                
+                p2x = cx - ((ox - cx) * math.cos(theta)) - ((oy - cy) * math.sin(theta))
+                p2y = cy - ((ox - cx) * math.sin(theta)) + ((oy - cy) * math.cos(theta))
+
+                # Untranslation step:
+                # Add the x and y value of the point of rotation back
+                # to each point
+                px += cx
+                ox += cx
+                py += cy
+                oy += cy
+
+                # Set the line to it's new coordinate
+                self.curr_pl.set_line(line, 
+                                      [p1x, p2x],
+                                      [p1y, p2y])
+
+                print "NEW LINE: (" + str(p1x) + ", " + str(p1y) + ") --> (" + str(p2x) + ", " + str(p2y) + ")"
 
     def over_polyline(self, event):
         self.picked = None

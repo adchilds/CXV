@@ -130,7 +130,7 @@ cx_Freeze.setup(
         #
         # So for example, "1.1.05" would be major release 1,
         # with 105 updates/changes.
-        version = "1.1.05",
+        version = "1.1.08",
         author = 'US Geological Survey',
         description = "Coral x-ray image viewing software for the U.S. Geological Survey",
         executables = executables,

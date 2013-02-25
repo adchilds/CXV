@@ -11,6 +11,7 @@
 #             Department of Interior (DOI)
 #########################################################
 from Models import polyline_model as pl
+import numpy as np
 import math
 import os
 import wx
@@ -215,27 +216,42 @@ class Controller():
 
     def rotate_lines(self, deg=-90):
         # Convert from degrees to radians
-        theta = math.radians(deg)
+        theta = math.radians(deg)        
+        
+        # Get the image's center point
+        cy, cx = self.dicom_controller.model.get_image_shape()
+        cx /= 2
+        cy /= 2
+        print "Center of image (AFTER): (" + str(cx) + ", " + str(cy) + ")"
 
-        # Get the polyline's center point
-        sumX = 0
-        sumY = 0
-        count = 0
-        for pl in self.polylines:
-            for line in pl.lines:
-                sumX += line.get_xdata()[0]
-                sumY += line.get_ydata()[0]
-                count += 1
-        cx = sumX / count
-        cy = sumY / count
-
+        counter = 0
+        temp = np.matrix(np.zeros(shape=(3,1)))
         for pl in self.polylines:
             self.curr_pl = pl
             for line in pl.lines:
+                counter += 1
                 # Get the vertices of the line
                 px, ox = line.get_xdata()
                 py, oy = line.get_ydata()
 
+                A = np.matrix([[1, 0, cx],
+                               [0, 1, cy],
+                               [0, 0, 1]])
+                B = np.matrix([[math.cos(theta), -math.sin(theta), 0],
+                               [math.sin(theta), math.cos(theta), 0],
+                               [0, 0, 1]])
+                C = np.matrix([[1, 0, -cx],
+                               [0, 1, -cy],
+                               [0, 0, 1]])
+                D = np.matrix([[px],
+                               [py],
+                               [1]])
+                
+                M = A * B * C * D
+
+                print M
+                print "\n\n\n\n"
+                """
                 # Translation step:
                 # Subtract the x and y value of the point of rotation
                 # from each coordinate
@@ -243,13 +259,6 @@ class Controller():
                 ox -= cx
                 py -= cy
                 oy -= cy
-
-                # Get the center of the line
-#                cx = math.fabs(px - ox) / 2 + px
-#                cy = math.fabs(py - oy) / 2 + py
-
-                print str(px) + ", " + str(py)
-                print str(ox) + ", " + str(oy)
                 
                 # Rotate line around center point
                 p1x = cx - ((px - cx) * math.cos(theta)) - ((py - cy) * math.sin(theta))
@@ -261,17 +270,19 @@ class Controller():
                 # Untranslation step:
                 # Add the x and y value of the point of rotation back
                 # to each point
-                px += cx
-                ox += cx
-                py += cy
-                oy += cy
-
-                # Set the line to it's new coordinate
-                self.curr_pl.set_line(line, 
-                                      [p1x, p2x],
-                                      [p1y, p2y])
-
-                print "NEW LINE: (" + str(p1x) + ", " + str(p1y) + ") --> (" + str(p2x) + ", " + str(p2y) + ")"
+                p1x += cx
+                p2x += cx
+                p1y += cy
+                p2y += cy
+                """
+                if counter % 2 == 0:
+                    # Set the line to it's new coordinate
+                    self.curr_pl.set_line(line, 
+                                          [temp[1][0], M[1][0]],
+                                          [temp[2][0], M[1][0]])
+                    print "NEW LINE: (" + str(temp[1][0]) + ", " + str(temp[2][0]) + ") --> (" + str(M[1][0]) + ", " + str(M[2][0]) + ")"
+                    counter = 0
+                temp = M
 
     def over_polyline(self, event):
         self.picked = None

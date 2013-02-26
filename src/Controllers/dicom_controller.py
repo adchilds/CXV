@@ -902,15 +902,15 @@ class Controller():
         cy /= 2
         print "Center of image (BEFORE): (" + str(cx) + ", " + str(cy) + ")"
 
-#        self.model.image_array = self.model.rotate_image(self.model.get_image())
+        self.model.image_array = self.model.rotate_image(self.model.get_image())
 
         # Redraw the canvas to show the rotated image
-#        self.view.axes.cla() # Clear the axes
-#        self.view.init_plot(False) # Redraw
+        self.view.axes.cla() # Clear the axes
+        self.view.init_plot(False) # Redraw
 
         # Rotate polyline accordingly
         if self.polyline_controller is not None:
-            self.polyline_controller.rotate_lines()
+            self.polyline_controller.rotate_lines(cx, cy)
         self.cache_background()
         
     def toggle_target_area(self):

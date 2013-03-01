@@ -227,45 +227,61 @@ class Controller():
                 px, ox = line.get_xdata()
                 py, oy = line.get_ydata()
 
-                # Untranslation
-                A = np.matrix([[1, 0, cx],
-                               [0, 1, cy],
-                               [0, 0, 1]])
+                """
+                px = px - (1/2)
+                py = (cy*2) + (1/2) - py
                 
-                # Rotation
-                B = np.matrix([[math.cos(theta), -math.sin(theta), 0],
-                               [math.sin(theta), math.cos(theta), 0],
-                               [0, 0, 1]])
-                
-                # Translation
-                C = np.matrix([[1, 0, -cx],
-                               [0, 1, -cy],
-                               [0, 0, 1]])
-                
-                # First vertex position
-                D = np.matrix([[px],
-                               [py],
-                               [1]])
-                
-                M = A * B * C * D
+                ox = ox - (1/2)
+                oy = (cy*2) + (1/2) - oy
+                """
 
-                # Second vertex position
-                D = np.matrix([[ox],
-                               [oy],
-                               [1]])
+                M = self.rotateAndTranslate(theta, cy, cy, px, py)
 
-                M2 = A * B * C * D
-
-                print M
-                print "\n\n\n\n"
-                print M2
-                print "\n\n\n\n"
+                M2 = self.rotateAndTranslate(theta, cx, cy, ox, oy)
 
                 # Set the line to it's new coordinate
                 self.curr_pl.set_line(line, 
                                       [M[0][0], M2[0][0]],
                                       [M[1][0], M2[1][0]])
                 print "NEW LINE: (" + str(M[0][0]) + ", " + str(M[1][0]) + ") --> (" + str(M2[0][0]) + ", " + str(M2[1][0]) + ")"
+
+    def rotateAndTranslate(self, theta, originX, originY, x=0, y=0):
+        """
+        Converts (x, y) coordinates to the Cartesian coordinate
+        system, and applies the rotation transformation by 'theta'
+        degrees to the provided coordinates around the specified
+        point (originX, originY). Translates to and from
+        the origin (originX, originY) before and after rotation.
+        """
+        # Convert from screen coordinates to Cartesian coordinates
+        
+        
+        # Untranslation
+        A = np.matrix([[1, 0, originX],
+                        [0, 1, originY],
+                        [0, 0, 1]])
+        
+        # Rotation
+        B = np.matrix([[math.cos(theta), -math.sin(theta), 0],
+                        [math.sin(theta), math.cos(theta), 0],
+                        [0, 0, 1]])
+        
+        # Translation
+        C = np.matrix([[1, 0, -originX],
+                        [0, 1, -originY],
+                        [0, 0, 1]])
+        
+        # First vertex position
+        D = np.matrix([[x],
+                        [y],
+                        [1]])
+        
+        M = A * B * C * D
+        
+        # Convert from Cartesian coordinates to screen coordinates
+        
+        
+        return M
 
     def over_polyline(self, event):
         self.picked = None

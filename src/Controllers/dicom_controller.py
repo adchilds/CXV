@@ -900,6 +900,7 @@ class Controller():
         cx, cy = self.model.get_image_shape()
         cx /= 2
         cy /= 2
+        """
         print "Center of image (BEFORE): (" + str(cx) + ", " + str(cy) + ")"
 
         self.model.image_array = self.model.rotate_image(self.model.get_image())
@@ -912,7 +913,10 @@ class Controller():
         if self.polyline_controller is not None:
             self.polyline_controller.rotate_lines(cx, cy)
         self.cache_background()
-        
+        """
+        M = self.polyline_controller.rotateAndTranslate(-90, cx, cy, 0, 0)
+        print "(" + str(M[0][0]) + ", " + str(M[1][0]) + ")"
+
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """
 

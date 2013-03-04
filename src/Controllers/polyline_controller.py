@@ -218,8 +218,6 @@ class Controller():
         # Convert from degrees to radians
         theta = math.radians(deg)
 
-        print "Center of image (AFTER): (" + str(cx) + ", " + str(cy) + ")"
-
         for pl in self.polylines:
             self.curr_pl = pl
             for line in pl.lines:
@@ -227,61 +225,47 @@ class Controller():
                 px, ox = line.get_xdata()
                 py, oy = line.get_ydata()
 
-                """
-                px = px - (1/2)
-                py = (cy*2) + (1/2) - py
-                
-                ox = ox - (1/2)
-                oy = (cy*2) + (1/2) - oy
-                """
-
                 M = self.rotateAndTranslate(theta, cy, cy, px, py)
 
                 M2 = self.rotateAndTranslate(theta, cx, cy, ox, oy)
 
                 # Set the line to it's new coordinate
-                self.curr_pl.set_line(line, 
+                self.curr_pl.set_line(line,
                                       [M[0][0], M2[0][0]],
                                       [M[1][0], M2[1][0]])
-                print "NEW LINE: (" + str(M[0][0]) + ", " + str(M[1][0]) + ") --> (" + str(M2[0][0]) + ", " + str(M2[1][0]) + ")"
+#                print "NEW LINE: (" + str(M[0][0]) + ", " + str(M[1][0]) + ") --> (" + str(M2[0][0]) + ", " + str(M2[1][0]) + ")"
 
-    def rotateAndTranslate(self, theta, originX, originY, x=0, y=0):
+    def rotateAndTranslate(self, theta, originX, originY, x=0, y=0, swap=False):
         """
-        Converts (x, y) coordinates to the Cartesian coordinate
-        system, and applies the rotation transformation by 'theta'
-        degrees to the provided coordinates around the specified
+        Applies the rotation transformation by 'theta'
+        degrees to the provided points around the specified
         point (originX, originY). Translates to and from
         the origin (originX, originY) before and after rotation.
         """
-        # Convert from screen coordinates to Cartesian coordinates
-        
-        
-        # Untranslation
+        # Un-translation
         A = np.matrix([[1, 0, originX],
-                        [0, 1, originY],
-                        [0, 0, 1]])
+                       [0, 1, originY],
+                       [0, 0, 1]])
         
         # Rotation
         B = np.matrix([[math.cos(theta), -math.sin(theta), 0],
-                        [math.sin(theta), math.cos(theta), 0],
-                        [0, 0, 1]])
+                       [math.sin(theta), math.cos(theta), 0],
+                       [0, 0, 1]])
         
         # Translation
-        C = np.matrix([[1, 0, -originX],
-                        [0, 1, -originY],
-                        [0, 0, 1]])
+        C = np.matrix([[1, 0, -originY],#-originX],
+                       [0, 1, -originX],#-originY],
+                       [0, 0, 1]])
         
-        # First vertex position
+        # Vertex position
         D = np.matrix([[x],
-                        [y],
-                        [1]])
-        
-        M = A * B * C * D
-        
-        # Convert from Cartesian coordinates to screen coordinates
-        
-        
-        return M
+                       [y],
+                       [1]])
+
+        G = A * B * C
+        H = G * D
+        return H
+#        return (A * B * C * D)
 
     def over_polyline(self, event):
         self.picked = None

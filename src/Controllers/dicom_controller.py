@@ -65,6 +65,8 @@ class Controller():
         self.plugin_directory = ""
         self.model = dicom_model.Model()
         self.zoom_model = zoom_model.Model()
+        self.centerX = 0
+        self.centerY = 0
 
         self.view = dicom_view.View(self, self.model)
         self.zoom_controller = zoom_controller.Controller(self, self.view, self.model)
@@ -83,17 +85,6 @@ class Controller():
             self.xml.create_config()
 
         path = os.path.expanduser('~') + os.sep + "plugins" + os.sep
-
-        # Move the plugins to a plugins folder for the user's home directory
-        # Only copies over the file if it doesn't already exist in the directory
-# DGZ 14 Aug 2012:  Commented out the following 4 lines to try and solve a
-# plugin-related problem with the cxfreeze installer.
-#
-#        if not os.path.exists(path):
-#            os.makedirs(path)
-#        for fil in os.listdir(self.view.get_main_dir() + os.sep + "plugins"):
-#            if not os.path.exists(path + os.sep + fil):
-#                shutil.copy("plugins" + os.sep + fil, path)
         
         self.cursor_hand = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_open.gif', wx.BITMAP_TYPE_GIF))
         self.cursor_hand_drag = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_closed.gif', wx.BITMAP_TYPE_GIF))
@@ -133,6 +124,7 @@ class Controller():
                 self.overlay_controller = None
                 self.polyline_controller = None
                 self.calibrate_controller = None
+            self.centerX, self.centerY = self.model.get_image_shape()
 
     def open_dicom_file(self, path, new):
         p = path.split(os.sep)
@@ -897,11 +889,9 @@ class Controller():
 
     def on_rotate(self, event):
         """ Rotates the image by 90 degrees (counter-clockwise) """
-        cx, cy = self.model.get_image_shape()
-        cx /= 2
-        cy /= 2
-        """
-        print "Center of image (BEFORE): (" + str(cx) + ", " + str(cy) + ")"
+        print "Center of image (BEFORE): (" + str(self.centerX/2) + ", " + str(self.centerY/2) + ")"
+        cx = self.centerX / 2
+        cy = self.centerY / 2
 
         self.model.image_array = self.model.rotate_image(self.model.get_image())
 
@@ -913,9 +903,10 @@ class Controller():
         if self.polyline_controller is not None:
             self.polyline_controller.rotate_lines(cx, cy)
         self.cache_background()
-        """
-        M = self.polyline_controller.rotateAndTranslate(-90, cx, cy, 0, 0)
-        print "(" + str(M[0][0]) + ", " + str(M[1][0]) + ")"
+        temp = self.centerX
+        self.centerX = self.centerY
+        self.centerY = temp
+        print "Center of image (AFTER): (" + str(self.centerX/2) + ", " + str(self.centerY/2) + ")"
 
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """

@@ -889,7 +889,6 @@ class Controller():
 
     def on_rotate(self, event):
         """ Rotates the image by 90 degrees (counter-clockwise) """
-        print "Center of image (BEFORE): (" + str(self.centerX/2) + ", " + str(self.centerY/2) + ")"
         cx = self.centerX / 2
         cy = self.centerY / 2
 
@@ -906,7 +905,6 @@ class Controller():
         temp = self.centerX
         self.centerX = self.centerY
         self.centerY = temp
-        print "Center of image (AFTER): (" + str(self.centerX/2) + ", " + str(self.centerY/2) + ")"
 
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """

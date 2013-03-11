@@ -220,22 +220,26 @@ class Controller():
 
         for pl in self.polylines:
             self.curr_pl = pl
+            v = 0
             for line in pl.lines:
                 # Get the vertices of the line
                 px, ox = line.get_xdata()
                 py, oy = line.get_ydata()
 
-                M = self.rotateAndTranslate(theta, cy, cy, px, py)
+                M = self.rotateAndTranslate(theta, cx, cy, px, py)
 
                 M2 = self.rotateAndTranslate(theta, cx, cy, ox, oy)
 
                 # Set the line to it's new coordinate
                 self.curr_pl.set_line(line,
-                                      [M[0][0], M2[0][0]],
-                                      [M[1][0], M2[1][0]])
-#                print "NEW LINE: (" + str(M[0][0]) + ", " + str(M[1][0]) + ") --> (" + str(M2[0][0]) + ", " + str(M2[1][0]) + ")"
+                                      [float(M[0][0]), float(M2[0][0])],
+                                      [float(M[1][0]), float(M2[1][0])])
 
-    def rotateAndTranslate(self, theta, originX, originY, x=0, y=0, swap=False):
+#                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v), float(M[0][0]), float(M[1][0]))
+#                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v+1), float(M2[0][0]), float(M2[1][0]))
+                v += 2
+
+    def rotateAndTranslate(self, theta, originX, originY, x=0, y=0):
         """
         Applies the rotation transformation by 'theta'
         degrees to the provided points around the specified
@@ -253,8 +257,8 @@ class Controller():
                        [0, 0, 1]])
         
         # Translation
-        C = np.matrix([[1, 0, -originY],#-originX],
-                       [0, 1, -originX],#-originY],
+        C = np.matrix([[1, 0, -originY], # swap the Y and X here because image dimensions changed
+                       [0, 1, -originX],
                        [0, 0, 1]])
         
         # Vertex position
@@ -262,10 +266,7 @@ class Controller():
                        [y],
                        [1]])
 
-        G = A * B * C
-        H = G * D
-        return H
-#        return (A * B * C * D)
+        return (A * B * C * D)
 
     def over_polyline(self, event):
         self.picked = None

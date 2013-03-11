@@ -235,9 +235,9 @@ class Controller():
                                       [float(M[0][0]), float(M2[0][0])],
                                       [float(M[1][0]), float(M2[1][0])])
 
-#                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v), float(M[0][0]), float(M[1][0]))
-#                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v+1), float(M2[0][0]), float(M2[1][0]))
-                v += 2
+                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v), float(M[0][0]), float(M[1][0]))
+                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v+1), float(M2[0][0]), float(M2[1][0]))
+                v += 1
 
     def rotateAndTranslate(self, theta, originX, originY, x=0, y=0):
         """

@@ -237,6 +237,14 @@ class Controller():
 
                 self.curr_pl.set_vertex(self.curr_pl.get_vertex(v), float(M[0][0]), float(M[1][0]))
                 self.curr_pl.set_vertex(self.curr_pl.get_vertex(v+1), float(M2[0][0]), float(M2[1][0]))
+                
+                # Reset label for line
+                if v == 0:
+                    x1 = float(M[0][0])
+                    y1 = float(M[1][0])
+                    x2 = float(M2[0][0])
+                    y2 = float(M2[1][0])
+                    self.curr_pl.set_label_pos(x1, y1, x2, y2)
                 v += 1
 
     def rotateAndTranslate(self, theta, originX, originY, x=0, y=0):

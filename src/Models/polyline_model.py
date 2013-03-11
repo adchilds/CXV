@@ -111,6 +111,11 @@ class Polyline():
         else: line = self.lines[0]
         x1, x2 = line.get_xdata()
         y1, y2 = line.get_ydata()
+        self.label.set_text('t'+str(i+1))
+        self.set_label_pos(x1, y1, x2, y2)
+
+    def set_label_pos(self, x1, y1, x2, y2):
+        """ Sets the label to the correct position for the given line """
         x_offset = math.fabs((x1-x2)/2.)
         y_offset = math.fabs((y1-y2)/2.)
         if x1 < x2: x = x1
@@ -119,8 +124,7 @@ class Polyline():
         else: y = y2
         x += x_offset
         y += y_offset
-        self.label.set_text('t'+str(i+1))
-        self.label.set_position((x,y))
+        self.label.set_position((x, y))
 
     def get_label(self):
         return self.label.get_text()

@@ -17,7 +17,6 @@ from Controllers import calibrate_controller
 from Controllers import xml_controller
 from Models import polyline_model
 import chilkat # XML API
-import re
 
 class SaveSession():
     
@@ -28,7 +27,8 @@ class SaveSession():
 
     def load_file(self):
         xml = chilkat.CkXml()
-        xml.LoadXmlFile(self.path)
+        path = self.path.encode('ascii', 'ignore')
+        xml.LoadXmlFile(path)
         xml.UnzipTree()
         self.fn = xml.getChildContent("filename")
 
@@ -37,7 +37,8 @@ class SaveSession():
         zoom factor, scrollbars, etc.) from the saved session (*.xml) file.
         """
         xml = chilkat.CkXml()
-        xml.LoadXmlFile(self.path)
+        path = self.path.encode('ascii', 'ignore')
+        xml.LoadXmlFile(path)
 
         # Load Calibration Region
         calib = xml.SearchForContent(xml, "calibration_region", "")
@@ -91,6 +92,16 @@ class SaveSession():
             if density is not None:
                 self.controller.calibrate_controller.density = float(calib.getChildContent("density"))
 
+            # Pixels Per Unit
+            ppu = xml.SearchForTag(calib, "pixels_per_unit")
+            if ppu is not None:
+                self.controller.calibrate_controller.pixels_per_unit = float(calib.getChildContent("pixels_per_unit"))
+
+            # Unit selected
+            unit = xml.SearchForTag(calib, "unit_selected")
+            if unit is not None:
+                self.controller.calibrate_controller.unit = calib.getChildContent("unit_selected")
+    
             # Region (x, y, width, height)
             region = xml.SearchForTag(calib, "region")
             if region is not None:
@@ -107,7 +118,7 @@ class SaveSession():
                 self.controller.calibrate_controller.model.dx = data[2]
                 self.controller.calibrate_controller.model.dy = data[3]
 
-            self.controller.enable_tools(['Set Density Parameters'], True)
+            self.controller.enable_tools(['Set Calibration Parameters'], True)
             self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Calibration Region'], False)
 
         # Load Target Area
@@ -116,8 +127,10 @@ class SaveSession():
         if target == 'True':
             target = xml.SearchForTag(xml, "target_area") # Reset target
 
-            self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Target Area'], True)
-            #self.controller.on_coral(None)
+            self.controller.enable_tools(['Adjust Target Area', 'Filtered Overlays'], True)
+#            self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Target Area'], True)
+#            self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Filtered Overlays'], True)
+#            self.controller.on_coral(None)
             self.controller.coral_controller  = coral_controller.Controller(self.controller.view, self.controller.background)
 
             coords = []
@@ -133,7 +146,7 @@ class SaveSession():
             self.controller.coral_controller.model.dx = coords[2]
             self.controller.coral_controller.model.dy = coords[3]
 
-            self.controller.enable_tools(['Lock Target Area'], True)
+            #self.controller.enable_tools(['Lock Target Area'], True)
             self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Target Area'], False)
 
         # Load Polylines

@@ -12,11 +12,8 @@ from Controllers import xml_controller
 from Views import overlay_view
 from lib import progress_bar
 from yapsy.PluginManager import PluginManager
-import imp
-import math
 import numpy as np
 import os
-import re
 import threading
 import wx
 
@@ -50,8 +47,16 @@ class Controller(threading.Thread):
         path = os.path.expanduser('~')
         xml = xml_controller.Controller(path + '\.cxvrc.xml')
         xml.load_file()
-        xml.get_plugin_directory()
-        directory = ["plugins", xml.get_plugin_directory()]
+
+        if os.path.exists(os.path.expanduser('~') + os.sep + "plugins"):
+            default_dir = os.path.expanduser('~') + os.sep + "plugins"
+        else:
+            default_dir = self.dicom_controller.view.get_main_dir() + os.sep + "plugins"
+
+        if xml.get_plugin_directory() == "" or xml.get_plugin_directory() is None:
+            directory = [default_dir]
+        else:
+            directory = [default_dir, xml.get_plugin_directory()]
 
         # Load the plugins from the default plugin directory.
         manager = PluginManager()
@@ -66,7 +71,7 @@ class Controller(threading.Thread):
             plugin.plugin_object.initPlugin(self.controller, coral_slab, self.model, self.pb, count)
 
             # Print a little information about the plugin (DEBUG)
-            plugin.plugin_object.print_information()
+#            plugin.plugin_object.print_information()
 
             # Run the plugin's algorithm
             plugin.plugin_object.calc_filter()

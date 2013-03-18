@@ -15,10 +15,12 @@ from Controllers import xml_controller
 from Controllers import zoom_controller
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
-from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib.widgets import RectangleSelector
+import matplotlib.transforms as transforms
 from yapsy.PluginManager import PluginManager
+import imp
 import os
+import sys
 import wx
 
 class View(wx.Frame):
@@ -33,6 +35,7 @@ class View(wx.Frame):
         self.connect_ids = []
         self.ov_axes = ''
         self.toggle_selector = None
+        self.figure = None
 
         wx.Frame.__init__(self,
                           parent=None,
@@ -74,25 +77,29 @@ class View(wx.Frame):
         if not label:
             menu.AppendSeparator()
         else:
-            id = wx.NewId()
-            self.menubar_ids[label] = id
+            menu_id = wx.NewId()
+            self.menubar_ids[label] = menu_id
             if has_submenu:
-                option = menu.AppendMenu(id, label, submenu)
+                if label == 'Filter Plugins':
+                    option = menu.AppendMenu(menu_id, label, self.plugin_submenu())
+                else:
+                    option = menu.AppendMenu(menu_id, label, submenu)
             else:
-                option = menu.Append(id, label)
+                option = menu.Append(menu_id, label)
             option.Enable(enabled)
             if accel:
                 wx.AcceleratorTable([ (accel[0], ord(accel[1]), option.GetId()) ])
             self.Bind(wx.EVT_MENU, handler, option)
         
     def menu_names(self):
-        return ('File', 'Tools')
+        return ('File', 'Tools', 'Help')
     
     def menu_options(self):
         """ ('TEXT', (ACCELERATOR), HANDLER, ENABLED, HAS_SUBMENU, SUBMENU METHOD """
         return ( [ # File
                   ('&Open...\tCtrl+O', (wx.ACCEL_CTRL, 'O'), self.controller.on_open, True, False, None),
-                  ('&Save...\tCtrl+S', (wx.ACCEL_CTRL, 'S'), self.controller.on_save, False, False, None),
+                  ('&Save\tCtrl+S', (wx.ACCEL_CTRL, 'S'), self.controller.on_save, False, False, None),
+                  ('Save As...', (), self.controller.on_save_as, False, False, None),
                   ('', '', '', True, False, None),
                   ('Export', (), self.controller.on_export, False, False, None),
                   ('', '', '', True, False, None),
@@ -102,29 +109,45 @@ class View(wx.Frame):
                   ('Image Overview', (), self.controller.on_overview, False, False, None),
                   ('Image Information', (), self.controller.on_image_info, False, False, None),
                   ('', '', '', True, False, None),
+#                  ('Rotate Image', (), self.controller.on_rotate_image, False, False, None), 
                   ('Pan Image', (), self.controller.on_pan_image_menu, False, False, None),
+                  ('Rotate Image', (), self.controller.on_rotate, False, False, None),
                   ('Zoom In', (), self.zoom_controller.on_zoom_in_menu, False, False, None),
                   ('Zoom Out', (), self.zoom_controller.on_zoom_out, False, False, None),
                   ('', '', '', True, False, None),
-                  ('Adjust Contrast', (), self.controller.on_contrast, False, False, None),
-                  ('', '', '', True, False, None),
+#                  ('Adjust Contrast', (), self.controller.on_contrast, False, False, None),
+#                  ('', '', '', True, False, None),
                   ('Adjust Target Area', (), self.controller.on_coral_menu, False, False, None),
-                  ('Lock Target Area', (), self.controller.on_lock_coral, False, False, None),
                   ('', '', '', True, False, None),
                   ('Filtered Overlays', (), self.controller.on_overlay, False, False, None),
-                  ('Filter Plugins', (), self.controller.on_plugin, True, True, self.plugin_submenu()),
+                  ('Filter Plugins', (), self.controller.on_plugin, True, True, None),
                   ('', '', '', True, False, None),
                   ('Adjust Calibration Region', (), self.controller.on_calibrate_menu, False, False, None),
-                  ('Set Density Parameters', (), self.controller.on_density_params, False, False, None),
+                  ('Set Calibration Parameters', (), self.controller.on_density_params, False, False, None),
                   ('', '', '', True, False, None),
                   ('Draw Polylines', (), self.controller.on_polyline_menu, False, False, None),
-                  ('Lock Polylines', (), self.controller.on_lock_polyline, False, False, None)
+                  ],
+                 [ # Help
+                  ('Help', (), self.controller.on_help, True, False, None),
+                  ('About', (), self.controller.on_about, True, False, None)
                   ]
                 )
 
     def plugin_submenu(self):
+        """ Creates the plugin submenu in the menubar which displays all plugins
+        and allows the user to specify a secondary plugin directory.
+        """
         menu = wx.Menu()
-        props = wx.MenuItem(menu, wx.ID_ANY, 'Properties')
+
+        """
+        # Add a plugin from another directory to the default directory
+        addPlugin = wx.MenuItem(menu, wx.ID_ANY, 'Add Plugin')
+        menu.AppendItem(addPlugin)
+        self.Bind(wx.EVT_MENU, self.controller.on_add_plugin, addPlugin)
+        """
+
+        # Set directory where extra plugins are held
+        props = wx.MenuItem(menu, wx.ID_ANY, 'Set Directory')
         menu.AppendItem(props)
         self.Bind(wx.EVT_MENU, self.controller.on_plugin_properties, props)
 
@@ -134,10 +157,18 @@ class View(wx.Frame):
         path = os.path.expanduser('~')
         xml = xml_controller.Controller(path + '\.cxvrc.xml')
         xml.load_file()
-        xml.get_plugin_directory()
-        directory = ["plugins", xml.get_plugin_directory()]
 
-        # Load the plugins from the default plugin directory.
+        if os.path.exists(os.path.expanduser('~') + os.sep + "plugins"):
+            default_dir = os.path.expanduser('~') + os.sep + "plugins"
+        else:
+            default_dir = self.get_main_dir() + os.sep + "plugins"
+
+        if xml.get_plugin_directory() == "" or xml.get_plugin_directory() is None:
+            directory = [default_dir]
+        else:
+            directory = [default_dir, xml.get_plugin_directory()]
+
+        # Load the plugins from the specified plugin directory/s.
         manager = PluginManager()
         manager.setPluginPlaces(directory)
         manager.setPluginInfoExtension('plugin')
@@ -147,10 +178,11 @@ class View(wx.Frame):
             item = wx.MenuItem(menu, wx.ID_ANY, plugin.name)
             menu.AppendItem(item)
             self.better_bind(wx.EVT_MENU, item, self.controller.on_about_filter, plugin)
+
         return menu
 
-    def better_bind(self, type, instance, handler, *args, **kwargs):
-        self.Bind(type, lambda event: handler(event, *args, **kwargs), instance)
+    def better_bind(self, evt_type, instance, handler, *args, **kwargs):
+        self.Bind(evt_type, lambda event: handler(event, *args, **kwargs), instance)
 
     def create_toolbar(self):
         self.toolbar = self.CreateToolBar()
@@ -158,20 +190,20 @@ class View(wx.Frame):
             self.add_tool(self.toolbar, *each)
         self.toolbar.Realize()
     
-    def add_tool(self, toolbar, type, label, bmp, handler, enabled):
-        if type == 'separator':
+    def add_tool(self, toolbar, tool_type, label, bmp, handler, enabled):
+        if tool_type == 'separator':
             toolbar.AddSeparator()
-        elif type == 'control':
+        elif tool_type == 'control':
             toolbar.AddControl(label)
         else:
-            bmp = wx.Image(bmp).ConvertToBitmap()
-            id = wx.NewId()
-            self.toolbar_ids[label] = id
-            if type == 'toggle':
-                tool = toolbar.AddCheckTool(id, bmp, wx.NullBitmap, label, '')
-            elif type == 'simple':
-                tool = toolbar.AddSimpleTool(id, bmp, label, '')
-            toolbar.EnableTool(id, enabled)
+            bmp = wx.Image(self.get_main_dir() + os.sep + bmp, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            tool_id = wx.NewId()
+            self.toolbar_ids[label] = tool_id
+            if tool_type == 'toggle':
+                tool = toolbar.AddCheckTool(tool_id, bmp, wx.NullBitmap, label, '')
+            elif tool_type == 'simple':
+                tool = toolbar.AddSimpleTool(tool_id, bmp, label, '')
+            toolbar.EnableTool(tool_id, enabled)
             self.Bind(wx.EVT_MENU, handler, tool)
         
     def toolbar_data(self):
@@ -184,29 +216,30 @@ class View(wx.Frame):
         self.Bind(wx.EVT_TEXT_ENTER, self.controller.on_aspect, self.aspect_cb)
         self.aspect_cb.Disable()
         return (# tool type, description text, icon directory, handler
-                ('simple', '&Open...\tCtrl+O', 'images/open.png', self.controller.on_open, True),
-                ('simple', '&Save...\tCtrl+S', 'images/save.png', self.controller.on_save, False),
+                ('simple', '&Open...\tCtrl+O', 'images' + os.sep + 'open.png', self.controller.on_open, True),
+                ('simple', '&Save\tCtrl+S', 'images' + os.sep + 'save.png', self.controller.on_save, False),
                 ('separator', '', '', '', ''),
-                ('simple', 'Image Overview', 'images/overview.png', self.controller.on_overview, False),
-                ('simple', 'Image Information', 'images/info.png', self.controller.on_image_info, False),
+                ('simple', 'Image Overview', 'images' + os.sep + 'overview.png', self.controller.on_overview, False),
+                ('simple', 'Image Information', 'images' + os.sep + 'info.png', self.controller.on_image_info, False),
                 ('separator', '', '', '', ''),
-                ('toggle', 'Pan Image', 'images/cursor_hand.png', self.controller.on_pan_image, False),
-                ('toggle', 'Zoom In', 'images/zoom_in_toolbar.png', self.zoom_controller.on_zoom_in, False),
-                ('simple', 'Zoom Out', 'images/zoom_out_toolbar.png', self.zoom_controller.on_zoom_out, False),
+#                ('simple', 'Rotate Image', 'images' + os.sep + 'rotate_counter-clock.png', self.controller.on_rotate_image, False),
+                ('toggle', 'Pan Image', 'images' + os.sep + 'cursor_hand.png', self.controller.on_pan_image, False),
+                ('simple', 'Rotate Image', 'images' + os.sep + 'rotate_image.png', self.controller.on_rotate, False),
+                ('toggle', 'Zoom In', 'images' + os.sep + 'zoom_in_toolbar.png', self.zoom_controller.on_zoom_in, False),
+                ('simple', 'Zoom Out', 'images' + os.sep + 'zoom_out_toolbar.png', self.zoom_controller.on_zoom_out, False),
                 ('control', self.aspect_cb, '', '', ''),
                 ('separator', '', '', '', ''),
-                ('simple', 'Adjust Contrast', 'images/contrast.png', self.controller.on_contrast, False),
+#                ('simple', 'Adjust Contrast', 'images' + os.sep + 'contrast.png', self.controller.on_contrast, False),
+#                ('separator', '', '', '', ''),
+                ('toggle', 'Adjust Target Area', 'images' + os.sep + 'coral.png', self.controller.on_coral, False),
+#                ('simple', 'Lock Target Area', 'images' + os.sep + 'lock_coral.png', self.controller.on_lock_coral, False),
+#                ('separator', '', '', '', ''),
+                ('simple', 'Filtered Overlays', 'images' + os.sep + 'overlay.png', self.controller.on_overlay, False),
                 ('separator', '', '', '', ''),
-                ('toggle', 'Adjust Target Area', 'images/coral.png', self.controller.on_coral, False),
-                ('simple', 'Lock Target Area', 'images/lock_coral.png', self.controller.on_lock_coral, False),
+                ('toggle', 'Adjust Calibration Region', 'images' + os.sep + 'calibrate.png', self.controller.on_calibrate, False),
+                ('toggle', 'Set Calibration Parameters', 'images' + os.sep + 'density.png', self.controller.on_density_params, False),
                 ('separator', '', '', '', ''),
-                ('simple', 'Filtered Overlays', 'images/overlay.png', self.controller.on_overlay, False),
-                ('separator', '', '', '', ''),
-                ('toggle', 'Adjust Calibration Region', 'images/calibrate.png', self.controller.on_calibrate, False),
-                ('simple', 'Set Density Parameters', 'images/density.png', self.controller.on_density_params, False),
-                ('separator', '', '', '', ''),
-                ('toggle', 'Draw Polylines', 'images/polyline.png', self.controller.on_polyline, False),
-                ('simple', 'Lock Polylines', 'images/lock_polyline.png', self.controller.on_lock_polyline, False)
+                ('toggle', 'Draw Polylines', 'images' + os.sep + 'polyline.png', self.controller.on_polyline, False),
                )
         
     def create_statusbar(self):
@@ -265,3 +298,13 @@ class View(wx.Frame):
                                         minspanx=1, minspany=1,
                                         spancoords='data')
         self.toggle_selector.set_active(False)
+        
+    def main_is_frozen(self):
+        return (hasattr(sys, "frozen") or # new py2exe
+            hasattr(sys, "importers") or # old py2exe
+            imp.is_frozen("__main__")) # tools/freeze
+        
+    def get_main_dir(self):
+        if self.main_is_frozen():
+            return os.path.dirname(sys.executable)
+        return os.path.dirname(sys.argv[0])

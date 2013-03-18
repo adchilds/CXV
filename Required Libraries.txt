@@ -1,7 +1,49 @@
-matplotlib (matlab interface for python)
-numpy
-scipy
-chilkat (for python xml)
-dicom (from google code)
-wxpython (GUI)
-yapsy (plugin framework)
+NAME:
+	1. DESCRIPTION
+	2. VERSION
+	3. DOWNLOAD LOCATION
+------------------------------------------------
+Matplotlib:
+	1. Matlab interface for python
+	2. 1.0.1
+	3. http://matplotlib.sourceforge.net
+
+Numpy
+	1. Scientific computing library for Python
+	2. 1.6.1
+	3. http://numpy.scipy.org
+
+Scipy
+	1. Another scientific computing library for Python
+	2. 0.9.0
+	3. http://scipy.org
+
+Chilkat
+	1. XML interfacing for Python
+	2. 9.3.1
+	3. http://www.chilkatsoft.com/python-xml.asp
+
+Pydicom
+	1. DICOM image reading library
+	2. 0.9.5
+	3. http://code.google.com/p/pydicom
+
+WxPython
+	1. GUI
+	2. 2.8.12.0
+	3. http://www.wxpython.org
+
+Yapsy
+	1. Plugin framework
+	2. 1.9.2
+	3. http://sourceforge.net/projects/yapsy
+
+Python Image Library (PIL)
+	1. Many useful image file operations, specifically used for .tiff exporting in CXV
+	2. 
+	3. 
+
+cx_Freeze
+	1. Creates binary distributables of Python projects
+	2. 4.3
+	3. http://cx-freeze.sourceforge.net

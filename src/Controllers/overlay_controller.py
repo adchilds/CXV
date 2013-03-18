@@ -16,13 +16,9 @@ from Controllers import xml_controller
 from lib import progress_bar
 from Views import overlay_view
 from yapsy.PluginManager import PluginManager
-import numpy as np
-import scipy.ndimage.filters as sp
-import math
 import os
 import re
 import wx
-import threading
 
 class Controller():
     
@@ -43,15 +39,23 @@ class Controller():
         path = os.path.expanduser('~')
         xml = xml_controller.Controller(path + '\.cxvrc.xml')
         xml.load_file()
-        xml.get_plugin_directory()
-        directory = ["plugins", xml.get_plugin_directory()]
+
+        if os.path.exists(os.path.expanduser('~') + os.sep + "plugins"):
+            default_dir = os.path.expanduser('~') + os.sep + "plugins"
+        else:
+            default_dir = self.dicom_view.get_main_dir() + os.sep + "plugins"
+
+        if xml.get_plugin_directory() == "" or xml.get_plugin_directory() is None:
+            directory = [default_dir]
+        else:
+            directory = [default_dir, xml.get_plugin_directory()]
 
         # Load the plugins from the plugin directory.
         manager = PluginManager()
         manager.setPluginPlaces(directory)
         manager.setPluginInfoExtension('plugin')
         manager.collectPlugins()
-        
+
         return len(manager.getAllPlugins())
         
     def find_items(self, event):
@@ -144,7 +148,6 @@ class Controller():
         b = 1.0 - (dy/iH)
         w = (dx-x)/iW
         h = (dy-y)/iH
-        
         self.dicom_view.ov_axes = self.dicom_view.figure.add_axes((l,b,w,h))
         self.dicom_view.ov_axes.set_axis_off()
         self.dicom_view.ov_axes.patch.set_facecolor('none')
@@ -165,9 +168,15 @@ class Controller():
                 self.overlay += (alphas[ov]/100.0) * self.overlays[ov]
         self.overlay = self.model.invert_grayscale(self.overlay)
 
-    def display(self, event=None, alphas=None):
+    def display(self, event=None, alphas=None, dx=0, dy=0):
         self.calc_overlay(alphas)
-        y, x = self.overlay.shape
+
+        if dx > 0:
+            x = dx
+            y = dy
+        else:
+            y, x = self.overlay.shape
+
         rgba, ptr = self.model.allocate_array((y, x, 4))
         rgba = self.model.set_display_data(rgba, self.overlay, 1.0)
 

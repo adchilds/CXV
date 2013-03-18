@@ -1,9 +1,0 @@
-[Core]
-Name = PLUGIN NAME
-Module = MODULE NAME
-
-[Documentation]
-Author = AUTHOR OF PLUGIN
-Version = 0.0
-Website = WEBSITE URL
-Description = DESCRIPTION OF PLUGIN

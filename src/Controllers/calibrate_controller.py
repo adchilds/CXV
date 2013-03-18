@@ -53,9 +53,7 @@ class Controller():
         self.view = calibrate_view.View(self, self.unit, self.pixels_per_unit,
                                         self.density, self.min_thickness,
                                         self.max_thickness)
-    def on_rotate(self, cx, cy):
-        self.model.rotate_lines(cx, cy)
-        
+
     def on_mouse_motion(self, event):
         if self.polyline_controller:
             self.polyline_controller.on_mouse_motion(event)

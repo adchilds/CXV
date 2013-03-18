@@ -1,9 +1,0 @@
-[Core]
-Name = Test 4 Filter
-Module = test4
-
-[Documentation]
-Author = Adam Childs
-Version = 0.1
-Website = http://www.usgs.gov
-Description = Test 4 plugin

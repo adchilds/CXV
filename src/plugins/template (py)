@@ -1,0 +1,55 @@
+from yapsy.IPlugin import IPlugin
+import wx
+
+class Filters(IPlugin):
+    """ TEMPLATE DESCRIPTION (REPLACE NECESSARY TEXT)"""
+
+    def __init__(self):
+    	""" Can be left alone. Not necessary for the plugin to run
+    	but still nice to have here for future use, just in case.
+    	"""
+        pass
+
+    def initPlugin(self, overlay_controller, coral_slab, model, progress_bar, overlay):
+    	""" Initializes the needed variables for running the algorithm.
+
+    	NOTE: This method shouldn't need to be touched.
+
+    	More often than not, the user will only need to use:
+    		self.coral_slab - holds the image data
+    		self.pb - the progress bar that notifies the user of the time left
+    		self.overlay_num - the overlay number that this filter will be added to;
+    			this may be used as follows(usually after the algorithm completes):
+    			self.overlay_controller.overlays[self.overlay_num] = FILTER IMAGE OVERLAY
+    	"""
+        self.overlay_controller = overlay_controller    # Overlay Controller
+        self.coral_slab = coral_slab                    # The coral slab we're filtering
+        self.model = model                              # The model (image)
+        self.pb = progress_bar                          # The progress bar to update
+        self.overlay_num = overlay						# The overlay this filter is added to
+
+    def print_information(self):
+    	""" This can be used to display some debugging information
+    	or whatever is necessary before the algorithm is run.
+    	"""
+        pass
+
+    def calc_filter(self):
+        """ This is where the algorithm will be run from. plugin_controller.py
+        calls this method. This method executes the main algorithm and updates the
+        coral_slab and progress bar accordingly. The progress bar should only be
+        updated twice by each plugin, usually before and after the algorithm's 
+        execution.
+        """
+        # Update the progress bar to show beginning
+        wx.CallAfter(self.pb.update, 'Applying SOME FILTER to overlay ' + str(self.overlay_num))
+
+		# Code here for applying the filter (ALGORITHM GOES BELOW THIS LINE)
+
+		# Create the overlay and append it to the list
+		# NOTE: User's algorithm should change 'self.coral_slab' which holds the raw data
+        self.overlay_controller.overlays.append(self.coral_slab)
+        self.overlay_controller.alphas.append(0)
+
+		# Update the progress bar to show completion
+		wx.CallAfter(self.pb.update, 'Completed SOME FILTER')

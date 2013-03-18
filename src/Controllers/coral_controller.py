@@ -24,7 +24,7 @@ class Controller():
         self.model = rectangle_model.Model(self.dicom_view, background, x1+50, y1+50, x1+450, y1+450)
         self.dicom_view.controller.coral_slab = [self.model.sx, self.model.sy, self.model.dx, self.model.dy]
 
-    def on_rotate(self, cx, cy):
+    def rotate_lines(self, cx, cy):
         self.model.rotate_lines(cx, cy)
 
     def on_mouse_motion(self, event):

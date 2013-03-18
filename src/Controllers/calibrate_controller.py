@@ -54,6 +54,9 @@ class Controller():
                                         self.density, self.min_thickness,
                                         self.max_thickness)
 
+    def rotate_lines(self, cx, cy, deg=-90):
+        self.model.rotate_lines(cx, cy)
+
     def on_mouse_motion(self, event):
         if self.polyline_controller:
             self.polyline_controller.on_mouse_motion(event)

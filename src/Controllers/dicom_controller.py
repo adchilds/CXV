@@ -898,9 +898,14 @@ class Controller():
         self.view.axes.cla() # Clear the axes
         self.view.init_plot(False) # Redraw
 
-        # Rotate polyline accordingly
+        # Rotate polylines accordingly
         if self.polyline_controller is not None:
             self.polyline_controller.rotate_lines(cx, cy)
+        if self.coral_controller is not None:
+            self.coral_controller.rotate_lines(cx, cy)
+        if self.calibrate_controller is not None:
+            self.calibrate_controller.rotate_lines(cx, cy)
+        
         self.cache_background()
         temp = self.centerX
         self.centerX = self.centerY

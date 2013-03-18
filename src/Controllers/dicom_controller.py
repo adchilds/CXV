@@ -94,7 +94,7 @@ class Controller():
         self.cursor_polyline = wx.CursorFromImage(image)
 
     def on_open(self, event):
-        dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml; *.cxv)|*.DCM; *.xml; *.cxv|DICOM (*.DCM)|*.DCM|Saved session (*.xml; *.cxv)|*.xml; *.cxv', style=wx.FD_FILE_MUST_EXIST)
+        dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml; *.cxv)|*.DCM;*.xml;*.cxv|DICOM (*.DCM)|*.DCM|Saved session (*.cxv; *.xml)|*.cxv;*.xml', style=wx.FD_FILE_MUST_EXIST)
         if dialog.ShowModal() == wx.ID_OK:
             new = True
             if self.model.image_array is not None:  # opening a project on top of another

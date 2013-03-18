@@ -14,6 +14,7 @@
 from Controllers import calibrate_controller
 from Controllers import contrast_controller
 from Controllers import coral_controller
+from Controllers import dxf_controller
 from Controllers import image_info_controller
 from Controllers import overlay_controller
 from Controllers import overview_controller
@@ -26,12 +27,12 @@ from lib import browse_dialog
 from lib import progress_bar
 from lib import save_session
 from Views import dicom_view
-import getpass
-import wx
-import wx.lib.filebrowsebutton as filebrowse
-import re
-import os
+#import Image # PIL (Python Image Library)
 import math
+import os
+import re
+#import shutil
+import wx
 
 class Controller():
     
@@ -46,40 +47,54 @@ class Controller():
         self.polyline = False
         self.polyline_locked = False
         self.calib = False
+        self.calib_locked = False
+        self.changed = False
+        self.pan_image = False # Is the user able to currently pan the image?
+        self.toolbar_pan = False
+        self.left_down = False # Is the user holding the left mouse button?
+        self.polyline_cursor_on = False
+        self.debug = False
+        self.set_pixels_per_unit = False
         self.coral_controller = None
         self.overlay_controller = None
         self.polyline_controller = None
         self.calibrate_controller = None
         self.save_session = None
-        self.changed = False
-        self.pan_image = False # Is the user able to currently pan the image?
-        self.left_down = False # Is the user holding the left mouse button?
         self.background = None
         self.xml = None
         self.plugin_directory = ""
-        self.debug = False
         self.model = dicom_model.Model()
-        self.view = dicom_view.View(self, self.model)
         self.zoom_model = zoom_model.Model()
+        self.centerX = 0
+        self.centerY = 0
+
+        self.view = dicom_view.View(self, self.model)
         self.zoom_controller = zoom_controller.Controller(self, self.view, self.model)
-        self.cursor_hand = wx.CursorFromImage(wx.Image("images/cursor_hand_open.gif", wx.BITMAP_TYPE_GIF))
-        self.cursor_hand_drag = wx.CursorFromImage(wx.Image("images/cursor_hand_closed.gif", wx.BITMAP_TYPE_GIF))
 
         # Check for the XML config file. If it's installed,
         # read the corresponding data. If it's not installed,
         # install it to the user's home directory, setting
         # default values.
         path = os.path.expanduser('~')
-        if os.path.exists(r'' + path + '\.cxvrc.xml'):
-            self.xml = xml_controller.Controller(path + '\.cxvrc.xml')
+        if os.path.exists(r'' + path + os.sep + '.cxvrc.xml'):
+            self.xml = xml_controller.Controller(path + os.sep + '.cxvrc.xml')
             self.xml.load_file()
             self.plugin_directory = self.xml.get_plugin_directory()
         else:
-            self.xml = xml_controller.Controller(path + '\.cxvrc.xml')
+            self.xml = xml_controller.Controller(path + os.sep + '.cxvrc.xml')
             self.xml.create_config()
 
+        path = os.path.expanduser('~') + os.sep + "plugins" + os.sep
+        
+        self.cursor_hand = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_open.gif', wx.BITMAP_TYPE_GIF))
+        self.cursor_hand_drag = wx.CursorFromImage(wx.Image(self.view.get_main_dir() + os.sep + 'images' + os.sep + 'cursor_hand_closed.gif', wx.BITMAP_TYPE_GIF))
+        image = wx.Image(self.view.get_main_dir() + os.sep + "images" + os.sep + "cursor_cross.png", wx.BITMAP_TYPE_PNG)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 9)
+        image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 9)
+        self.cursor_polyline = wx.CursorFromImage(image)
+
     def on_open(self, event):
-        dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml)|*.DCM; *.xml|DICOM (*.DCM)|*.DCM|Saved session (*.xml)|*.xml', style=wx.FD_FILE_MUST_EXIST)
+        dialog = wx.FileDialog(None, wildcard='CXV files (*.DCM; *.xml; *.cxv)|*.DCM; *.xml; *.cxv|DICOM (*.DCM)|*.DCM|Saved session (*.xml; *.cxv)|*.xml; *.cxv', style=wx.FD_FILE_MUST_EXIST)
         if dialog.ShowModal() == wx.ID_OK:
             new = True
             if self.model.image_array is not None:  # opening a project on top of another
@@ -95,11 +110,12 @@ class Controller():
                 savedsesh = True
             self.view.aspect_cb.Enable()
             tools = ['Image Overview', 'Image Information', 
-                     'Pan Image', 'Zoom In', 'Zoom Out', 'Adjust Contrast', 
+                     'Pan Image', 'Zoom In', 'Zoom Out', 
                      'Adjust Target Area', 'Draw Polylines',
-                     'Adjust Calibration Region']
+                     'Adjust Calibration Region', 'Rotate Image']
             self.enable_tools(tools, True)
-            self.enable_tools(['&Save...\tCtrl+S'], False)
+            self.enable_tools(['&Save\tCtrl+S'], False)
+            self.view.menubar.FindItemById(self.view.menubar_ids['Save As...']).Enable(True)
             self.view.menubar.FindItemById(self.view.menubar_ids['Export']).Enable(True)
 
             # If the user loads a saved session, we don't want to set these to None!
@@ -108,9 +124,9 @@ class Controller():
                 self.overlay_controller = None
                 self.polyline_controller = None
                 self.calibrate_controller = None
+            self.centerX, self.centerY = self.model.get_image_shape()
 
     def open_dicom_file(self, path, new):
-        print path
         p = path.split(os.sep)
         p = p[:3] + p[-2:]
         p[2] = '...'
@@ -118,29 +134,43 @@ class Controller():
         for each in p:
             label += (each + os.sep)
         label = label[:-1]
-        pb = progress_bar.ProgressBar('Loading DICOM', label, 7, self.view)
+        self.pb = progress_bar.ProgressBar('Loading DICOM', label, 7, self.view)
         self.model.image_array = self.model.load_dicom_image(path)
-        pb.update(label)
+        self.pb.update(label)
         y, x = self.model.get_image_shape()
-        pb.update(label)
+        self.pb.update(label)
         try: rgba, self.ptr = self.model.allocate_array((y, x, 4))
         except ValueError: rgba, self.ptr = self.model.allocate_array((y, x, 4))
-        pb.update(label)
+        self.pb.update(label)
         self.model.image_array = self.model.normalize_intensity(self.model.image_array)
-        pb.update(label)
+        self.pb.update(label)
         self.model.image_array = self.model.invert_grayscale(self.model.image_array)
-        pb.update(label)
+        self.pb.update(label)
         self.model.image_array = self.model.set_display_data(rgba, self.model.image_array, 1.0)
-        pb.update(label)
+        self.pb.update(label)
         self.view.init_plot(new)
-        pb.finish(label)
+        self.pb.finish(label)
         self.cleanup()
+        self.pb = None
 
     def open_saved_session(self, path, new):
+        if self.view.figure is not None:
+            self.view.figure.clear()
         self.save_session = save_session.SaveSession(self, path)
         self.save_session.load_file()
-        self.open_dicom_file(self.save_session.fn, new)
+        try:
+            self.open_dicom_file(self.save_session.fn, new)
+        except IOError:
+            self.save_session = None
+            self.pb.Destroy()
+            self.pb = None
+            # Image path not found, prompt user to edit XML file with correct path to image
+            # TODO: Add section number from manual to this messageBox text
+            wx.MessageBox('Image location not found! Please edit the saved session XML file and add the correct image location between the "filename" tags. ' +
+                            'For more information on this issue, please consult the CXV manual under section SECTION_NUMBER.', 'Invalid Image Path', wx.OK | wx.ICON_ERROR)
+            return
         self.save_session.load()
+        self.changed = False
 
     def close_current(self):
         self.model.deallocate_array(self.ptr)
@@ -150,7 +180,7 @@ class Controller():
         self.polyline_controller = None
         self.save_session = None
         self.changed = False
-        self.enable_tools(['Lock Target Area', 'Filtered Overlays'], False)
+        self.enable_tools(['Filtered Overlays'], False)
 
     def on_quit(self, event):
         if self.save_prompt() is not -1: # Cancel button
@@ -162,10 +192,10 @@ class Controller():
             ' has changed.\n\n Do you want to save the changes?'
             dialog = wx.MessageDialog(self.view, msg, 'CXV', style=wx.YES_NO|wx.CANCEL)
             choice = dialog.ShowModal()
-            if choice==wx.ID_CANCEL:
-                return -1
-            elif choice==wx.ID_YES:
+            if choice==wx.ID_YES:
                 self.save_session.write()
+            elif choice == wx.ID_CANCEL:
+                return -1
 
     def enable_tools(self, tools, enable):
         for tool in tools:
@@ -260,6 +290,13 @@ class Controller():
             self.polyline_controller.draw_polylines(self.polyline, self.polyline_locked)
         if self.calibrate_controller:
             self.calibrate_controller.draw_rect(self.calib, False)
+            
+            # Initiated when the user is calibrating pixels per unit
+            if self.calibrate_controller.polyline_controller:
+                if self.calibrate_controller.clicks > 0:
+                    if self.calibrate_controller.polyline_controller is not None:
+                        self.calibrate_controller.polyline_controller.draw_polylines(self.polyline, self.polyline_locked, False)
+
         self.view.canvas.blit(self.view.axes.bbox)
 
     def draw_lines(self):
@@ -307,23 +344,24 @@ class Controller():
 
     def on_show_popup(self, event):
         if not self.ztf and not self.zoom:
-            self.popup_menu = wx.Menu()
-            self.popup_menu.Append(-1, 'Zoom to fit')
-
-            # Better to set this event here when we need it because if it's set in
-            # the view class, all menu items will fire this event.
-            self.view.Bind(wx.EVT_MENU, self.on_popup_item_selected)
-            x, y = wx.GetMousePosition()
-            y -= 35 # Ugly but GetMousePosition returns y position too low
-            pos = x, y
-            self.view.PopupMenu(self.popup_menu, pos)
-
-            # Unbind the event, otherwise we get a screen flickering if the user opens
-            # multiple popupmenu's without selecting an item. This is caused because
-            # there would now be multiple events open and waiting for input. Once input
-            # is given, all those events are fired at once, resizing our screen multiple
-            # times.
-            self.view.Unbind(wx.EVT_MENU)
+            if not self.polyline:
+                self.popup_menu = wx.Menu()
+                self.popup_menu.Append(-1, 'Zoom to fit')
+    
+                # Better to set this event here when we need it because if it's set in
+                # the view class, all menu items will fire this event.
+                self.view.Bind(wx.EVT_MENU, self.on_popup_item_selected)
+                x, y = wx.GetMousePosition()
+                y -= 35 # Ugly but GetMousePosition returns y position too low
+                pos = x, y
+                self.view.PopupMenu(self.popup_menu, pos)
+    
+                # Unbind the event, otherwise we get a screen flickering if the user opens
+                # multiple popupmenu's without selecting an item. This is caused because
+                # there would now be multiple events open and waiting for input. Once input
+                # is given, all those events are fired at once, resizing our screen multiple
+                # times.
+                self.view.Unbind(wx.EVT_MENU)
 
     def on_popup_item_selected(self, event):
         self.ztf = True
@@ -375,6 +413,9 @@ class Controller():
             elif self.coral:
                 self.coral_controller.on_mouse_motion(event)
             elif self.calib:
+                if self.calibrate_controller is None:
+                    self.calib = False
+                    return
                 self.calibrate_controller.on_mouse_motion(event)
 
             if not self.zoom:
@@ -396,6 +437,8 @@ class Controller():
                 self.view.canvas.SetCursor(self.cursor_hand_drag)
             elif self.zoom:
                 self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+            elif self.polyline_cursor_on:
+                self.view.canvas.SetCursor(self.cursor_polyline)
             else:
                 self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
         elif event.button == 2: # Scroll-wheel button??
@@ -409,7 +452,7 @@ class Controller():
                 self.state_changed(True)
             elif self.coral:
                 self.coral_controller.on_mouse_press(event)
-            elif self.calib:
+            elif self.calib or self.calib_locked:
                 self.calibrate_controller.on_mouse_press(event)
             self.draw_all()
 
@@ -434,8 +477,11 @@ class Controller():
             self.view.canvas.SetCursor(self.cursor_hand)
         elif (event.button == 1 or event.button == 3) and self.zoom:
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+        elif (event.button == 1 or event.button == 3) and self.polyline_cursor_on:
+            self.view.canvas.SetCursor(self.cursor_polyline)
         else:
-            self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            if event.button is not 2:
+                self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
         # Update toggle_selector's background. Otherwise, next time we try to
         # drag zoom, the objects overlaying the image will disappear during drag
@@ -446,25 +492,26 @@ class Controller():
             if not self.pan_image:
                 self.pan_image = True
                 self.view.canvas.SetCursor(self.cursor_hand)
-        elif event.key == 'c': # Calibration
-            self.on_calibrate(event, True, True)
-        elif event.key == 'p': # Polylines
-            self.on_polyline(event, True, True)
-        elif event.key == 't': # Target Area
-            self.on_coral(event, True, True)
+                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], True)
+        elif event.key == 'shift': # Holding SHIFT while setting pixel_per_unit
+            if self.calibrate_controller.polyline_controller is not None:
+                self.calibrate_controller.polyline_controller.shift_down = True
         elif event.key == 'd': # DEBUG
             if not self.debug:
                 self.debug = True
-                self.debug_message("DEBUG Activated...")
+                print "DEBUG Activated..."
             else:
                 self.debug = False
                 print "DEBUG De-Activated..."
 
     def on_key_release(self, event):
-        toolbar_pan = self.view.toolbar.GetToolState(self.view.toolbar_ids['Pan Image'])
-        if not toolbar_pan:
+        if not self.toolbar_pan:
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Pan Image'], False)
+        if self.calibrate_controller is not None:
+            if self.calibrate_controller.polyline_controller is not None:
+                self.calibrate_controller.polyline_controller.shift_down = False
 
     def on_figure_leave(self, event):
         self.view.statusbar.SetStatusText("Pixel Position: (x, y)", 0)
@@ -476,7 +523,8 @@ class Controller():
         self.state_changed(True)
 
     def on_resize(self, event):
-        event.Skip()
+        if event is not None:
+            event.Skip()
         if self.ztf:
             try: # ignore first few events before controller instantiation
                 y, = self.view.scroll.GetSizeTuple()[-1:]
@@ -559,10 +607,9 @@ class Controller():
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
-        self.enable_tools(['Filtered Overlays'], False)
         if not self.coral_controller: # first open
             self.coral_controller = coral_controller.Controller(self.view, self.background)
-            self.enable_tools(['Lock Target Area'], True)
+            self.enable_tools(['Filtered Overlays'], True)
         else:
             try: # remove overlay if already added
                 self.view.figure.delaxes(self.view.ov_axes)
@@ -607,40 +654,51 @@ class Controller():
         pass
 
     def on_export(self, event):
-        """ Export event
-        
-        Exports the DICOM image with all polylines, rectangles,
+        """ Exports the DICOM image with all polylines, rectangles,
         and overlays shown in the selected format.
         
         Formats include:
             PNG (*.png)    - Portable Network Graphics
-            *****TIFF (*.tif)   - Tagged Image File Format (Tagged Image File (*.tif)|*.tif|)
             DXF (*.dxf)    - Autodesk Drawing Exhange Format
+            **REMOVED**TIFF (*.tif)   - Tagged Image File Format (Tagged Image File (*.tif)|*.tif|)
         """
         wildcard = 'Portable Network Graphic (*.png)|*.png|Drawing Exchange Format (*.dxf)|*.dxf'
         dialog = wx.FileDialog(self.view, "Export As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard)
         dialog.SetFilename(self.model.get_image_name().split('.')[0])
         if dialog.ShowModal()==wx.ID_OK:
+            
+            # If exporting a DXF, have they set the pixels_per_unit?
+            if self.get_file_extension(dialog.GetPath()) == '.dxf':
+                if not self.set_pixels_per_unit:
+                    wx.MessageBox('Please set the pixels per unit first, using the "Set Calibration Parameters" tool.', 'Pixels Per Unit not set!', wx.OK | wx.ICON_ERROR)
+                    return
+
             pb = progress_bar.ProgressBar('Exporting Image', 'Initiating export', 5, self.view)
             temp = self.view.aspect
+            
+            # Change to ZTF first to stop memory issues
+            self.view.aspect_cb.SetValue('Zoom to fit')
+            self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
+            
             self.view.aspect = 1.00
             self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
             pb.update('Calculating image size')
             self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
-            pb.update('Saving image')
 
-            if self.get_file_extension(dialog.GetPath()) == '.tif': # Convert PNG to TIFF if .tif is selected
-                import Image # PIL (Python Image Library)
-
-                path = dialog.GetPath()
-                path = path.split('.')[0] + '.png'
-                self.view.figure.savefig(path, dpi=self.view.figure.dpi)
-                Image.open(path).save(path.split('.')[0] + '.tif', 'TIFF')
-                os.remove(path) # Remove the PNG but keep the TIFF
-            elif self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
-                print 'DXF'
+            if self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
+                pb.update('Saving DXF file')
+                dxf_controller.Controllers().get_model().create_dxf(dialog.GetPath(), self.polyline_controller, self.model, self.calibrate_controller)
             else:
+                pb.update('Saving image')
+                # Toggle polyline animation off
+                lw = self.polyline_controller.get_line_width()
+                self.polyline_controller.set_animated(False, lw+3)
+
+                # Save the figure
                 self.view.figure.savefig(dialog.GetPath(), dpi=self.view.figure.dpi)
+
+                # Toggle polyline animation on
+                self.polyline_controller.set_animated(True, lw)
 
             self.view.aspect_cb.SetValue(str(int(temp*100.0))+'%')
             pb.update('Finishing up...')
@@ -668,11 +726,18 @@ class Controller():
         self.polyline_locked = False
         self.coral = False
         self.calib = False
+
+        if not self.polyline_cursor_on:
+            self.view.canvas.SetCursor(self.cursor_polyline)
+            self.polyline_cursor_on = True
+        else:
+            self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            self.polyline_cursor_on = False
+
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Target Area'], False)
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         if not self.polyline_controller:
             self.polyline_controller = polyline_controller.Controller(self, self.view, self.background)
-            #self.enable_tools(['Lock Polylines'], True)
         self.draw_all()
         self.state_changed(True)
 
@@ -706,28 +771,50 @@ class Controller():
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
         if not self.calibrate_controller:
             self.calibrate_controller = calibrate_controller.Controller(self.view, self.background)
-            self.enable_tools(['Set Density Parameters'], True)
+            self.enable_tools(['Set Calibration Parameters'], True)
         self.draw_all()
         self.state_changed(True)
 
-    def on_density_params(self, event, show=True):
+    def on_density_params(self, event, show=True, zoom_off=True, pan_off=True):
+        """ Opens the calibration parameters dialog """
+        self.toggle_zoom(zoom_off)
+        self.toggle_pan(pan_off)
         self.calib = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
         if show:
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Set Calibration Parameters'], True)
             self.calibrate_controller.on_density_params(event)
         self.draw_all()
         self.state_changed(True)
 
     def on_save(self, event):
         if not self.save_session:
-            dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='XML File (*.xml)|*.xml')
-            dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
-            if dialog.ShowModal()==wx.ID_OK:
-                self.save_session = save_session.SaveSession(self, dialog.GetPath())
-                self.save_session.write()
+            self.on_save_as(event)
         else:
             self.save_session.write()
-        self.state_changed(False)
+            self.state_changed(False)
+
+    def on_save_as(self, event):
+        """ Shows a save as dialog where the user choose to save the file
+        on their system with a specific filename and extension.
+        """
+        dialog = wx.FileDialog(self.view, "Save As", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard='CXV Session File (*.cxv)|*.cxv|XML Document (*.xml)|*.xml')
+
+        dialog.SetFilename(self.model.get_image_name().split('.')[0])
+
+        if dialog.ShowModal() == wx.ID_OK:
+            # Is the user saving a CXV Session file or XML file?
+            path = dialog.GetPath()
+            if self.get_file_extension(path) == '.cxv':
+                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
+            else:
+                dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
+
+            self.save_session = save_session.SaveSession(self, path)
+            self.save_session.write()
+            self.state_changed(False)
+        else:
+            self.state_changed(True)
 
     def on_plugin_properties(self, event=None):
         browse = browse_dialog.BrowseDialog(None, title='Default Plugin Directory')
@@ -750,8 +837,8 @@ class Controller():
         description = plugin.description
         span = 10
         words = description.split(" ")
-        list = [" ".join(words[i:i+span]) for i in range(0, len(words), span)]
-        description = '\n'.join(list)
+        li = [" ".join(words[i:i+span]) for i in range(0, len(words), span)]
+        description = '\n'.join(li)
 
         info = wx.AboutDialogInfo()
         info.SetName(plugin.name)
@@ -771,23 +858,19 @@ class Controller():
         self.on_pan_image(event)
 
     def on_pan_image(self, event):
+        if self.toolbar_pan:
+            self.toolbar_pan = False
+        else:
+            self.toolbar_pan = True
+
         if self.view.toolbar.GetToolState(self.view.toolbar_ids['Pan Image']):
             self.pan_image = True
 
             # Un-toggle toolbar items that may currently be toggled
-            coral_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Target Area'])
-            calib_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
-            polyline_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Draw Polylines'])
+            self.toggle_target_area()
+            self.toggle_calibration_region()
+            self.toggle_polyline()
 
-            if coral_on: # Turn off coral region
-                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Target Area'], False)
-                self.on_coral(None, zoom_off=True, pan_off=False)
-            if calib_on: # Turn off calibration region
-                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
-                self.on_calibrate(None, zoom_off=True, pan_off=False)
-            if polyline_on: # Turn of polylines
-                self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
-                self.on_polyline(None, zoom_off=True, pan_off=False)
             self.view.toolbar.ToggleTool(self.view.toolbar_ids['Zoom In'], False)
             self.zoom = False
             self.view.toggle_selector.set_active(False)
@@ -796,6 +879,64 @@ class Controller():
             self.pan_image = False
             self.view.canvas.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
+    def on_help(self, event):
+        print 'Help'
+        pass
+
+    def on_about(self, event):
+        print 'About'
+        pass
+
+    def on_rotate(self, event):
+        """ Rotates the image by 90 degrees (counter-clockwise) """
+        cx = self.centerX / 2
+        cy = self.centerY / 2
+
+        self.model.image_array = self.model.rotate_image(self.model.get_image())
+
+        # Redraw the canvas to show the rotated image
+        self.view.axes.cla() # Clear the axes
+        self.view.init_plot(False) # Redraw
+
+        # Rotate polylines accordingly
+        if self.polyline_controller is not None:
+            self.polyline_controller.rotate_lines(cx, cy)
+        if self.coral_controller is not None:
+            self.coral_controller.on_rotate(cx, cy)
+        if self.calibrate_controller is not None:
+            self.calibrate_controller.on_rotate(cx, cy)
+        
+        self.cache_background()
+        temp = self.centerX
+        self.centerX = self.centerY
+        self.centerY = temp
+
+    def toggle_target_area(self):
+        """ Toggles off the target area button in the toolbar if it's enabled. """
+
+        # Un-toggle toolbar items that may currently be toggled
+        coral_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Target Area'])
+
+        if coral_on: # Turn off coral region
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Target Area'], False)
+            self.on_coral(None, zoom_off=True, pan_off=False)
+
+    def toggle_calibration_region(self):
+        """ Toggles off the calibration region button in the toolbar if it's enabled. """
+        calib_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Adjust Calibration Region'])
+
+        if calib_on: # Turn off calibration region
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Adjust Calibration Region'], False)
+            self.on_calibrate(None, zoom_off=True, pan_off=False)
+
+    def toggle_polyline(self):
+        """ Toggles off the polyline button in the toolbar if it's enabled. """
+        polyline_on = self.view.toolbar.GetToolState(self.view.toolbar_ids['Draw Polylines'])
+
+        if polyline_on: # Turn of polylines
+            self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
+            self.on_polyline(None, zoom_off=True, pan_off=False)
+    
     def toggle_zoom(self, zoom_off):
         """ Toggles the zoom button in the toolbar, given the
         zoom_off parameter.
@@ -821,11 +962,6 @@ class Controller():
         else:
             self.pan_image = True
 
-    def debug_message(self, message):
-        """ Used for testing and debugging purposes """
-        if self.debug:
-            print message
-
     def state_changed(self, changed):
         """ This method is called when the user changes something and the
         current version differs from the previously saved version.
@@ -833,7 +969,7 @@ class Controller():
         @var changed - Does the program differ from the previously saved session?
         """
         if changed:
-            self.enable_tools(['&Save...\tCtrl+S'], True)
+            self.enable_tools(['&Save\tCtrl+S'], True)
         else:
-            self.enable_tools(['&Save...\tCtrl+S'], False)
+            self.enable_tools(['&Save\tCtrl+S'], False)
         self.changed = changed

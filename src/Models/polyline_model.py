@@ -43,19 +43,28 @@ class Polyline():
         self.verticies.remove(self.get_vertex(index))
         
     def set_vertex(self, vertex, x, y):
-        vertex.set_xdata([x])
-        vertex.set_ydata([y])
-        
+        try:
+            vertex.set_xdata([x])
+            vertex.set_ydata([y])
+        except AttributeError:
+            print "AttributeError while trying to change vertex (x, y) position"
+            pass
+
     def get_vertex(self, index):
         return self.verticies[index]
-        
+    
     def get_vertex_index(self, vertex):
-        return self.verticies.index(vertex)
+        try:
+            return self.verticies.index(vertex)
+        except ValueError:
+            pass
     
     def is_first(self, vertex):
-        if self.verticies.index(vertex) == 0: 
-            return True
-        return False
+        try:
+            if self.verticies.index(vertex) == 0: 
+                return True
+        except ValueError:
+            return False
     
     def is_last(self, vertex):
         if self.verticies.index(vertex) == len(self.verticies)-1:
@@ -69,14 +78,14 @@ class Polyline():
     
     def add_line(self, xdata, ydata):
         line, = self.axes.plot(xdata, ydata, c=self.color, 
-                               marker='-', zorder=1,
+                               linestyle='-', zorder=1,
                                animated=True)
         self.lines.append(line)
         return line
     
     def insert_line(self, index, xdata, ydata):
         line, = self.axes.plot(xdata, ydata, c=self.color, 
-                               marker='-', zorder=1,
+                               linestyle='-', zorder=1,
                                animated=True)
         self.lines.insert(index, line)
         return line
@@ -87,7 +96,7 @@ class Polyline():
     def set_line(self, line, xdata, ydata):
         line.set_xdata(xdata)
         line.set_ydata(ydata)
-        
+
     def get_line(self, index):
         return self.lines[index]
         
@@ -102,6 +111,11 @@ class Polyline():
         else: line = self.lines[0]
         x1, x2 = line.get_xdata()
         y1, y2 = line.get_ydata()
+        self.label.set_text('t'+str(i+1))
+        self.set_label_pos(x1, y1, x2, y2)
+
+    def set_label_pos(self, x1, y1, x2, y2):
+        """ Sets the label to the correct position for the given line """
         x_offset = math.fabs((x1-x2)/2.)
         y_offset = math.fabs((y1-y2)/2.)
         if x1 < x2: x = x1
@@ -110,8 +124,7 @@ class Polyline():
         else: y = y2
         x += x_offset
         y += y_offset
-        self.label.set_text('t'+str(i+1))
-        self.label.set_position((x,y))
+        self.label.set_position((x, y))
 
     def get_label(self):
         return self.label.get_text()

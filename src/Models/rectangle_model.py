@@ -11,6 +11,9 @@
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
+import math
+import numpy as np
+import os
 import wx
 
 class Model():
@@ -89,10 +92,20 @@ class Model():
             elif self.picked == 'top' or self.picked == 'bottom':
                 self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_SIZENS))
 
-    def on_mouse_release(self, event):
+    def on_mouse_release(self, event, setting_ppu=False):
         self.drag = False 
         self.adjust = False
-        self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+
+        if not setting_ppu:
+            self.dicom_view.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+        else:
+            # Setting pixels per unit cursor
+            image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_ppu.png", wx.BITMAP_TYPE_PNG)
+            image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 10) 
+            image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 10)
+            cursor_ppu = wx.CursorFromImage(image)
+            self.dicom_view.SetCursor(cursor_ppu)
+
         return [self.sx, self.sy, self.dx, self.dy]
 
     def is_mouse_in_rect(self, event):
@@ -103,7 +116,51 @@ class Model():
 
     def get_rect_pos(self):
         return [self.sx, self.sy, self.dx, self.dy]
+    
+    def set_rect_pos(self, x1, y1, x2, y2):
+        self.sx = x1
+        self.sy = y1
+        self.dx = x2
+        self.dy = y2
 
+    def rotate_lines(self, cx, cy, deg=-90):
+        # Convert from degrees to radians
+        theta = math.radians(deg)
+        
+        M = self.rotate_and_translate(theta, cx, cy, self.sx, self.sy)
+        M2 = self.rotate_and_translate(theta, cx, cy, self.dx, self.dy)
+        
+        self.set_rect_pos(float(M[0][0]), float(M[1][0]), float(M2[0][0]), float(M2[1][0]))
+    
+    def rotate_and_translate(self, theta, originX, originY, x, y):
+        """
+        Applies the rotation transformation by 'theta'
+        degrees to the provided points around the specified
+        point (originX, originY). Translates to and from
+        the origin (originX, originY) before and after rotation.
+        """
+        # Un-translation
+        A = np.matrix([[1, 0, originX],
+                       [0, 1, originY],
+                       [0, 0, 1]])
+        
+        # Rotation
+        B = np.matrix([[math.cos(theta), -math.sin(theta), 0],
+                       [math.sin(theta), math.cos(theta), 0],
+                       [0, 0, 1]])
+        
+        # Translation
+        C = np.matrix([[1, 0, -originY], # swap the Y and X here because image dimensions changed
+                       [0, 1, -originX],
+                       [0, 0, 1]])
+        
+        # Vertex position
+        D = np.matrix([[x],
+                       [y],
+                       [1]])
+
+        return (A * B * C * D)
+        
     def on_pick(self, event):
         if self.left.contains(event)[0]:
             self.adjust = True

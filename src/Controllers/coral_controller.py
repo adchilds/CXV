@@ -12,14 +12,20 @@
 #             Department of Interior (DOI)
 #########################################################
 from Models import rectangle_model
+from Models import zoom_model
 import wx
 
 class Controller():
     
     def __init__(self, dicom_view, background):
         self.dicom_view = dicom_view
-        self.model = rectangle_model.Model(self.dicom_view, background, 200, 200, 600, 600)
+        self.zoom_model = zoom_model.Model()
+        x1, y1, x2, y2 = self.zoom_model.get_viewable_rect(self.dicom_view)
+        self.model = rectangle_model.Model(self.dicom_view, background, x1+50, y1+50, x1+450, y1+450)
         self.dicom_view.controller.coral_slab = [self.model.sx, self.model.sy, self.model.dx, self.model.dy]
+
+    def on_rotate(self, cx, cy):
+        self.model.rotate_lines(cx, cy)
 
     def on_mouse_motion(self, event):
         self.model.on_mouse_motion(event)
@@ -55,7 +61,7 @@ class Controller():
     def create_popup_menu(self):
         self.menu = wx.Menu()
         if self.dicom_view.controller.coral_locked:
-            self.add_option(self.menu, 'Unlock Coral Slab', self.on_popup_item_selected)
+            self.add_option(self.menu, 'Unlock Target Area', self.on_popup_item_selected)
         for each in self.popup_line_data():
             self.add_option(self.menu, *each)
         try: self.dicom_view.PopupMenu(self.menu)
@@ -68,14 +74,13 @@ class Controller():
 
     def popup_line_data(self):
         return [('Lock Target Area', self.on_popup_item_selected),
-                ('Delete Coral Slab', self.delete_coral_slab)]
+                ('Delete Target Area', self.delete_coral_slab)]
 
     def delete_coral_slab(self, event):
         self.model = None
         del self.model
         self.dicom_view.controller.coral = False
         self.dicom_view.controller.coral_controller = None
-        self.dicom_view.controller.enable_tools(['Lock Target Area'], False)
         self.dicom_view.controller.enable_tools(['Filtered Overlays'], False)
         self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Adjust Target Area'], False)
         self.dicom_view.controller.draw_all()

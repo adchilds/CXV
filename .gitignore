@@ -19,3 +19,39 @@
 *.zip			# Compressed zip files
 *.exe			# Executables
 *.afm			# Fonts
+.project
+.pydevproject
+src/Controllers/__init__.pyc
+src/Controllers/calibrate_controller.pyc
+src/Controllers/contrast_controller.pyc
+src/Controllers/coral_controller.pyc
+src/Controllers/dicom_controller.pyc
+src/Controllers/dxf_controller.pyc
+src/Controllers/image_info_controller.pyc
+src/Controllers/overlay_controller.pyc
+src/Controllers/overview_controller.pyc
+src/Controllers/plugin_controller.pyc
+src/Controllers/polyline_controller.pyc
+src/Controllers/xml_controller.pyc
+src/Controllers/zoom_controller.pyc
+src/Models/__init__.pyc
+src/Models/dicom_model.pyc
+src/Models/dxf_model.pyc
+src/Models/polyline_model.pyc
+src/Models/rectangle_model.pyc
+src/Models/zoom_model.pyc
+src/Views/__init__.pyc
+src/Views/calibrate_view.pyc
+src/Views/contrast_view.pyc
+src/Views/dicom_view.pyc
+src/Views/image_info_view.pyc
+src/Views/overlay_view.pyc
+src/Views/overview_view.pyc
+src/lib/__init__.pyc
+src/lib/browse_dialog.pyc
+src/lib/progress_bar.pyc
+src/lib/save_session.pyc
+test/dicom images/4.dcm
+test/dicom images/5.dcm
+test/saved_sessions/4.cxv
+test/saved_sessions/4.xml

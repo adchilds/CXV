@@ -16,7 +16,6 @@ from Controllers import zoom_controller
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 from matplotlib.widgets import RectangleSelector
-import matplotlib.transforms as transforms
 from yapsy.PluginManager import PluginManager
 import imp
 import os

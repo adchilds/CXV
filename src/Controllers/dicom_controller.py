@@ -351,8 +351,7 @@ class Controller():
                 # Better to set this event here when we need it because if it's set in
                 # the view class, all menu items will fire this event.
                 self.view.Bind(wx.EVT_MENU, self.on_popup_item_selected)
-                x, y = wx.GetMousePosition()
-                y -= 35 # Ugly but GetMousePosition returns y position too low
+                x, y = self.view.scroll.ScreenToClient(wx.GetMousePosition())
                 pos = x, y
                 self.view.PopupMenu(self.popup_menu, pos)
     

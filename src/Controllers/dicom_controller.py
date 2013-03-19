@@ -543,7 +543,7 @@ class Controller():
             self.update_overview()
 
     def on_aspect(self, event, x=0, y=0, always_hide=False):
-        m = self.ztf_patt.match(self.view.aspect_cb.GetLabel()) # Zoom to fit
+        m = self.ztf_patt.match(self.view.aspect_cb.GetValue()) # Zoom to fit
         if m:
             if self.ztf:
                 return
@@ -553,7 +553,7 @@ class Controller():
             return
         else: self.ztf = False
 
-        m = self.aspect_patt.match(self.view.aspect_cb.GetLabel()) # percent
+        m = self.aspect_patt.match(self.view.aspect_cb.GetValue()) # percent
         if not m: self.view.aspect_cb.SetValue(str(int(self.view.aspect*100.0))+'%')
         else:
             if int(m.group(0)) > 120:

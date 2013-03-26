@@ -31,7 +31,7 @@ class SaveSession():
         xml.UnzipTree()
         return xml.getChildContent("filename")
 
-    def load(self):
+    def load(self, pb):
         """ Loads the data (polylines, target area, calibration region,
         zoom factor, scrollbars, etc.) from the saved session (*.xml) file.
         """
@@ -42,9 +42,14 @@ class SaveSession():
         # Load Rotations
         rot = xml.getChildContent("rotations")
         self.controller.rotations = int(rot)
+        if int(rot) > 0:
+            pb.update("Loading image and rotations...")
+        else:
+            pb.update("Loading image...")
         self.controller.on_rotate(None, int(rot))
 
         # Load Calibration Region
+        pb.update("Loading calibration region")
         calib = xml.SearchForContent(xml, "calibration_region", "")
         calib = calib.attr("exists")
         if calib == "True":
@@ -126,6 +131,7 @@ class SaveSession():
             self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Calibration Region'], False)
 
         # Load Target Area
+        pb.update("Loading overlay region")
         target = xml.SearchForContent(xml, "target_area", "")
         target = target.attr("exists")
         if target == 'True':
@@ -154,6 +160,7 @@ class SaveSession():
             self.controller.view.toolbar.ToggleTool(self.controller.view.toolbar_ids['Adjust Target Area'], False)
 
         # Load Polylines
+        pb.update("Loading polylines")
         poly = xml.SearchForContent(xml, "polylines", "")
         poly = poly.attr("exists")
         if poly == 'True':
@@ -197,6 +204,7 @@ class SaveSession():
                 self.controller.polyline_controller.curr_pl = polylines[0]
 
         # Set the zoom ratio and scrollbar positions
+        pb.update("Loading zoom ratio and scrollbar positions")
         screen = xml.SearchForTag(xml, "screen")
         aspect = screen.getChildContent("aspect")
         scrollbars = xml.SearchForTag(screen, "scrollbars")
@@ -204,6 +212,7 @@ class SaveSession():
         scroll_y = scrollbars.getChildContent("y_pos")
 
         # Redraw and resize the screen
+        pb.update("Resizing image")
         self.controller.view.aspect = float(aspect)
         self.controller.view.aspect_cb.SetValue(str(int(round(float(aspect)*100.0)))+'%')
         self.controller.on_aspect(None, int(scroll_x), int(scroll_y))

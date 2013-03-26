@@ -99,45 +99,45 @@ class Controller():
                 if self.shift_down:
                     if moving_horizontal:
                         self.left_line, = self.axes.plot([x, x], [y+10, y-10],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                         self.tmp_line, = self.axes.plot([x, event.xdata], [y, y],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                         self.right_line, = self.axes.plot([event.xdata, event.xdata], [y+10, y-10],
-                                                          c='#00FF00', marker='-',
+                                                          c='#00FF00', linestyle='-',
                                                           zorder=1, animated=True)
                     else:
                         self.left_line, = self.axes.plot([x+10, x-10], [y, y],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                         self.tmp_line, = self.axes.plot([x, x], [y, event.ydata],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                         self.right_line, = self.axes.plot([x+10, x-10], [event.ydata, event.ydata],
-                                                          c='#00FF00', marker='-',
+                                                          c='#00FF00', linestyle='-',
                                                           zorder=1, animated=True)
                 else:
                     if moving_horizontal:
                         self.left_line, = self.axes.plot([x, x], [y+10, y-10],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                         self.right_line, = self.axes.plot([event.xdata, event.xdata], [event.ydata+10, event.ydata-10],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                     else:
                         self.left_line, = self.axes.plot([x+10, x-10], [y, y],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                         self.right_line, = self.axes.plot([event.xdata+10, event.xdata-10], [event.ydata, event.ydata],
-                                                        c='#00FF00', marker='-',
+                                                        c='#00FF00', linestyle='-',
                                                         zorder=1, animated=True)
                     self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
-                                                    c='#00FF00', marker='-',
+                                                    c='#00FF00', linestyle='-',
                                                     zorder=1, animated=True)
             else:
                 self.tmp_line, = self.axes.plot([x, event.xdata], [y, event.ydata],
-                                                c='#00FF00', marker='-',
+                                                c='#00FF00', linestyle='-',
                                                 zorder=1, animated=True)
         elif self.over_polyline(event):
             if self.picked.contains(event)[0]:

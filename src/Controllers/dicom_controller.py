@@ -169,8 +169,8 @@ class Controller():
             wx.MessageBox('Image location not found! Please edit the saved session XML file and add the correct image location between the "filename" tags. ' +
                             'For more information on this issue, please consult the CXV manual under section SECTION_NUMBER.', 'Invalid Image Path', wx.OK | wx.ICON_ERROR)
             return
-        self.pb = progress_bar.ProgressBar('Loading Session values', "Loading Session values", 1, self.view)
-        self.save_session.load()
+        self.pb = progress_bar.ProgressBar('Loading Session values', "Loading Session values", 7, self.view)
+        self.save_session.load(self.pb)
         self.pb.finish("Finished")
         self.pb = None
         self.changed = False

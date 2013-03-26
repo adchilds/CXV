@@ -22,7 +22,7 @@ import wx
 
 class Controller():
     
-    def __init__(self, dicom_view, dicom_controller, model, background, show):
+    def __init__(self, dicom_view, dicom_controller, model, background, show, rotations=0):
         self.dicom_view = dicom_view
         self.dicom_controller = dicom_controller
         self.model = model
@@ -33,6 +33,7 @@ class Controller():
         self.view = overlay_view.View(self, self.dicom_view)
         self.background = background
         self.show = show
+        self.rotations = rotations
 
     def getPluginCount(self):
         # Get the default plugin directory, using XML
@@ -133,7 +134,7 @@ class Controller():
         Initializes the plugin controller, which then runs the plugin algorithms.
         """
         pb = progress_bar.ProgressBar('Creating Overlays', 'Locking coral region', ((self.getPluginCount() * 2) + 1), self.dicom_view)
-        plugin_controller.Controller(pb, self, self.dicom_controller, self.model)
+        plugin_controller.Controller(pb, self, self.dicom_controller, self.model, self.rotations)
 
     def add_overlay(self):
         x, y, dx, dy = self.dicom_controller.coral_slab

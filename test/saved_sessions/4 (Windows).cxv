@@ -1,0 +1,1132 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<session>
+    <filename>C:\Users\Adam\Dropbox\Public\Python Workspace\CXV\test\dicom images\4.dcm</filename>
+    <screen>
+        <aspect>0.183045977011</aspect>
+        <scrollbars>
+            <x_pos>0</x_pos>
+            <y_pos>0</y_pos>
+        </scrollbars>
+    </screen>
+    <rotations>1</rotations>
+    <calibration_region exists="True">
+        <thickness_range>
+            <min>1.0</min>
+            <max>5.0</max>
+        </thickness_range>
+        <al_grayscale_range>
+            <0>0.753731213848</0>
+            <1>0.860579216207</1>
+            <2>None</2>
+        </al_grayscale_range>
+        <grayscale_to_al_thick>
+            <0>33.2169510785</0>
+            <1>-37.4363573646</1>
+            <2>1.0</2>
+        </grayscale_to_al_thick>
+        <grayscale_to_relative_density>
+            <0>798.369539192</0>
+            <1>-926.549844774</1>
+            <2>1.0</2>
+        </grayscale_to_relative_density>
+        <density>2.79</density>
+        <pixels_per_unit>101.666666667</pixels_per_unit>
+        <unit_selected>mm</unit_selected>
+        <region>
+            <x_pos>1583.97125141</x_pos>
+            <y_pos>862.506764371</y_pos>
+            <width>400.0</width>
+            <height>907.731867719</height>
+        </region>
+    </calibration_region>
+    <target_area exists="True">
+        <x_pos>614.96054115</x_pos>
+        <y_pos>1811.95434048</y_pos>
+        <width>365.37373168</width>
+        <height>345.757046223</height>
+    </target_area>
+    <polylines exists="True">
+        <poly name="t1" color="#FFFFFF">
+            <vertex num="0">
+                <x_pos>420.5</x_pos>
+                <y_pos>536.5</y_pos>
+            </vertex>
+            <vertex num="1">
+                <x_pos>427.5</x_pos>
+                <y_pos>514.5</y_pos>
+            </vertex>
+            <vertex num="2">
+                <x_pos>422.5</x_pos>
+                <y_pos>493.5</y_pos>
+            </vertex>
+            <vertex num="3">
+                <x_pos>423.5</x_pos>
+                <y_pos>478.5</y_pos>
+            </vertex>
+            <vertex num="4">
+                <x_pos>423.5</x_pos>
+                <y_pos>456.5</y_pos>
+            </vertex>
+            <vertex num="5">
+                <x_pos>425.5</x_pos>
+                <y_pos>438.5</y_pos>
+            </vertex>
+            <vertex num="6">
+                <x_pos>419.5</x_pos>
+                <y_pos>415.5</y_pos>
+            </vertex>
+            <vertex num="7">
+                <x_pos>420.5</x_pos>
+                <y_pos>375.5</y_pos>
+            </vertex>
+            <vertex num="8">
+                <x_pos>417.5</x_pos>
+                <y_pos>367.5</y_pos>
+            </vertex>
+            <vertex num="9">
+                <x_pos>419.5</x_pos>
+                <y_pos>352.5</y_pos>
+            </vertex>
+            <vertex num="10">
+                <x_pos>420.5</x_pos>
+                <y_pos>340.5</y_pos>
+            </vertex>
+            <vertex num="11">
+                <x_pos>420.5</x_pos>
+                <y_pos>329.5</y_pos>
+            </vertex>
+            <vertex num="12">
+                <x_pos>421.5</x_pos>
+                <y_pos>322.5</y_pos>
+            </vertex>
+            <vertex num="13">
+                <x_pos>427.5</x_pos>
+                <y_pos>312.5</y_pos>
+            </vertex>
+            <vertex num="14">
+                <x_pos>426.5</x_pos>
+                <y_pos>255.5</y_pos>
+            </vertex>
+            <vertex num="15">
+                <x_pos>423.5</x_pos>
+                <y_pos>244.5</y_pos>
+            </vertex>
+            <vertex num="16">
+                <x_pos>430.5</x_pos>
+                <y_pos>207.5</y_pos>
+            </vertex>
+            <vertex num="17">
+                <x_pos>438.5</x_pos>
+                <y_pos>205.5</y_pos>
+            </vertex>
+            <vertex num="18">
+                <x_pos>443.5</x_pos>
+                <y_pos>192.5</y_pos>
+            </vertex>
+            <vertex num="19">
+                <x_pos>455.5</x_pos>
+                <y_pos>201.5</y_pos>
+            </vertex>
+            <vertex num="20">
+                <x_pos>453.5</x_pos>
+                <y_pos>183.5</y_pos>
+            </vertex>
+            <vertex num="21">
+                <x_pos>470.5</x_pos>
+                <y_pos>196.5</y_pos>
+            </vertex>
+            <vertex num="22">
+                <x_pos>513.5</x_pos>
+                <y_pos>198.5</y_pos>
+            </vertex>
+            <vertex num="23">
+                <x_pos>524.5</x_pos>
+                <y_pos>197.5</y_pos>
+            </vertex>
+            <vertex num="24">
+                <x_pos>536.5</x_pos>
+                <y_pos>191.5</y_pos>
+            </vertex>
+            <vertex num="25">
+                <x_pos>548.5</x_pos>
+                <y_pos>188.5</y_pos>
+            </vertex>
+            <vertex num="26">
+                <x_pos>560.5</x_pos>
+                <y_pos>193.5</y_pos>
+            </vertex>
+            <vertex num="27">
+                <x_pos>571.5</x_pos>
+                <y_pos>192.5</y_pos>
+            </vertex>
+            <vertex num="28">
+                <x_pos>584.5</x_pos>
+                <y_pos>187.5</y_pos>
+            </vertex>
+            <vertex num="29">
+                <x_pos>594.5</x_pos>
+                <y_pos>173.5</y_pos>
+            </vertex>
+            <vertex num="30">
+                <x_pos>607.5</x_pos>
+                <y_pos>167.5</y_pos>
+            </vertex>
+            <vertex num="31">
+                <x_pos>617.5</x_pos>
+                <y_pos>163.5</y_pos>
+            </vertex>
+            <vertex num="32">
+                <x_pos>620.5</x_pos>
+                <y_pos>150.5</y_pos>
+            </vertex>
+            <vertex num="33">
+                <x_pos>631.5</x_pos>
+                <y_pos>158.5</y_pos>
+            </vertex>
+            <vertex num="34">
+                <x_pos>640.5</x_pos>
+                <y_pos>147.5</y_pos>
+            </vertex>
+            <vertex num="35">
+                <x_pos>659.5</x_pos>
+                <y_pos>150.5</y_pos>
+            </vertex>
+            <vertex num="36">
+                <x_pos>668.5</x_pos>
+                <y_pos>156.5</y_pos>
+            </vertex>
+            <vertex num="37">
+                <x_pos>681.5</x_pos>
+                <y_pos>153.5</y_pos>
+            </vertex>
+            <vertex num="38">
+                <x_pos>694.5</x_pos>
+                <y_pos>158.5</y_pos>
+            </vertex>
+            <vertex num="39">
+                <x_pos>705.5</x_pos>
+                <y_pos>152.5</y_pos>
+            </vertex>
+            <vertex num="40">
+                <x_pos>720.5</x_pos>
+                <y_pos>154.5</y_pos>
+            </vertex>
+            <vertex num="41">
+                <x_pos>731.5</x_pos>
+                <y_pos>153.5</y_pos>
+            </vertex>
+            <vertex num="42">
+                <x_pos>741.5</x_pos>
+                <y_pos>144.5</y_pos>
+            </vertex>
+            <vertex num="43">
+                <x_pos>762.5</x_pos>
+                <y_pos>141.5</y_pos>
+            </vertex>
+            <vertex num="44">
+                <x_pos>770.5</x_pos>
+                <y_pos>146.5</y_pos>
+            </vertex>
+            <vertex num="45">
+                <x_pos>792.5</x_pos>
+                <y_pos>141.5</y_pos>
+            </vertex>
+            <vertex num="46">
+                <x_pos>798.5</x_pos>
+                <y_pos>147.5</y_pos>
+            </vertex>
+            <vertex num="47">
+                <x_pos>815.5</x_pos>
+                <y_pos>142.5</y_pos>
+            </vertex>
+            <vertex num="48">
+                <x_pos>828.5</x_pos>
+                <y_pos>142.5</y_pos>
+            </vertex>
+        </poly>
+        <poly name="t2" color="#FFFFFF">
+            <vertex num="0">
+                <x_pos>1022.5</x_pos>
+                <y_pos>131.5</y_pos>
+            </vertex>
+            <vertex num="1">
+                <x_pos>1058.5</x_pos>
+                <y_pos>135.5</y_pos>
+            </vertex>
+            <vertex num="2">
+                <x_pos>1075.5</x_pos>
+                <y_pos>118.5</y_pos>
+            </vertex>
+            <vertex num="3">
+                <x_pos>1081.5</x_pos>
+                <y_pos>119.5</y_pos>
+            </vertex>
+            <vertex num="4">
+                <x_pos>1085.5</x_pos>
+                <y_pos>79.5</y_pos>
+            </vertex>
+            <vertex num="5">
+                <x_pos>1090.5</x_pos>
+                <y_pos>48.5</y_pos>
+            </vertex>
+            <vertex num="6">
+                <x_pos>1131.5</x_pos>
+                <y_pos>58.5</y_pos>
+            </vertex>
+            <vertex num="7">
+                <x_pos>1140.5</x_pos>
+                <y_pos>55.5</y_pos>
+            </vertex>
+            <vertex num="8">
+                <x_pos>1143.5</x_pos>
+                <y_pos>61.5</y_pos>
+            </vertex>
+            <vertex num="9">
+                <x_pos>1165.5</x_pos>
+                <y_pos>65.5</y_pos>
+            </vertex>
+            <vertex num="10">
+                <x_pos>1182.5</x_pos>
+                <y_pos>66.5</y_pos>
+            </vertex>
+            <vertex num="11">
+                <x_pos>1195.5</x_pos>
+                <y_pos>71.5</y_pos>
+            </vertex>
+            <vertex num="12">
+                <x_pos>1202.5</x_pos>
+                <y_pos>72.5</y_pos>
+            </vertex>
+            <vertex num="13">
+                <x_pos>1202.5</x_pos>
+                <y_pos>61.5</y_pos>
+            </vertex>
+            <vertex num="14">
+                <x_pos>1225.5</x_pos>
+                <y_pos>59.5</y_pos>
+            </vertex>
+            <vertex num="15">
+                <x_pos>1232.5</x_pos>
+                <y_pos>59.5</y_pos>
+            </vertex>
+            <vertex num="16">
+                <x_pos>1237.5</x_pos>
+                <y_pos>68.5</y_pos>
+            </vertex>
+            <vertex num="17">
+                <x_pos>1248.5</x_pos>
+                <y_pos>65.5</y_pos>
+            </vertex>
+            <vertex num="18">
+                <x_pos>1268.5</x_pos>
+                <y_pos>64.5</y_pos>
+            </vertex>
+            <vertex num="19">
+                <x_pos>1272.5</x_pos>
+                <y_pos>69.5</y_pos>
+            </vertex>
+            <vertex num="20">
+                <x_pos>1286.5</x_pos>
+                <y_pos>69.5</y_pos>
+            </vertex>
+            <vertex num="21">
+                <x_pos>1295.5</x_pos>
+                <y_pos>62.5</y_pos>
+            </vertex>
+            <vertex num="22">
+                <x_pos>1312.5</x_pos>
+                <y_pos>63.5</y_pos>
+            </vertex>
+            <vertex num="23">
+                <x_pos>1325.5</x_pos>
+                <y_pos>81.5</y_pos>
+            </vertex>
+            <vertex num="24">
+                <x_pos>1340.5</x_pos>
+                <y_pos>83.5</y_pos>
+            </vertex>
+            <vertex num="25">
+                <x_pos>1354.5</x_pos>
+                <y_pos>77.5</y_pos>
+            </vertex>
+            <vertex num="26">
+                <x_pos>1364.5</x_pos>
+                <y_pos>77.5</y_pos>
+            </vertex>
+            <vertex num="27">
+                <x_pos>1400.5</x_pos>
+                <y_pos>77.5</y_pos>
+            </vertex>
+            <vertex num="28">
+                <x_pos>1406.5</x_pos>
+                <y_pos>77.5</y_pos>
+            </vertex>
+            <vertex num="29">
+                <x_pos>1413.5</x_pos>
+                <y_pos>90.5</y_pos>
+            </vertex>
+            <vertex num="30">
+                <x_pos>1413.5</x_pos>
+                <y_pos>106.5</y_pos>
+            </vertex>
+            <vertex num="31">
+                <x_pos>1419.5</x_pos>
+                <y_pos>114.5</y_pos>
+            </vertex>
+            <vertex num="32">
+                <x_pos>1417.5</x_pos>
+                <y_pos>133.5</y_pos>
+            </vertex>
+            <vertex num="33">
+                <x_pos>1416.5</x_pos>
+                <y_pos>153.5</y_pos>
+            </vertex>
+            <vertex num="34">
+                <x_pos>1413.5</x_pos>
+                <y_pos>163.5</y_pos>
+            </vertex>
+            <vertex num="35">
+                <x_pos>1420.5</x_pos>
+                <y_pos>173.5</y_pos>
+            </vertex>
+            <vertex num="36">
+                <x_pos>1409.5</x_pos>
+                <y_pos>175.5</y_pos>
+            </vertex>
+            <vertex num="37">
+                <x_pos>1404.5</x_pos>
+                <y_pos>186.5</y_pos>
+            </vertex>
+            <vertex num="38">
+                <x_pos>1416.5</x_pos>
+                <y_pos>204.5</y_pos>
+            </vertex>
+            <vertex num="39">
+                <x_pos>1418.5</x_pos>
+                <y_pos>218.5</y_pos>
+            </vertex>
+            <vertex num="40">
+                <x_pos>1416.5</x_pos>
+                <y_pos>239.5</y_pos>
+            </vertex>
+            <vertex num="41">
+                <x_pos>1418.5</x_pos>
+                <y_pos>261.5</y_pos>
+            </vertex>
+            <vertex num="42">
+                <x_pos>1419.5</x_pos>
+                <y_pos>275.5</y_pos>
+            </vertex>
+            <vertex num="43">
+                <x_pos>1417.5</x_pos>
+                <y_pos>284.5</y_pos>
+            </vertex>
+            <vertex num="44">
+                <x_pos>1413.5</x_pos>
+                <y_pos>295.5</y_pos>
+            </vertex>
+            <vertex num="45">
+                <x_pos>1419.5</x_pos>
+                <y_pos>309.5</y_pos>
+            </vertex>
+        </poly>
+        <poly name="t3" color="#FFFFFF">
+            <vertex num="0">
+                <x_pos>1395.5</x_pos>
+                <y_pos>3546.5</y_pos>
+            </vertex>
+            <vertex num="1">
+                <x_pos>1406.5</x_pos>
+                <y_pos>3574.5</y_pos>
+            </vertex>
+            <vertex num="2">
+                <x_pos>1405.5</x_pos>
+                <y_pos>3583.5</y_pos>
+            </vertex>
+            <vertex num="3">
+                <x_pos>1398.5</x_pos>
+                <y_pos>3578.5</y_pos>
+            </vertex>
+            <vertex num="4">
+                <x_pos>1395.5</x_pos>
+                <y_pos>3587.5</y_pos>
+            </vertex>
+            <vertex num="5">
+                <x_pos>1389.5</x_pos>
+                <y_pos>3594.5</y_pos>
+            </vertex>
+            <vertex num="6">
+                <x_pos>1393.5</x_pos>
+                <y_pos>3606.5</y_pos>
+            </vertex>
+            <vertex num="7">
+                <x_pos>1387.5</x_pos>
+                <y_pos>3617.5</y_pos>
+            </vertex>
+            <vertex num="8">
+                <x_pos>1392.5</x_pos>
+                <y_pos>3642.5</y_pos>
+            </vertex>
+            <vertex num="9">
+                <x_pos>1394.5</x_pos>
+                <y_pos>3666.5</y_pos>
+            </vertex>
+            <vertex num="10">
+                <x_pos>1402.5</x_pos>
+                <y_pos>3686.5</y_pos>
+            </vertex>
+            <vertex num="11">
+                <x_pos>1396.5</x_pos>
+                <y_pos>3702.5</y_pos>
+            </vertex>
+            <vertex num="12">
+                <x_pos>1395.5</x_pos>
+                <y_pos>3711.5</y_pos>
+            </vertex>
+            <vertex num="13">
+                <x_pos>1415.5</x_pos>
+                <y_pos>3742.5</y_pos>
+            </vertex>
+            <vertex num="14">
+                <x_pos>1417.5</x_pos>
+                <y_pos>3754.5</y_pos>
+            </vertex>
+            <vertex num="15">
+                <x_pos>1409.5</x_pos>
+                <y_pos>3757.5</y_pos>
+            </vertex>
+            <vertex num="16">
+                <x_pos>1417.5</x_pos>
+                <y_pos>3779.5</y_pos>
+            </vertex>
+            <vertex num="17">
+                <x_pos>1416.5</x_pos>
+                <y_pos>3806.5</y_pos>
+            </vertex>
+            <vertex num="18">
+                <x_pos>1416.5</x_pos>
+                <y_pos>3818.5</y_pos>
+            </vertex>
+            <vertex num="19">
+                <x_pos>1419.5</x_pos>
+                <y_pos>3840.5</y_pos>
+            </vertex>
+            <vertex num="20">
+                <x_pos>1417.5</x_pos>
+                <y_pos>3852.5</y_pos>
+            </vertex>
+            <vertex num="21">
+                <x_pos>1420.5</x_pos>
+                <y_pos>3863.5</y_pos>
+            </vertex>
+            <vertex num="22">
+                <x_pos>1419.5</x_pos>
+                <y_pos>3873.5</y_pos>
+            </vertex>
+            <vertex num="23">
+                <x_pos>1412.5</x_pos>
+                <y_pos>3871.5</y_pos>
+            </vertex>
+            <vertex num="24">
+                <x_pos>1416.5</x_pos>
+                <y_pos>3896.5</y_pos>
+            </vertex>
+            <vertex num="25">
+                <x_pos>1408.5</x_pos>
+                <y_pos>3901.5</y_pos>
+            </vertex>
+            <vertex num="26">
+                <x_pos>1412.5</x_pos>
+                <y_pos>3927.5</y_pos>
+            </vertex>
+            <vertex num="27">
+                <x_pos>1414.5</x_pos>
+                <y_pos>3944.5</y_pos>
+            </vertex>
+            <vertex num="28">
+                <x_pos>1413.5</x_pos>
+                <y_pos>3962.5</y_pos>
+            </vertex>
+            <vertex num="29">
+                <x_pos>1407.5</x_pos>
+                <y_pos>3969.5</y_pos>
+            </vertex>
+            <vertex num="30">
+                <x_pos>1405.5</x_pos>
+                <y_pos>3979.5</y_pos>
+            </vertex>
+            <vertex num="31">
+                <x_pos>1399.5</x_pos>
+                <y_pos>3985.5</y_pos>
+            </vertex>
+            <vertex num="32">
+                <x_pos>1398.5</x_pos>
+                <y_pos>3997.5</y_pos>
+            </vertex>
+            <vertex num="33">
+                <x_pos>1389.5</x_pos>
+                <y_pos>3986.5</y_pos>
+            </vertex>
+            <vertex num="34">
+                <x_pos>1373.5</x_pos>
+                <y_pos>3985.5</y_pos>
+            </vertex>
+            <vertex num="35">
+                <x_pos>1377.5</x_pos>
+                <y_pos>3998.5</y_pos>
+            </vertex>
+            <vertex num="36">
+                <x_pos>1371.5</x_pos>
+                <y_pos>4002.5</y_pos>
+            </vertex>
+            <vertex num="37">
+                <x_pos>1364.5</x_pos>
+                <y_pos>3999.5</y_pos>
+            </vertex>
+            <vertex num="38">
+                <x_pos>1356.5</x_pos>
+                <y_pos>4000.5</y_pos>
+            </vertex>
+            <vertex num="39">
+                <x_pos>1355.5</x_pos>
+                <y_pos>4005.5</y_pos>
+            </vertex>
+            <vertex num="40">
+                <x_pos>1350.5</x_pos>
+                <y_pos>4009.5</y_pos>
+            </vertex>
+            <vertex num="41">
+                <x_pos>1342.5</x_pos>
+                <y_pos>4011.5</y_pos>
+            </vertex>
+            <vertex num="42">
+                <x_pos>1333.5</x_pos>
+                <y_pos>4013.5</y_pos>
+            </vertex>
+            <vertex num="43">
+                <x_pos>1328.5</x_pos>
+                <y_pos>4022.5</y_pos>
+            </vertex>
+            <vertex num="44">
+                <x_pos>1320.5</x_pos>
+                <y_pos>4028.5</y_pos>
+            </vertex>
+            <vertex num="45">
+                <x_pos>1314.5</x_pos>
+                <y_pos>4032.5</y_pos>
+            </vertex>
+            <vertex num="46">
+                <x_pos>1316.5</x_pos>
+                <y_pos>4059.5</y_pos>
+            </vertex>
+            <vertex num="47">
+                <x_pos>1316.5</x_pos>
+                <y_pos>4079.5</y_pos>
+            </vertex>
+            <vertex num="48">
+                <x_pos>1316.5</x_pos>
+                <y_pos>4101.5</y_pos>
+            </vertex>
+            <vertex num="49">
+                <x_pos>1311.5</x_pos>
+                <y_pos>4105.5</y_pos>
+            </vertex>
+            <vertex num="50">
+                <x_pos>1316.5</x_pos>
+                <y_pos>4138.5</y_pos>
+            </vertex>
+            <vertex num="51">
+                <x_pos>1313.5</x_pos>
+                <y_pos>4159.5</y_pos>
+            </vertex>
+            <vertex num="52">
+                <x_pos>1306.5</x_pos>
+                <y_pos>4172.5</y_pos>
+            </vertex>
+            <vertex num="53">
+                <x_pos>1272.5</x_pos>
+                <y_pos>4177.5</y_pos>
+            </vertex>
+            <vertex num="54">
+                <x_pos>1265.5</x_pos>
+                <y_pos>4173.5</y_pos>
+            </vertex>
+            <vertex num="55">
+                <x_pos>1258.5</x_pos>
+                <y_pos>4175.5</y_pos>
+            </vertex>
+            <vertex num="56">
+                <x_pos>1238.5</x_pos>
+                <y_pos>4176.5</y_pos>
+            </vertex>
+            <vertex num="57">
+                <x_pos>1221.5</x_pos>
+                <y_pos>4176.5</y_pos>
+            </vertex>
+            <vertex num="58">
+                <x_pos>1215.5</x_pos>
+                <y_pos>4176.5</y_pos>
+            </vertex>
+            <vertex num="59">
+                <x_pos>1209.5</x_pos>
+                <y_pos>4174.5</y_pos>
+            </vertex>
+            <vertex num="60">
+                <x_pos>1203.5</x_pos>
+                <y_pos>4165.5</y_pos>
+            </vertex>
+            <vertex num="61">
+                <x_pos>1197.5</x_pos>
+                <y_pos>4163.5</y_pos>
+            </vertex>
+            <vertex num="62">
+                <x_pos>1182.5</x_pos>
+                <y_pos>4158.5</y_pos>
+            </vertex>
+            <vertex num="63">
+                <x_pos>1170.5</x_pos>
+                <y_pos>4153.5</y_pos>
+            </vertex>
+            <vertex num="64">
+                <x_pos>1155.5</x_pos>
+                <y_pos>4145.5</y_pos>
+            </vertex>
+            <vertex num="65">
+                <x_pos>1142.5</x_pos>
+                <y_pos>4143.5</y_pos>
+            </vertex>
+            <vertex num="66">
+                <x_pos>1139.5</x_pos>
+                <y_pos>4137.5</y_pos>
+            </vertex>
+            <vertex num="67">
+                <x_pos>1126.5</x_pos>
+                <y_pos>4134.5</y_pos>
+            </vertex>
+        </poly>
+        <poly name="t4" color="#FFFFFF">
+            <vertex num="0">
+                <x_pos>411.5</x_pos>
+                <y_pos>3767.5</y_pos>
+            </vertex>
+            <vertex num="1">
+                <x_pos>427.5</x_pos>
+                <y_pos>3821.5</y_pos>
+            </vertex>
+            <vertex num="2">
+                <x_pos>421.5</x_pos>
+                <y_pos>3828.5</y_pos>
+            </vertex>
+            <vertex num="3">
+                <x_pos>421.5</x_pos>
+                <y_pos>3845.5</y_pos>
+            </vertex>
+            <vertex num="4">
+                <x_pos>418.5</x_pos>
+                <y_pos>3852.5</y_pos>
+            </vertex>
+            <vertex num="5">
+                <x_pos>420.5</x_pos>
+                <y_pos>3867.5</y_pos>
+            </vertex>
+            <vertex num="6">
+                <x_pos>418.5</x_pos>
+                <y_pos>3872.5</y_pos>
+            </vertex>
+            <vertex num="7">
+                <x_pos>425.5</x_pos>
+                <y_pos>3876.5</y_pos>
+            </vertex>
+            <vertex num="8">
+                <x_pos>430.5</x_pos>
+                <y_pos>3891.5</y_pos>
+            </vertex>
+            <vertex num="9">
+                <x_pos>425.5</x_pos>
+                <y_pos>3895.5</y_pos>
+            </vertex>
+            <vertex num="10">
+                <x_pos>438.5</x_pos>
+                <y_pos>3935.5</y_pos>
+            </vertex>
+            <vertex num="11">
+                <x_pos>449.5</x_pos>
+                <y_pos>3970.5</y_pos>
+            </vertex>
+            <vertex num="12">
+                <x_pos>462.5</x_pos>
+                <y_pos>4012.5</y_pos>
+            </vertex>
+            <vertex num="13">
+                <x_pos>481.5</x_pos>
+                <y_pos>4010.5</y_pos>
+            </vertex>
+            <vertex num="14">
+                <x_pos>488.5</x_pos>
+                <y_pos>4021.5</y_pos>
+            </vertex>
+            <vertex num="15">
+                <x_pos>500.5</x_pos>
+                <y_pos>4006.5</y_pos>
+            </vertex>
+            <vertex num="16">
+                <x_pos>498.5</x_pos>
+                <y_pos>3992.5</y_pos>
+            </vertex>
+            <vertex num="17">
+                <x_pos>507.5</x_pos>
+                <y_pos>3990.5</y_pos>
+            </vertex>
+            <vertex num="18">
+                <x_pos>513.5</x_pos>
+                <y_pos>4003.5</y_pos>
+            </vertex>
+            <vertex num="19">
+                <x_pos>520.5</x_pos>
+                <y_pos>3998.5</y_pos>
+            </vertex>
+            <vertex num="20">
+                <x_pos>522.5</x_pos>
+                <y_pos>3979.5</y_pos>
+            </vertex>
+            <vertex num="21">
+                <x_pos>531.5</x_pos>
+                <y_pos>3978.5</y_pos>
+            </vertex>
+            <vertex num="22">
+                <x_pos>536.5</x_pos>
+                <y_pos>3985.5</y_pos>
+            </vertex>
+            <vertex num="23">
+                <x_pos>544.5</x_pos>
+                <y_pos>3978.5</y_pos>
+            </vertex>
+            <vertex num="24">
+                <x_pos>542.5</x_pos>
+                <y_pos>3968.5</y_pos>
+            </vertex>
+            <vertex num="25">
+                <x_pos>550.5</x_pos>
+                <y_pos>3970.5</y_pos>
+            </vertex>
+            <vertex num="26">
+                <x_pos>550.5</x_pos>
+                <y_pos>3961.5</y_pos>
+            </vertex>
+            <vertex num="27">
+                <x_pos>559.5</x_pos>
+                <y_pos>3958.5</y_pos>
+            </vertex>
+            <vertex num="28">
+                <x_pos>565.5</x_pos>
+                <y_pos>3964.5</y_pos>
+            </vertex>
+            <vertex num="29">
+                <x_pos>566.5</x_pos>
+                <y_pos>3955.5</y_pos>
+            </vertex>
+            <vertex num="30">
+                <x_pos>574.5</x_pos>
+                <y_pos>3957.5</y_pos>
+            </vertex>
+            <vertex num="31">
+                <x_pos>577.5</x_pos>
+                <y_pos>3950.5</y_pos>
+            </vertex>
+            <vertex num="32">
+                <x_pos>585.5</x_pos>
+                <y_pos>3954.5</y_pos>
+            </vertex>
+            <vertex num="33">
+                <x_pos>595.5</x_pos>
+                <y_pos>3953.5</y_pos>
+            </vertex>
+            <vertex num="34">
+                <x_pos>599.5</x_pos>
+                <y_pos>3946.5</y_pos>
+            </vertex>
+            <vertex num="35">
+                <x_pos>612.5</x_pos>
+                <y_pos>3947.5</y_pos>
+            </vertex>
+            <vertex num="36">
+                <x_pos>632.5</x_pos>
+                <y_pos>3940.5</y_pos>
+            </vertex>
+            <vertex num="37">
+                <x_pos>642.5</x_pos>
+                <y_pos>3946.5</y_pos>
+            </vertex>
+            <vertex num="38">
+                <x_pos>647.5</x_pos>
+                <y_pos>3938.5</y_pos>
+            </vertex>
+            <vertex num="39">
+                <x_pos>657.5</x_pos>
+                <y_pos>3940.5</y_pos>
+            </vertex>
+            <vertex num="40">
+                <x_pos>664.5</x_pos>
+                <y_pos>3946.5</y_pos>
+            </vertex>
+            <vertex num="41">
+                <x_pos>672.5</x_pos>
+                <y_pos>3946.5</y_pos>
+            </vertex>
+            <vertex num="42">
+                <x_pos>676.5</x_pos>
+                <y_pos>3942.5</y_pos>
+            </vertex>
+            <vertex num="43">
+                <x_pos>682.5</x_pos>
+                <y_pos>3946.5</y_pos>
+            </vertex>
+            <vertex num="44">
+                <x_pos>683.5</x_pos>
+                <y_pos>3956.5</y_pos>
+            </vertex>
+            <vertex num="45">
+                <x_pos>689.5</x_pos>
+                <y_pos>3953.5</y_pos>
+            </vertex>
+            <vertex num="46">
+                <x_pos>695.5</x_pos>
+                <y_pos>3951.5</y_pos>
+            </vertex>
+            <vertex num="47">
+                <x_pos>696.5</x_pos>
+                <y_pos>3961.5</y_pos>
+            </vertex>
+            <vertex num="48">
+                <x_pos>707.5</x_pos>
+                <y_pos>3962.5</y_pos>
+            </vertex>
+            <vertex num="49">
+                <x_pos>710.5</x_pos>
+                <y_pos>3971.5</y_pos>
+            </vertex>
+            <vertex num="50">
+                <x_pos>720.5</x_pos>
+                <y_pos>3970.5</y_pos>
+            </vertex>
+            <vertex num="51">
+                <x_pos>727.5</x_pos>
+                <y_pos>3977.5</y_pos>
+            </vertex>
+            <vertex num="52">
+                <x_pos>733.5</x_pos>
+                <y_pos>3979.5</y_pos>
+            </vertex>
+            <vertex num="53">
+                <x_pos>739.5</x_pos>
+                <y_pos>3974.5</y_pos>
+            </vertex>
+            <vertex num="54">
+                <x_pos>745.5</x_pos>
+                <y_pos>3975.5</y_pos>
+            </vertex>
+            <vertex num="55">
+                <x_pos>756.5</x_pos>
+                <y_pos>3967.5</y_pos>
+            </vertex>
+            <vertex num="56">
+                <x_pos>757.5</x_pos>
+                <y_pos>3953.5</y_pos>
+            </vertex>
+            <vertex num="57">
+                <x_pos>760.5</x_pos>
+                <y_pos>3928.5</y_pos>
+            </vertex>
+            <vertex num="58">
+                <x_pos>756.5</x_pos>
+                <y_pos>3920.5</y_pos>
+            </vertex>
+            <vertex num="59">
+                <x_pos>755.5</x_pos>
+                <y_pos>3893.5</y_pos>
+            </vertex>
+            <vertex num="60">
+                <x_pos>764.5</x_pos>
+                <y_pos>3876.5</y_pos>
+            </vertex>
+            <vertex num="61">
+                <x_pos>773.5</x_pos>
+                <y_pos>3872.5</y_pos>
+            </vertex>
+        </poly>
+        <poly name="t5" color="#FF9900">
+            <vertex num="0">
+                <x_pos>966.5</x_pos>
+                <y_pos>3546.5</y_pos>
+            </vertex>
+            <vertex num="1">
+                <x_pos>973.5</x_pos>
+                <y_pos>3493.5</y_pos>
+            </vertex>
+            <vertex num="2">
+                <x_pos>982.5</x_pos>
+                <y_pos>3449.5</y_pos>
+            </vertex>
+            <vertex num="3">
+                <x_pos>986.5</x_pos>
+                <y_pos>3418.5</y_pos>
+            </vertex>
+            <vertex num="4">
+                <x_pos>996.5</x_pos>
+                <y_pos>3371.5</y_pos>
+            </vertex>
+            <vertex num="5">
+                <x_pos>1009.5</x_pos>
+                <y_pos>3332.5</y_pos>
+            </vertex>
+            <vertex num="6">
+                <x_pos>1022.5</x_pos>
+                <y_pos>3289.5</y_pos>
+            </vertex>
+            <vertex num="7">
+                <x_pos>1042.5</x_pos>
+                <y_pos>3244.5</y_pos>
+            </vertex>
+            <vertex num="8">
+                <x_pos>1060.5</x_pos>
+                <y_pos>3200.5</y_pos>
+            </vertex>
+            <vertex num="9">
+                <x_pos>1069.5</x_pos>
+                <y_pos>3180.5</y_pos>
+            </vertex>
+            <vertex num="10">
+                <x_pos>1073.5</x_pos>
+                <y_pos>3161.5</y_pos>
+            </vertex>
+            <vertex num="11">
+                <x_pos>1078.5</x_pos>
+                <y_pos>3138.5</y_pos>
+            </vertex>
+            <vertex num="12">
+                <x_pos>1082.5</x_pos>
+                <y_pos>3108.5</y_pos>
+            </vertex>
+            <vertex num="13">
+                <x_pos>1082.5</x_pos>
+                <y_pos>3079.5</y_pos>
+            </vertex>
+            <vertex num="14">
+                <x_pos>1089.5</x_pos>
+                <y_pos>3047.5</y_pos>
+            </vertex>
+            <vertex num="15">
+                <x_pos>1094.5</x_pos>
+                <y_pos>3018.5</y_pos>
+            </vertex>
+            <vertex num="16">
+                <x_pos>1097.5</x_pos>
+                <y_pos>2987.5</y_pos>
+            </vertex>
+            <vertex num="17">
+                <x_pos>1101.5</x_pos>
+                <y_pos>2957.5</y_pos>
+            </vertex>
+            <vertex num="18">
+                <x_pos>1108.5</x_pos>
+                <y_pos>2919.5</y_pos>
+            </vertex>
+            <vertex num="19">
+                <x_pos>1113.5</x_pos>
+                <y_pos>2889.5</y_pos>
+            </vertex>
+            <vertex num="20">
+                <x_pos>1116.5</x_pos>
+                <y_pos>2858.5</y_pos>
+            </vertex>
+            <vertex num="21">
+                <x_pos>1117.5</x_pos>
+                <y_pos>2831.5</y_pos>
+            </vertex>
+            <vertex num="22">
+                <x_pos>1120.5</x_pos>
+                <y_pos>2799.5</y_pos>
+            </vertex>
+        </poly>
+        <poly name="t6" color="#FF9900">
+            <vertex num="0">
+                <x_pos>1339.5</x_pos>
+                <y_pos>2606.5</y_pos>
+            </vertex>
+            <vertex num="1">
+                <x_pos>1311.5</x_pos>
+                <y_pos>2550.5</y_pos>
+            </vertex>
+            <vertex num="2">
+                <x_pos>1287.5</x_pos>
+                <y_pos>2484.5</y_pos>
+            </vertex>
+            <vertex num="3">
+                <x_pos>1272.5</x_pos>
+                <y_pos>2421.5</y_pos>
+            </vertex>
+            <vertex num="4">
+                <x_pos>1255.5</x_pos>
+                <y_pos>2364.5</y_pos>
+            </vertex>
+            <vertex num="5">
+                <x_pos>1229.5</x_pos>
+                <y_pos>2291.5</y_pos>
+            </vertex>
+            <vertex num="6">
+                <x_pos>1219.5</x_pos>
+                <y_pos>2254.5</y_pos>
+            </vertex>
+        </poly>
+        <poly name="t7" color="#FF9900">
+            <vertex num="0">
+                <x_pos>932.0</x_pos>
+                <y_pos>1268.0</y_pos>
+            </vertex>
+            <vertex num="1">
+                <x_pos>943.666666667</x_pos>
+                <y_pos>1227.16666667</y_pos>
+            </vertex>
+            <vertex num="2">
+                <x_pos>952.833333333</x_pos>
+                <y_pos>1184.66666667</y_pos>
+            </vertex>
+            <vertex num="3">
+                <x_pos>960.333333333</x_pos>
+                <y_pos>1137.16666667</y_pos>
+            </vertex>
+            <vertex num="4">
+                <x_pos>968.666666667</x_pos>
+                <y_pos>1103.83333333</y_pos>
+            </vertex>
+            <vertex num="5">
+                <x_pos>980.333333333</x_pos>
+                <y_pos>1056.33333333</y_pos>
+            </vertex>
+            <vertex num="6">
+                <x_pos>991.166666667</x_pos>
+                <y_pos>1012.16666667</y_pos>
+            </vertex>
+            <vertex num="7">
+                <x_pos>1002.83333333</x_pos>
+                <y_pos>971.33333333</y_pos>
+            </vertex>
+            <vertex num="8">
+                <x_pos>1017.83333333</x_pos>
+                <y_pos>930.5</y_pos>
+            </vertex>
+            <vertex num="9">
+                <x_pos>1034.5</x_pos>
+                <y_pos>878.83333333</y_pos>
+            </vertex>
+            <vertex num="10">
+                <x_pos>1043.66666667</x_pos>
+                <y_pos>834.66666667</y_pos>
+            </vertex>
+            <vertex num="11">
+                <x_pos>1057.83333333</x_pos>
+                <y_pos>783.83333333</y_pos>
+            </vertex>
+        </poly>
+    </polylines>
+</session>

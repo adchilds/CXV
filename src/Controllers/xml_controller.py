@@ -58,6 +58,9 @@ class Controller():
         scrollbars.NewChild2("x_pos", str(horizontal))
         scrollbars.NewChild2("y_pos", str(vertical))
 
+        # Image rotations
+        self.xml.NewChild2("rotations", str(dc.rotations))
+
         # Calibration Region
         calib = self.xml.NewChild("calibration_region", "")
         calib.AddAttribute("exists", str(dc.calibrate_controller is not None))

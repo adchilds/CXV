@@ -25,6 +25,7 @@ class Filters(IPlugin):
 
         wx.CallAfter(self.pb.update, 'Applying Butterworth HPF to overlay ' + str(self.overlay_num))
         iht, iwd = self.coral_slab.shape
+        
         # zero pad image to a power of 2 to speed up FFT
         vpad = 2**(int(math.ceil(math.log(iht, 2))))
         hpad = 2**(int(math.ceil(math.log(iwd, 2))))

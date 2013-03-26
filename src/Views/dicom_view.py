@@ -271,8 +271,8 @@ class View(wx.Frame):
                 ]
         
     def init_plot(self, new):
+        y, x = self.model.get_image_shape()
         if new:
-            y, x = self.model.get_image_shape()
             self.figure = Figure(figsize=(x*2/72.0, y*2/72.0), dpi=72)
             self.canvas = FigureCanvasWxAgg(self.scroll, -1, self.figure)
             self.canvas.SetBackgroundColour('grey')

@@ -27,6 +27,9 @@ class Controller():
     def rotate_lines(self, cx, cy):
         self.model.rotate_lines(cx, cy)
 
+    def refresh_area(self):
+        self.dicom_view.controller.coral_slab = [self.model.sx, self.model.sy, self.model.dx, self.model.dy]
+
     def on_mouse_motion(self, event):
         self.model.on_mouse_motion(event)
 

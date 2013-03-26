@@ -67,6 +67,7 @@ class Controller():
         self.zoom_model = zoom_model.Model()
         self.centerX = 0
         self.centerY = 0
+        self.rotations = 0
 
         self.view = dicom_view.View(self, self.model)
         self.zoom_controller = zoom_controller.Controller(self, self.view, self.model)
@@ -157,9 +158,8 @@ class Controller():
         if self.view.figure is not None:
             self.view.figure.clear()
         self.save_session = save_session.SaveSession(self, path)
-        self.save_session.load_file()
         try:
-            self.open_dicom_file(self.save_session.fn, new)
+            self.open_dicom_file(self.save_session.load_file(), new)
         except IOError:
             self.save_session = None
             self.pb.Destroy()
@@ -169,7 +169,10 @@ class Controller():
             wx.MessageBox('Image location not found! Please edit the saved session XML file and add the correct image location between the "filename" tags. ' +
                             'For more information on this issue, please consult the CXV manual under section SECTION_NUMBER.', 'Invalid Image Path', wx.OK | wx.ICON_ERROR)
             return
+        self.pb = progress_bar.ProgressBar('Loading Session values', "Loading Session values", 1, self.view)
         self.save_session.load()
+        self.pb.finish("Finished")
+        self.pb = None
         self.changed = False
 
     def close_current(self):
@@ -629,7 +632,7 @@ class Controller():
         self.enable_tools(['Filtered Overlays'], True)
         if alg:
             if not self.overlay_controller:
-                self.overlay_controller = overlay_controller.Controller(self.view, self, self.model, self.background, show)
+                self.overlay_controller = overlay_controller.Controller(self.view, self, self.model, self.background, show, self.rotations)
         self.draw_all()
         if alg:
             self.overlay_controller.create_overlays()
@@ -641,7 +644,7 @@ class Controller():
 
     def on_overlay(self, event):
         if not self.coral_locked:
-            self.on_lock_coral(event, True) # have worker thread add and display overlay
+            self.on_lock_coral(event) # have worker thread add and display overlay
         elif not self.overlay_controller.view.IsShown():    # first press
             self.overlay_controller.display()
             self.overlay_controller.view.Show()
@@ -886,12 +889,11 @@ class Controller():
         print 'About'
         pass
 
-    def on_rotate(self, event):
-        """ Rotates the image by 90 degrees (counter-clockwise) """
+    def rotate(self):
         cx = self.centerX / 2
         cy = self.centerY / 2
 
-        self.model.image_array = self.model.rotate_image(self.model.get_image())
+        self.model.rotate_image(self.model.get_image())
 
         # Redraw the canvas to show the rotated image
         self.view.axes.cla() # Clear the axes
@@ -902,13 +904,29 @@ class Controller():
             self.polyline_controller.rotate_lines(cx, cy)
         if self.coral_controller is not None:
             self.coral_controller.rotate_lines(cx, cy)
+            self.coral_controller.refresh_area()
         if self.calibrate_controller is not None:
             self.calibrate_controller.rotate_lines(cx, cy)
+            self.calibrate_controller.refresh_area()
         
         self.cache_background()
+
+        # Swap the center's X and Y coordinates to correctly rotate image multiple times
         temp = self.centerX
         self.centerX = self.centerY
         self.centerY = temp
+
+    def on_rotate(self, event, rot=None):
+        """ Rotates the image by 90 degrees (counter-clockwise) """
+        if rot is None:
+            if self.rotations <= 2:
+                self.rotations += 1
+            else:
+                self.rotations = 0
+            self.rotate()
+        else:
+            for i in xrange(rot):
+                self.rotate()
 
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """

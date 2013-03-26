@@ -51,7 +51,7 @@ class Model():
         
         @var img - The image array to rotate
         """
-        return np.rot90(img)
+        self.image_array = np.rot90(img)
 
     def normalize_intensity(self, img):
         """Normalizes raw intensity values to real values between 0.0 and 1.0"""

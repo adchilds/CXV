@@ -57,6 +57,9 @@ class Controller():
     def rotate_lines(self, cx, cy, deg=-90):
         self.model.rotate_lines(cx, cy)
 
+    def refresh_area(self):
+        self.dicom_view.controller.calib_region = [self.model.sx, self.model.sy, self.model.dx, self.model.dy]
+
     def on_mouse_motion(self, event):
         if self.polyline_controller:
             self.polyline_controller.on_mouse_motion(event)

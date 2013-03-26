@@ -24,25 +24,28 @@ class Controller(threading.Thread):
     loading of the files, the running of the scripts, etc.
     """
 
-    def __init__(self, pb, overlay_controller, dicom_controller, model):
+    def __init__(self, pb, overlay_controller, dicom_controller, model, rotations):
         threading.Thread.__init__(self)
-        self.pb = pb
+        self.pb = pb # progress bar
         self.controller = overlay_controller
         self.dicom_controller = dicom_controller
         self.model = model
+        self.rotations = rotations
         self.start()
 
     def run(self):
         """ Runs the given algorithms """
-        
         wx.CallAfter(self.pb.update, 'Retrieving coral region')
+
         # Load in original dicom pixel data and normalize
         coral_slab = self.model.ds.pixel_array.astype(np.double)
+        coral_slab = np.rot90(coral_slab, self.rotations)
         coral_slab = self.model.normalize_intensity(coral_slab)
+
         # Cut down dicom pixel data to user defined coral slab region
         x, y, dx, dy = self.dicom_controller.coral_slab
         coral_slab = coral_slab[y:dy, x:dx]
-        
+
         # Get the default plugin directory, using XML
         path = os.path.expanduser('~')
         xml = xml_controller.Controller(path + '\.cxvrc.xml')
@@ -69,9 +72,6 @@ class Controller(threading.Thread):
         for plugin in manager.getAllPlugins():
             # Initialize the plugin so that we can call it's methods
             plugin.plugin_object.initPlugin(self.controller, coral_slab, self.model, self.pb, count)
-
-            # Print a little information about the plugin (DEBUG)
-#            plugin.plugin_object.print_information()
 
             # Run the plugin's algorithm
             plugin.plugin_object.calc_filter()

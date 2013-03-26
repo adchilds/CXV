@@ -23,14 +23,13 @@ class SaveSession():
     def __init__(self, controller, path):
         self.controller = controller
         self.path = path
-        self.fn = None  # file name
 
     def load_file(self):
         xml = chilkat.CkXml()
         path = self.path.encode('ascii', 'ignore')
         xml.LoadXmlFile(path)
         xml.UnzipTree()
-        self.fn = xml.getChildContent("filename")
+        return xml.getChildContent("filename")
 
     def load(self):
         """ Loads the data (polylines, target area, calibration region,
@@ -39,6 +38,11 @@ class SaveSession():
         xml = chilkat.CkXml()
         path = self.path.encode('ascii', 'ignore')
         xml.LoadXmlFile(path)
+
+        # Load Rotations
+        rot = xml.getChildContent("rotations")
+        self.controller.rotations = int(rot)
+        self.controller.on_rotate(None, int(rot))
 
         # Load Calibration Region
         calib = xml.SearchForContent(xml, "calibration_region", "")

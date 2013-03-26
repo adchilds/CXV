@@ -46,8 +46,9 @@ class Model():
         
         M = self.rotate_and_translate(theta, cx, cy, self.sx, self.sy)
         M2 = self.rotate_and_translate(theta, cx, cy, self.dx, self.dy)
-        
-        self.set_rect_pos(float(M[0][0]), float(M[1][0]), float(M2[0][0]), float(M2[1][0]))
+
+        # Swap sy and dy to make the upper left (sx, sy) and bottom right (dx, dy)
+        self.set_rect_pos(float(M[0][0]), float(M2[1][0]), float(M2[0][0]), float(M[1][0]))
     
     def rotate_and_translate(self, theta, originX, originY, x, y):
         """

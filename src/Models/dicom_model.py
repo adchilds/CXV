@@ -34,9 +34,9 @@ class Model():
         """Allocates array using Python C API function PyMem_Malloc"""
         y, x, z = shape
         num_of_elements = y * x * z
-        size_of_element = ctypes.sizeof(ctypes.c_double)    # 8 bytes on all platforms
+        size_of_element = ctypes.sizeof(ctypes.c_float)    # 8 bytes on all platforms
         ptr = ctypes.pythonapi.PyMem_Malloc(num_of_elements*size_of_element)
-        ptr = ctypes.cast(ptr, ctypes.POINTER(ctypes.c_double*num_of_elements))
+        ptr = ctypes.cast(ptr, ctypes.POINTER(ctypes.c_float*num_of_elements))
         rgba = np.ctypeslib.as_array(ptr.contents)
         rgba = rgba.reshape(y, x, z)
         return (rgba, ptr)

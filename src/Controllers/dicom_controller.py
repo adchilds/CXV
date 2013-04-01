@@ -174,6 +174,11 @@ class Controller():
         self.pb.finish("Finished")
         self.pb = None
         self.changed = False
+        # Set center correctly for rotations
+        if self.rotations == 1 or self.rotations == 3:
+            temp = self.centerX
+            self.centerX = self.centerY
+            self.centerY = temp
 
     def close_current(self):
         self.model.deallocate_array(self.ptr)
@@ -890,6 +895,11 @@ class Controller():
         pass
 
     def rotate(self):
+        # Swap the center's X and Y coordinates to correctly rotate image multiple times
+        temp = self.centerX
+        self.centerX = self.centerY
+        self.centerY = temp
+
         cx = self.centerX / 2
         cy = self.centerY / 2
 
@@ -911,13 +921,11 @@ class Controller():
         
         self.cache_background()
 
-        # Swap the center's X and Y coordinates to correctly rotate image multiple times
-        temp = self.centerX
-        self.centerX = self.centerY
-        self.centerY = temp
-
     def on_rotate(self, event, rot=None):
         """ Rotates the image by 90 degrees (counter-clockwise) """
+        if self.coral_controller is not None:
+            self.on_coral(event)
+
         if rot is None:
             if self.rotations <= 2:
                 self.rotations += 1

@@ -139,6 +139,13 @@ class Controller():
     def add_overlay(self):
         x, y, dx, dy = self.dicom_controller.coral_slab
         iH, iW = self.model.get_image_shape()
+
+        # Swap x and y if image is rotated
+        if self.dicom_controller.rotations == 1 or self.dicom_controller.rotations == 3:
+            temp = iH
+            iH = iW
+            iW = temp
+
         x = float(x)
         y = float(y)
         dx = float(dx)

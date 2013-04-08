@@ -105,6 +105,7 @@ class SaveSession():
             ppu = xml.SearchForTag(calib, "pixels_per_unit")
             if ppu is not None:
                 self.controller.calibrate_controller.pixels_per_unit = float(calib.getChildContent("pixels_per_unit"))
+                self.controller.set_pixels_per_unit = True
 
             # Unit selected
             unit = xml.SearchForTag(calib, "unit_selected")

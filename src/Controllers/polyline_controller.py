@@ -229,14 +229,17 @@ class Controller():
                 M = self.rotateAndTranslate(theta, cx, cy, px, py)
 
                 M2 = self.rotateAndTranslate(theta, cx, cy, ox, oy)
-
+                
                 # Set the line to it's new coordinate
-                self.curr_pl.set_line(line,
+                del self.curr_pl.lines[v]
+                self.curr_pl.insert_line(v,
                                       [float(M[0][0]), float(M2[0][0])],
                                       [float(M[1][0]), float(M2[1][0])])
 
-                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v), float(M[0][0]), float(M[1][0]))
-                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v+1), float(M2[0][0]), float(M2[1][0]))
+                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v),
+                                        float(M[0][0]), float(M[1][0]))
+                self.curr_pl.set_vertex(self.curr_pl.get_vertex(v+1),
+                                        float(M2[0][0]), float(M2[1][0]))
                 
                 # Reset label for line
                 if v == 0:
@@ -275,7 +278,7 @@ class Controller():
                        [1]])
 
         return (A * B * C * D)
-
+        
     def over_polyline(self, event):
         self.picked = None
         for polyline in self.polylines:

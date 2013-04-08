@@ -103,7 +103,6 @@ buildOptions = dict(
                          'images/save.png',
                          'images/zoom_in_toolbar.png',
                          'images/zoom_out_toolbar.png',
-                         'images/Thumbs.db',
                          'images/rotate_image.png'
                         ]
         )

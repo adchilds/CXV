@@ -55,3 +55,4 @@ test/dicom images/4.dcm
 test/dicom images/5.dcm
 test/saved_sessions/4.cxv
 test/saved_sessions/4.xml
+test/saved_sessions/test.cxv

@@ -33,7 +33,7 @@ class View(wx.MiniFrame):
         wx.MiniFrame.__init__(self,
                               parent=None,
                               title="Set Calibration Parameters",
-                              size=(300, 300),
+                              size=(300, 350),
                               style=wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.RESIZE_BOX | wx.MAXIMIZE_BOX))
         
         panel = wx.Panel(self)

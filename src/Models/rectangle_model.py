@@ -231,13 +231,15 @@ class Model():
             self.low_right_adj.remove()
         except ValueError:
             pass
+        except AttributeError:
+            pass
 
     def draw_rect(self, adjustable, locked, color):
         if not locked: c = color
         else: c = 'r'
 
         # Only need to check these two. If they're true, the others must be as well
-        if self.left and self.left_adj:
+        if self.left or self.left_adj:
             '''
             Stops a major memory leak. Program will use TONS of
             memory if we do not remove the old lines when moving

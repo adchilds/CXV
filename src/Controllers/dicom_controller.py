@@ -68,6 +68,7 @@ class Controller():
         self.centerX = 0
         self.centerY = 0
         self.rotations = 0
+        self.startrotation = 0;
 
         self.view = dicom_view.View(self, self.model)
         self.zoom_controller = zoom_controller.Controller(self, self.view, self.model)
@@ -174,6 +175,12 @@ class Controller():
         self.pb.finish("Finished")
         self.pb = None
         self.changed = False
+        # Set center correctly for rotations
+        if self.rotations == 1 or self.rotations == 3:
+            temp = self.centerX
+            self.centerX = self.centerY
+            self.centerY = temp
+        self.startrotation = self.rotations
 
     def close_current(self):
         self.model.deallocate_array(self.ptr)
@@ -300,6 +307,7 @@ class Controller():
                     if self.calibrate_controller.polyline_controller is not None:
                         self.calibrate_controller.polyline_controller.draw_polylines(self.polyline, self.polyline_locked, False)
 
+        self.view.canvas.Refresh()
         self.view.canvas.blit(self.view.axes.bbox)
 
     def draw_lines(self):
@@ -382,8 +390,12 @@ class Controller():
                 # when the coordinates show (x, y) in the status bar.
                 return
 
-            total_x = math.fabs(x - self.previous_x) # total x plane mouse movement
-            total_y = math.fabs(y - self.previous_y) # total y plane mouse movement
+            try:
+                total_x = math.fabs(x - self.previous_x) # total x plane mouse movement
+                total_y = math.fabs(y - self.previous_y) # total y plane mouse movement
+            except AttributeError:
+                total_x = 0;
+                total_y = 0;
 
             # Force the method to only run if the user has moved their mouse
             # more than 'aspect' number of pixels. This ensures that the mouse
@@ -670,7 +682,7 @@ class Controller():
         if dialog.ShowModal()==wx.ID_OK:
             
             # If exporting a DXF, have they set the pixels_per_unit?
-            if self.get_file_extension(dialog.GetPath()) == '.dxf':
+            if dialog.GetFilterIndex() == 1:
                 if not self.set_pixels_per_unit:
                     wx.MessageBox('Please set the pixels per unit first, using the "Set Calibration Parameters" tool.', 'Pixels Per Unit not set!', wx.OK | wx.ICON_ERROR)
                     return
@@ -687,17 +699,20 @@ class Controller():
             pb.update('Calculating image size')
             self.on_aspect(None, 0, 0, always_hide=True) # Set to 100% size
 
-            if self.get_file_extension(dialog.GetPath()) == '.dxf': # Save out .dxf file with polylines
+            filename = dialog.GetFilename().split(".")[-1]
+            if dialog.GetFilterIndex() == 1:
                 pb.update('Saving DXF file')
-                dxf_controller.Controllers().get_model().create_dxf(dialog.GetPath(), self.polyline_controller, self.model, self.calibrate_controller)
+                filename = (dialog.GetDirectory() + os.sep + filename + ".dxf")
+                dxf_controller.Controllers().get_model().create_dxf(filename, self.polyline_controller, self.model, self.calibrate_controller)
             else:
-                pb.update('Saving image')
+                pb.update('Saving PNG image')
                 # Toggle polyline animation off
                 lw = self.polyline_controller.get_line_width()
                 self.polyline_controller.set_animated(False, lw+3)
 
                 # Save the figure
-                self.view.figure.savefig(dialog.GetPath(), dpi=self.view.figure.dpi)
+                filename = (dialog.GetDirectory() + os.sep + filename + ".png")
+                self.view.figure.savefig(filename, dpi=self.view.figure.dpi)
 
                 # Toggle polyline animation on
                 self.polyline_controller.set_animated(True, lw)
@@ -707,11 +722,6 @@ class Controller():
             self.on_aspect(None, 0, 0) # Set back to current size
             self.view.scroll.Show()
             pb.finish('Complete!')
-
-    def get_file_extension(self, file_path):
-        """ Returns the file's extension, given the file's path """
-        fileName, file_extension = os.path.splitext(file_path)
-        return file_extension
 
     def on_polyline_menu(self, event):
         """ Menu callback event for drawing polylines """
@@ -890,16 +900,24 @@ class Controller():
         pass
 
     def rotate(self):
+        """ Rotates the image and any lines drawn on the canvas
+        by 90 degrees counter-clockwise
+        """
+        if self.startrotation == 1 or self.startrotation == 3:
+            # Swap the center's X and Y coordinates to correctly rotate image multiple times
+            temp = self.centerX
+            self.centerX = self.centerY
+            self.centerY = temp
+        
         cx = self.centerX / 2
         cy = self.centerY / 2
 
         self.model.rotate_image(self.model.get_image())
 
-        # Redraw the canvas to show the rotated image
-        self.view.axes.cla() # Clear the axes
+        self.view.axes.cla()
         self.view.init_plot(False) # Redraw
 
-        # Rotate polylines accordingly
+        # Rotate lines accordingly
         if self.polyline_controller is not None:
             self.polyline_controller.rotate_lines(cx, cy)
         if self.coral_controller is not None:
@@ -908,16 +926,20 @@ class Controller():
         if self.calibrate_controller is not None:
             self.calibrate_controller.rotate_lines(cx, cy)
             self.calibrate_controller.refresh_area()
-        
+
         self.cache_background()
 
-        # Swap the center's X and Y coordinates to correctly rotate image multiple times
-        temp = self.centerX
-        self.centerX = self.centerY
-        self.centerY = temp
+        if self.startrotation == 0 or self.startrotation == 2:
+            # Swap the center's X and Y coordinates to correctly rotate image multiple times
+            temp = self.centerX
+            self.centerX = self.centerY
+            self.centerY = temp
 
     def on_rotate(self, event, rot=None):
         """ Rotates the image by 90 degrees (counter-clockwise) """
+        if self.coral_controller is not None:
+            self.on_coral(event)
+
         if rot is None:
             if self.rotations <= 2:
                 self.rotations += 1

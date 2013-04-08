@@ -4,6 +4,9 @@
 # @author:    Luke Mueller
 # @contact:   muellelj@eckerd.edu or lmueller62@gmail.com
 #
+# @author:    Adam Childs
+# @contact:   adchilds@eckerd.edu
+#
 # @copyright: owned and maintained by the
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
@@ -82,7 +85,7 @@ class Polyline():
                                animated=True)
         self.lines.append(line)
         return line
-    
+
     def insert_line(self, index, xdata, ydata):
         line, = self.axes.plot(xdata, ydata, c=self.color, 
                                linestyle='-', zorder=1,
@@ -92,7 +95,10 @@ class Polyline():
     
     def remove_line(self, index):
         self.lines.remove(self.get_line(index))
-        
+
+    def remove_lines(self):
+        self.lines = []
+
     def set_line(self, line, xdata, ydata):
         line.set_xdata(xdata)
         line.set_ydata(ydata)

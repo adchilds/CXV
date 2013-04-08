@@ -908,7 +908,7 @@ class Controller():
             temp = self.centerX
             self.centerX = self.centerY
             self.centerY = temp
-        
+
         cx = self.centerX / 2
         cy = self.centerY / 2
 

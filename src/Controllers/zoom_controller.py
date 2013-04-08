@@ -141,6 +141,9 @@ class Controller():
         """ Invoked when the user presses the zoom out button
         in the toolbar or menubar.
         """
+        if self.view.aspect == 0.1: # Limit the size to 10%
+            return
+
         self.dicom_controller.zoom = False
         self.dicom_controller.ztf = False
         self.view.toolbar.ToggleTool(self.view.toolbar_ids['Zoom In'], False)

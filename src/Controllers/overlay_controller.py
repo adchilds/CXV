@@ -16,6 +16,8 @@ from Controllers import xml_controller
 from lib import progress_bar
 from Views import overlay_view
 from yapsy.PluginManager import PluginManager
+import numpy as np
+import math
 import os
 import re
 import wx
@@ -34,6 +36,44 @@ class Controller():
         self.background = background
         self.show = show
         self.rotations = rotations
+
+    def rotate_filters(self, cx, cy, deg=-90):
+        # Rotate the filter regions
+        for i in xrange(len(self.overlays)):
+            np.rot90(self.overlays[i])
+
+        # Translate the regions by swapping their X and Y positions
+        
+        pass
+
+    def rotate_and_translate(self, theta, originX, originY, x, y):
+        """
+        Applies the rotation transformation by 'theta'
+        degrees to the provided points around the specified
+        point (originX, originY). Translates to and from
+        the origin (originX, originY) before and after rotation.
+        """
+        # Un-translation
+        A = np.matrix([[1, 0, originX],
+                       [0, 1, originY],
+                       [0, 0, 1]])
+        
+        # Rotation
+        B = np.matrix([[math.cos(theta), -math.sin(theta), 0],
+                       [math.sin(theta), math.cos(theta), 0],
+                       [0, 0, 1]])
+        
+        # Translation
+        C = np.matrix([[1, 0, -originY], # swap the Y and X here because image dimensions changed
+                       [0, 1, -originX],
+                       [0, 0, 1]])
+        
+        # Vertex position
+        D = np.matrix([[x],
+                       [y],
+                       [1]])
+
+        return (A * B * C * D)
 
     def getPluginCount(self):
         # Get the default plugin directory, using XML

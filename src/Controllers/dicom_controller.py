@@ -926,6 +926,8 @@ class Controller():
         if self.calibrate_controller is not None:
             self.calibrate_controller.rotate_lines(cx, cy)
             self.calibrate_controller.refresh_area()
+        if self.overlay_controller is not None:
+            self.overlay_controller.rotate_filters(cx, cy)
 
         self.cache_background()
 

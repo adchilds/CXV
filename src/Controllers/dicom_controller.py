@@ -29,6 +29,7 @@ from lib import save_session
 from Views import dicom_view
 #import Image # PIL (Python Image Library)
 import math
+import numpy as np
 import os
 import re
 #import shutil
@@ -927,7 +928,10 @@ class Controller():
             self.calibrate_controller.rotate_lines(cx, cy)
             self.calibrate_controller.refresh_area()
         if self.overlay_controller is not None:
-            self.overlay_controller.rotate_filters(cx, cy)
+            self.overlay_controller.remove_overlays()
+            self.overlay_controller.add_overlay()
+            self.overlay_controller.rotate_filters()
+#            self.overlay_controller.display()
 
         self.cache_background()
 
@@ -939,8 +943,8 @@ class Controller():
 
     def on_rotate(self, event, rot=None):
         """ Rotates the image by 90 degrees (counter-clockwise) """
-        if self.coral_controller is not None:
-            self.on_coral(event)
+#        if self.coral_controller is not None:
+#            self.on_coral(event)
 
         if rot is None:
             if self.rotations <= 2:

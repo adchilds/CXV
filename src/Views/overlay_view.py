@@ -47,7 +47,7 @@ class View(wx.MiniFrame):
         
         self.Bind(wx.EVT_BUTTON, self.controller.display, apply)
         self.Bind(wx.EVT_CLOSE, self.on_close, self)
-        self.Bind(wx.EVT_MOVE, self.dicom_view.controller.cleanup)
+#        self.Bind(wx.EVT_MOVE, self.dicom_view.controller.cleanup)
         self.Fit()
         
     def add_pane(self, panel, sizer, i, percent, label, enabled):

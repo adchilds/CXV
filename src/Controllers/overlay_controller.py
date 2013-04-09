@@ -37,43 +37,10 @@ class Controller():
         self.show = show
         self.rotations = rotations
 
-    def rotate_filters(self, cx, cy, deg=-90):
-        # Rotate the filter regions
+    def rotate_filters(self):
+        # Rotate each filter
         for i in xrange(len(self.overlays)):
-            np.rot90(self.overlays[i])
-
-        # Translate the regions by swapping their X and Y positions
-        
-        pass
-
-    def rotate_and_translate(self, theta, originX, originY, x, y):
-        """
-        Applies the rotation transformation by 'theta'
-        degrees to the provided points around the specified
-        point (originX, originY). Translates to and from
-        the origin (originX, originY) before and after rotation.
-        """
-        # Un-translation
-        A = np.matrix([[1, 0, originX],
-                       [0, 1, originY],
-                       [0, 0, 1]])
-        
-        # Rotation
-        B = np.matrix([[math.cos(theta), -math.sin(theta), 0],
-                       [math.sin(theta), math.cos(theta), 0],
-                       [0, 0, 1]])
-        
-        # Translation
-        C = np.matrix([[1, 0, -originY], # swap the Y and X here because image dimensions changed
-                       [0, 1, -originX],
-                       [0, 0, 1]])
-        
-        # Vertex position
-        D = np.matrix([[x],
-                       [y],
-                       [1]])
-
-        return (A * B * C * D)
+            np.rot90(self.overlays[i]) # Rotate the region
 
     def getPluginCount(self):
         # Get the default plugin directory, using XML
@@ -175,6 +142,9 @@ class Controller():
         """
         pb = progress_bar.ProgressBar('Creating Overlays', 'Locking coral region', ((self.getPluginCount() * 2) + 1), self.dicom_view)
         plugin_controller.Controller(pb, self, self.dicom_controller, self.model, self.rotations)
+
+    def remove_overlays(self):
+        self.dicom_view.figure.delaxes(self.dicom_view.ov_axes)
 
     def add_overlay(self):
         x, y, dx, dy = self.dicom_controller.coral_slab

@@ -10,7 +10,7 @@ class Filters(IPlugin):
     	"""
         pass
 
-    def initPlugin(self, overlay_controller, coral_slab, model, progress_bar, overlay):
+    def initPlugin(self, overlay_controller, coral_slab, model, progress_bar, overlay, alphas=None):
     	""" Initializes the needed variables for running the algorithm.
 
     	NOTE: This method shouldn't need to be touched.
@@ -27,6 +27,7 @@ class Filters(IPlugin):
         self.model = model                              # The model (image)
         self.pb = progress_bar                          # The progress bar to update
         self.overlay_num = overlay						# The overlay this filter is added to
+        self.alphas = alphas							# The transparency of the filter (if not None, don't append!)
 
     def print_information(self):
     	""" This can be used to display some debugging information
@@ -42,14 +43,18 @@ class Filters(IPlugin):
         execution.
         """
         # Update the progress bar to show beginning
-        wx.CallAfter(self.pb.update, 'Applying SOME FILTER to overlay ' + str(self.overlay_num))
+        if self.pb is not None:
+        	wx.CallAfter(self.pb.update, 'Applying SOME FILTER to overlay ' + str(self.overlay_num))
 
 		# Code here for applying the filter (ALGORITHM GOES BELOW THIS LINE)
 
 		# Create the overlay and append it to the list
 		# NOTE: User's algorithm should change 'self.coral_slab' which holds the raw data
         self.overlay_controller.overlays.append(self.coral_slab)
-        self.overlay_controller.alphas.append(0)
+        
+        if self.alphas is None:
+        	self.overlay_controller.alphas.append(0)
 
 		# Update the progress bar to show completion
-		wx.CallAfter(self.pb.update, 'Completed SOME FILTER')
+		if self.pb is not None:
+			wx.CallAfter(self.pb.update, 'Completed SOME FILTER')

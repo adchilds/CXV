@@ -34,6 +34,10 @@ class Model():
         self.left = None
         self.left_adj = None
 
+    def get_shape(self):
+        '''Returns the (X, Y) shape of this rectangle model instance'''
+        return (math.fabs(self.sx - self.dx), math.fabs(self.sy - self.dy))
+
     def set_rect_pos(self, x1, y1, x2, y2):
         self.sx = x1
         self.sy = y1
@@ -43,7 +47,7 @@ class Model():
     def rotate_lines(self, cx, cy, deg=-90):
         # Convert from degrees to radians
         theta = math.radians(deg)
-        
+
         M = self.rotate_and_translate(theta, cx, cy, self.sx, self.sy)
         M2 = self.rotate_and_translate(theta, cx, cy, self.dx, self.dy)
 

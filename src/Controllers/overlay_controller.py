@@ -17,22 +17,24 @@ from lib import progress_bar
 from Views import overlay_view
 from yapsy.PluginManager import PluginManager
 import numpy as np
-import math
 import os
 import re
 import wx
 
 class Controller():
     
-    def __init__(self, dicom_view, dicom_controller, model, background, show, rotations=0):
+    def __init__(self, dicom_view, dicom_controller, model, background, show, rotations=0, alphas=None):
         self.dicom_view = dicom_view
         self.dicom_controller = dicom_controller
         self.model = model
         self.patt = re.compile('\d+')
         self.overlay = 0.0
         self.overlays = []
-        self.alphas = []
-        self.view = overlay_view.View(self, self.dicom_view)
+        if alphas is not None:
+            self.alphas = alphas
+        else:
+            self.alphas = []
+        self.view = overlay_view.View(self, self.dicom_view, alphas=alphas)
         self.background = background
         self.show = show
         self.rotations = rotations
@@ -41,6 +43,7 @@ class Controller():
         # Rotate each filter
         for i in xrange(len(self.overlays)):
             np.rot90(self.overlays[i]) # Rotate the region
+        np.rot90(self.overlay)
 
     def getPluginCount(self):
         # Get the default plugin directory, using XML
@@ -130,7 +133,7 @@ class Controller():
         elif self.alphas[len(self.alphas) - 1] > 100:
             self.alphas[len(self.alphas) - 1] = 100
 
-    def create_overlays(self):
+    def create_overlays(self, alphas=None):
         """ Initializes the progress bar.
         
         Sets the total number of progress bar units to the total
@@ -141,7 +144,10 @@ class Controller():
         Initializes the plugin controller, which then runs the plugin algorithms.
         """
         pb = progress_bar.ProgressBar('Creating Overlays', 'Locking coral region', ((self.getPluginCount() * 2) + 1), self.dicom_view)
-        plugin_controller.Controller(pb, self, self.dicom_controller, self.model, self.rotations)
+        plugin_controller.Controller(pb, self, self.dicom_controller, self.model, self.rotations, alphas=alphas)
+        
+        if alphas is not None:
+            self.alphas = alphas
 
     def remove_overlays(self):
         self.dicom_view.figure.delaxes(self.dicom_view.ov_axes)
@@ -150,7 +156,8 @@ class Controller():
         x, y, dx, dy = self.dicom_controller.coral_slab
         iH, iW = self.model.get_image_shape()
 
-        # Swap x and y if image is rotated
+        # Swap x and y if image is rotated to correctly
+        # position the filter (otherwise wont be inside bbox)
         if self.dicom_controller.rotations == 1 or self.dicom_controller.rotations == 3:
             temp = iH
             iH = iW
@@ -178,7 +185,7 @@ class Controller():
         """
         # Use linear combination for displaying overlay
         self.overlay = 0.0 # Reset to 0.0; if we don't the new overlays are appended to the old!
-        if not alphas:
+        if alphas is None:
             for ov in range(len(self.overlays)):
                 self.overlay += (self.alphas[ov]/100.0) * self.overlays[ov]
         else:
@@ -193,7 +200,10 @@ class Controller():
             x = dx
             y = dy
         else:
-            y, x = self.overlay.shape
+            try:
+                y, x = self.overlay.shape
+            except AttributeError:
+                return
 
         rgba, ptr = self.model.allocate_array((y, x, 4))
         rgba = self.model.set_display_data(rgba, self.overlay, 1.0)

@@ -66,10 +66,13 @@ class Model():
 
     def set_display_data(self, rgba, data, alpha):
         """Sets values in data to the RGBA bands of rgba with specified alpha mask"""
-        rgba[:,:,0] = data  # R
-        rgba[:,:,1] = data  # G
-        rgba[:,:,2] = data  # B
-        rgba[:,:,3] = alpha # A
+        try:
+            rgba[:,:,0] = data  # R
+            rgba[:,:,1] = data  # G
+            rgba[:,:,2] = data  # B
+            rgba[:,:,3] = alpha # A
+        except ValueError:
+            pass
         return rgba
 
     def get_image(self):

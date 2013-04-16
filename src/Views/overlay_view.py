@@ -18,9 +18,10 @@ import wx
 
 class View(wx.MiniFrame):
     
-    def __init__(self, controller, dicom_view):
+    def __init__(self, controller, dicom_view, alphas):
         self.controller = controller
         self.dicom_view = dicom_view
+        self.alphas = alphas
         
         wx.MiniFrame.__init__(self,
                               parent=None,
@@ -35,8 +36,12 @@ class View(wx.MiniFrame):
         for each in self.pane_data():
             i = self.pane_data().index(each)
 #            percent = 100.0 / len(self.pane_data())
-            percent = 0
-            self.add_pane(panel, panel_sizer, i, int(percent), *each)
+            if self.alphas is not None:
+                percent = self.alphas[self.pane_data().index(each)]
+                self.add_pane(panel, panel_sizer, i, int(percent), *each)
+            else:
+                percent = 0
+                self.add_pane(panel, panel_sizer, i, int(percent), *each)
         
         apply = wx.Button(panel, -1, 'Apply')
         text = wx.StaticText(panel, -1, 'Overlays can\'t exceed 100%')
@@ -80,7 +85,7 @@ class View(wx.MiniFrame):
         bs3 = wx.BoxSizer(wx.HORIZONTAL)
         s = wx.Slider(panel, s_id, percent, 0, 100)
         s.Enable(enabled)
-        self.Bind(wx.EVT_SLIDER, self.controller.find_items, s) 
+        self.Bind(wx.EVT_SLIDER, self.controller.find_items, s)
         bs3.Add(s, 1, wx.EXPAND)
         sbs.Add(bs3, 1, wx.EXPAND)
         

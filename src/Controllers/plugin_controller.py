@@ -24,18 +24,24 @@ class Controller(threading.Thread):
     loading of the files, the running of the scripts, etc.
     """
 
-    def __init__(self, pb, overlay_controller, dicom_controller, model, rotations):
+    def __init__(self, pb, overlay_controller, dicom_controller, model, rotations, alphas=None):
         threading.Thread.__init__(self)
         self.pb = pb # progress bar
         self.controller = overlay_controller
         self.dicom_controller = dicom_controller
         self.model = model
         self.rotations = rotations
+        self.alphas = alphas
         self.start()
 
     def run(self):
         """ Runs the given algorithms """
-        wx.CallAfter(self.pb.update, 'Retrieving coral region')
+        self.controller.overlays = []
+        if self.alphas is None:
+            self.controller.alphas = []
+
+        if self.pb is not None:
+            wx.CallAfter(self.pb.update, 'Retrieving coral region')
 
         # Load in original dicom pixel data and normalize
         coral_slab = self.model.ds.pixel_array.astype(np.double)
@@ -71,7 +77,7 @@ class Controller(threading.Thread):
         count = 0;
         for plugin in manager.getAllPlugins():
             # Initialize the plugin so that we can call it's methods
-            plugin.plugin_object.initPlugin(self.controller, coral_slab, self.model, self.pb, count)
+            plugin.plugin_object.initPlugin(self.controller, coral_slab, self.model, self.pb, count, self.alphas)
 
             # Run the plugin's algorithm
             plugin.plugin_object.calc_filter()
@@ -81,15 +87,22 @@ class Controller(threading.Thread):
 
         # Add the original coral_slab to the overlay
         self.controller.overlays.append(coral_slab)
-        self.controller.alphas.append(100)
+
+        if self.alphas is None:
+            self.controller.alphas.append(100)
+        else:
+            self.controller.alphas = []
+            self.controller.alphas = self.alphas
+
         wx.CallAfter(self.controller.add_overlay)
 
         # Update the progress bar to let the user know we've finished
         # running the algorithms
-        wx.CallAfter(self.pb.finish, 'Finishing up')
+        if self.pb is not None:
+            wx.CallAfter(self.pb.finish, 'Finishing up')
 
         # Display the filters
-        if self.controller.show:
+        if self.controller.show and self.alphas is None:
             # Get the size of alphas (number of filters) minus one.
             # The last alpha should be 0. Set all the alphas to the same
             # value (except for the last one), so divide 100 by the number

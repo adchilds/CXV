@@ -420,7 +420,10 @@ class Controller():
             x = event.xdata + self.coral_slab[0]
             y = event.ydata + self.coral_slab[1]
             self.view.statusbar.SetStatusText("Pixel Position: (%i, %i)" % (x, y), 0)
-            self.view.statusbar.SetStatusText("Pixel Intensity: %.4f" % self.overlay_controller.overlay[event.ydata][event.xdata], 1)
+            try:
+                self.view.statusbar.SetStatusText("Pixel Intensity: %.4f" % self.overlay_controller.overlay[event.ydata][event.xdata], 1)
+            except IndexError:
+                pass
 
         if not self.pan_image:
             if self.polyline:
@@ -637,7 +640,7 @@ class Controller():
         self.draw_all()
         self.state_changed(True)
 
-    def on_lock_coral(self, event, show=True, alg=True):
+    def on_lock_coral(self, event, show=True, alg=True, alphas=None):
         if self.coral_locked: return  # already locked
         self.coral = False
         self.coral_locked = True
@@ -645,21 +648,21 @@ class Controller():
         self.enable_tools(['Filtered Overlays'], True)
         if alg:
             if not self.overlay_controller:
-                self.overlay_controller = overlay_controller.Controller(self.view, self, self.model, self.background, show, self.rotations)
+                self.overlay_controller = overlay_controller.Controller(self.view, self, self.model, self.background, show, self.rotations, alphas=alphas)
         self.draw_all()
         if alg:
-            self.overlay_controller.create_overlays()
+            self.overlay_controller.create_overlays(alphas)
         self.cleanup()
 
     def on_contrast(self, event):
         try: self.contrast_controller.view.Raise()
         except AttributeError: self.contrast_controller = contrast_controller.Controller(self.view, self.model)
 
-    def on_overlay(self, event):
+    def on_overlay(self, event, alphas=None):
         if not self.coral_locked:
-            self.on_lock_coral(event) # have worker thread add and display overlay
+            self.on_lock_coral(event, alphas=alphas) # have worker thread add and display overlay
         elif not self.overlay_controller.view.IsShown():    # first press
-            self.overlay_controller.display()
+            self.overlay_controller.display(alphas=alphas)
             self.overlay_controller.view.Show()
         elif self.overlay_controller.view.IsShown():
             self.overlay_controller.view.Raise()
@@ -900,7 +903,7 @@ class Controller():
         print 'About'
         pass
 
-    def rotate(self):
+    def rotate(self, event):
         """ Rotates the image and any lines drawn on the canvas
         by 90 degrees counter-clockwise
         """
@@ -928,13 +931,13 @@ class Controller():
             self.calibrate_controller.rotate_lines(cx, cy)
             self.calibrate_controller.refresh_area()
         if self.overlay_controller is not None:
-            self.overlay_controller.remove_overlays()
-            self.overlay_controller.add_overlay()
-            self.overlay_controller.rotate_filters()
-#            self.overlay_controller.display()
+            alp = self.overlay_controller.alphas
+            if self.coral_controller is not None:
+                self.on_coral(event)
+                self.on_overlay(event, alphas=alp)
 
         self.cache_background()
-
+        
         if self.startrotation == 0 or self.startrotation == 2:
             # Swap the center's X and Y coordinates to correctly rotate image multiple times
             temp = self.centerX
@@ -943,18 +946,15 @@ class Controller():
 
     def on_rotate(self, event, rot=None):
         """ Rotates the image by 90 degrees (counter-clockwise) """
-#        if self.coral_controller is not None:
-#            self.on_coral(event)
-
         if rot is None:
             if self.rotations <= 2:
                 self.rotations += 1
             else:
                 self.rotations = 0
-            self.rotate()
+            self.rotate(event)
         else:
             for i in xrange(rot):
-                self.rotate()
+                self.rotate(event)
 
     def toggle_target_area(self):
         """ Toggles off the target area button in the toolbar if it's enabled. """

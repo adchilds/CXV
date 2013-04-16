@@ -9,12 +9,13 @@ class Filters(IPlugin):
     def __init__(self):
         pass
 
-    def initPlugin(self, overlay_controller, coral_slab, model, progress_bar, overlay):
+    def initPlugin(self, overlay_controller, coral_slab, model, progress_bar, overlay, alphas=None):
         self.overlay_controller = overlay_controller    # Overlay Controller
         self.coral_slab = coral_slab                    # The coral slab we're filtering
         self.model = model                              # The model (image)
         self.pb = progress_bar                          # The progress bar to update
         self.overlay_num = overlay                      # The overlay this filter is added to
+        self.alphas = alphas                            # The transparency of the filter (if not None, don't append!)
 
     def print_information(self):
         print 'Running Butterworth plugin...'
@@ -23,7 +24,8 @@ class Filters(IPlugin):
     def calc_filter(self):
         """ Must provide an implementation for the run method """
 
-        wx.CallAfter(self.pb.update, 'Applying Butterworth HPF to overlay ' + str(self.overlay_num))
+        if self.pb is not None:
+            wx.CallAfter(self.pb.update, 'Applying Butterworth HPF to overlay ' + str(self.overlay_num))
         iht, iwd = self.coral_slab.shape
         
         # zero pad image to a power of 2 to speed up FFT
@@ -54,6 +56,9 @@ class Filters(IPlugin):
 
         # Create the overlay and append it to the list
         self.overlay_controller.overlays.append(self.coral_slab - fi)
-        self.overlay_controller.alphas.append(0)
         
-        wx.CallAfter(self.pb.update, 'Completed Butterworth Highpass Filter')
+        if self.alphas is None:
+            self.overlay_controller.alphas.append(0)
+        
+        if self.pb is not None:
+            wx.CallAfter(self.pb.update, 'Completed Butterworth Highpass Filter')

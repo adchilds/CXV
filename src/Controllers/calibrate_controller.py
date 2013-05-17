@@ -39,6 +39,7 @@ class Controller():
         self.polyline_controller = None
         self.clicks = 0
         self.click_points = []
+        self.averages = []
 
         # Setting pixels per unit cursor
         image = wx.Image(self.dicom_view.get_main_dir() + os.sep + "images" + os.sep + "cursor_ppu.png", wx.BITMAP_TYPE_PNG)
@@ -152,7 +153,42 @@ class Controller():
         else:
             self.dicom_view.controller.set_pixels_per_unit = False
 
+        # Calculate average grayscale values per column in selected area
+        self.averages = self.calculate_averages()
+
         self.dicom_view.toolbar.ToggleTool(self.dicom_view.toolbar_ids['Set Calibration Parameters'], False)
+        self.dicom_view.controller.enable_tools(['Show Density Chart'], True)
+
+    def calculate_averages(self):
+        """ Calculates the average grayscale value per column in the selected area. """
+        averages = []
+
+        # Find longest side
+        deltaX = int(math.fabs(self.model.sx - self.model.dx))
+        deltaY = int(math.fabs(self.model.sy - self.model.dy))
+
+        if deltaX > deltaY:
+            # Columns along X axis
+            # Rows along Y axis
+            for i in xrange(int(self.model.sx), int(self.model.dx)):
+                sum = 0.0
+                for j in xrange(int(self.model.sy), int(self.model.dy)):
+                    sum = sum + self.dicom_view.model.image_array[j][i][0]
+                sum = sum / (deltaY + 1)
+                sum = int(sum * 256) # 0 - 255 scale
+                averages.append(sum)
+        else:
+            # Columns along Y axis
+            # Rows along X axis
+            for i in xrange(int(self.model.sy), int(self.model.dy)):
+                sum = 0.0
+                for j in xrange(int(self.model.sx), int(self.model.dx)):
+                    sum = sum + self.dicom_view.model.image_array[j][i][0]
+                sum /= (deltaX + 1)
+                sum = int(sum * 256) # 0 - 255 scale
+                averages.append(sum)
+
+        return averages
 
     def on_set_pixel_unit(self, event):
         if self.view is None:
@@ -170,7 +206,6 @@ class Controller():
         # Load in original dicom pixel data and normalize
         calib_region = self.dicom_view.model.ds.pixel_array.astype(np.double)
         calib_region = self.dicom_view.model.normalize_intensity(calib_region)
-        #calib_region = self.dicom_view.model.invert_grayscale(calib_region)
 
         # Cut down dicom pixel data to user defined calibration region
         x, y, dx, dy = self.dicom_view.controller.calib_region

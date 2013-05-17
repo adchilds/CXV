@@ -11,6 +11,7 @@
 #             US Geological Survey (USGS),
 #             Department of Interior (DOI)
 #########################################################
+import platform
 import wx
 
 class View(wx.MiniFrame):
@@ -29,18 +30,34 @@ class View(wx.MiniFrame):
         self.dens = None
         self.min = None
         self.max = None
-        
-        wx.MiniFrame.__init__(self,
-                              parent=None,
-                              title="Set Calibration Parameters",
-                              size=(300, 350),
-                              style=wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.RESIZE_BOX | wx.MAXIMIZE_BOX))
-        
+
+        if "Win" in platform.system():
+            wx.MiniFrame.__init__(self,
+                    parent=None,
+                    title="Set Calibration Parameters",
+                    size=(300, 350),
+                    style=wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.RESIZE_BOX | wx.MAXIMIZE_BOX))
+        else:
+            wx.MiniFrame.__init__(self,
+                    parent=None,
+                    title="Set Calibration Parameters",
+                    size=(300, 400),
+                    style=wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.RESIZE_BOX | wx.MAXIMIZE_BOX))
+
         panel = wx.Panel(self)
         panel_sizer = wx.BoxSizer(wx.VERTICAL)
         panel_sizer.Add(self.add_unit_pane(panel, panel_sizer), 0, wx.EXPAND)
         panel_sizer.AddSpacer(5)
         panel_sizer.Add(self.add_density_pane(panel, panel_sizer), 0, wx.EXPAND)
+        panel_sizer.AddSpacer(5)
+        
+        # Add warning
+        text = wx.StaticText(panel, -1, '''Warning: Please make sure to fit the
+calibration area as closely as possible
+to the wedge size.''')
+        text.SetForegroundColour((255, 0, 0))
+        panel_sizer.Add(text, 0, wx.CENTER)
+
         panel_sizer.AddSpacer(5)
         save_button = wx.Button(panel, 0, 'Save')
         panel_sizer.Add(save_button, 0, wx.CENTER)
@@ -49,12 +66,14 @@ class View(wx.MiniFrame):
 
         self.Bind(wx.EVT_BUTTON, self.controller.on_apply, save_button)
         self.Bind(wx.EVT_CLOSE, self.controller.on_close)
+        
+        self.Center()
 
     def density_pane_data(self):
         return [
                 ('Wedge density: ', 'g/cm'+u'\u00B3', str(self.wedge_density)),
-                ('Min wedge thickness: ', 'mm', str(self.min_wedge_thickness)),
-                ('Max wedge thickness: ', 'mm', str(self.max_wedge_thickness))
+                ('Min thickness: ', 'mm', str(self.min_wedge_thickness)),
+                ('Max thickness: ', 'mm', str(self.max_wedge_thickness))
                 ]
 
     def add_density_pane(self, panel, panel_sizer):

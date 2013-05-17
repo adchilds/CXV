@@ -15,6 +15,7 @@ from Controllers import calibrate_controller
 from Controllers import contrast_controller
 from Controllers import coral_controller
 from Controllers import dxf_controller
+from Controllers import density_controller
 from Controllers import image_info_controller
 from Controllers import overlay_controller
 from Controllers import overview_controller
@@ -29,10 +30,8 @@ from lib import save_session
 from Views import dicom_view
 #import Image # PIL (Python Image Library)
 import math
-import numpy as np
 import os
 import re
-#import shutil
 import wx
 
 class Controller():
@@ -57,6 +56,7 @@ class Controller():
         self.debug = False
         self.set_pixels_per_unit = False
         self.coral_controller = None
+        self.density_controller = None
         self.overlay_controller = None
         self.polyline_controller = None
         self.calibrate_controller = None
@@ -70,6 +70,7 @@ class Controller():
         self.centerY = 0
         self.rotations = 0
         self.startrotation = 0;
+        self.file_name = ""
 
         self.view = dicom_view.View(self, self.model)
         self.zoom_controller = zoom_controller.Controller(self, self.view, self.model)
@@ -105,6 +106,7 @@ class Controller():
                 self.close_current()
                 new = False
             path = dialog.GetPath()
+            self.file_name = path[:-4]
             savedsesh = False
             if (path[-4:] == '.dcm') or (path[-4:] == '.DCM'):
                 self.open_dicom_file(path, new)
@@ -803,6 +805,12 @@ class Controller():
         self.draw_all()
         self.state_changed(True)
 
+    def on_show_density_chart(self, event):
+        if self.density_controller is not None:
+            self.density_controller.view.Show()
+        else:
+            self.density_controller = density_controller.Controller(self, self.calibrate_controller.averages)
+
     def on_save(self, event):
         if not self.save_session:
             self.on_save_as(event)
@@ -821,7 +829,7 @@ class Controller():
         if dialog.ShowModal() == wx.ID_OK:
             # Is the user saving a CXV Session file or XML file?
             path = dialog.GetPath()
-            if self.get_file_extension(path) == '.cxv':
+            if dialog.GetFilterIndex() == 0:
                 dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.cxv')
             else:
                 dialog.SetFilename(self.model.get_image_name().split('.')[0]+'.xml')
@@ -937,7 +945,7 @@ class Controller():
                 self.on_overlay(event, alphas=alp)
 
         self.cache_background()
-        
+
         if self.startrotation == 0 or self.startrotation == 2:
             # Swap the center's X and Y coordinates to correctly rotate image multiple times
             temp = self.centerX
@@ -981,7 +989,7 @@ class Controller():
         if polyline_on: # Turn of polylines
             self.view.toolbar.ToggleTool(self.view.toolbar_ids['Draw Polylines'], False)
             self.on_polyline(None, zoom_off=True, pan_off=False)
-    
+
     def toggle_zoom(self, zoom_off):
         """ Toggles the zoom button in the toolbar, given the
         zoom_off parameter.

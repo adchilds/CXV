@@ -57,6 +57,7 @@ class View(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.controller.on_quit)
         self.Bind(wx.EVT_CONTEXT_MENU, self.controller.on_show_popup)
 
+        self.Center()
         self.Show()
 
     def on_scroll(self, event):
@@ -123,6 +124,7 @@ class View(wx.Frame):
                   ('', '', '', True, False, None),
                   ('Adjust Calibration Region', (), self.controller.on_calibrate_menu, False, False, None),
                   ('Set Calibration Parameters', (), self.controller.on_density_params, False, False, None),
+                  ('Show Density Chart', (), self.controller.on_show_density_chart, False, False, None),
                   ('', '', '', True, False, None),
                   ('Draw Polylines', (), self.controller.on_polyline_menu, False, False, None),
                   ],
@@ -237,6 +239,7 @@ class View(wx.Frame):
                 ('separator', '', '', '', ''),
                 ('toggle', 'Adjust Calibration Region', 'images' + os.sep + 'calibrate.png', self.controller.on_calibrate, False),
                 ('toggle', 'Set Calibration Parameters', 'images' + os.sep + 'density.png', self.controller.on_density_params, False),
+                ('simple', 'Show Density Chart', 'images' + os.sep + 'chart_line.png', self.controller.on_show_density_chart, False),
                 ('separator', '', '', '', ''),
                 ('toggle', 'Draw Polylines', 'images' + os.sep + 'polyline.png', self.controller.on_polyline, False),
                )

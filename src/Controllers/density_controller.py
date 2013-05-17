@@ -193,6 +193,7 @@ class Controller():
                 c = '#%02X%02X%02X' % (r(), r(), r())
                 self.all_lines[x].append(c) # color
             self.all_lines[x].append(True) # bool
+            self.all_lines[x].append(polyline_data[x])
 
             self.lines_names.append("t" + str(x+1))
             try:
@@ -230,13 +231,22 @@ class Controller():
             # Is the user saving a CXV Session file or XML file?
             path = dialog.GetPath()
             data_file = open(path, 'w')
-            data_file.write("NOTE: \"nan\" stands for \"not a number.\" The value was not able to be computed.\n")
+            data_file.write("NOTE: \"nan\" stands for \"not a number.\" The value was not able to be computed.\n\n")
+            data_file.write("Format:\n")
+            data_file.write("\t(X, Y): DENSITY VALUE\n")
             data_file.write("---------------------------------------------------------------------------------\n\n\n")
             i = 1
+            line = 0
             for pl in self.calc_graph():
                 data_file.write("Polyline t" + str(i) + ":\n")
+                data_file.write("::::::::::::::::::::::::::::::\n")
+                x = 0
+                y = 1
                 for item in pl:
-                    data_file.write("%s, " % item)
+                    data_file.write("(%s, %s): %s\n" % (self.all_lines[line][4][x], self.all_lines[line][4][y], item))
+                    x += 2
+                    y += 2
                 data_file.write("\n\n")
                 i += 1
+                line += 1
             data_file.close()
